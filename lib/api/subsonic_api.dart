@@ -9,17 +9,20 @@ class SubsonicApi {
   static const String clientName = 'Zenify';
   static const String apiVersion = '1.16.1';
 
-  SubsonicApi(this.server);
+  late final String _salt;
+  late final String _token;
+
+  SubsonicApi(this.server) {
+    _salt = DateTime.now().millisecondsSinceEpoch.toString();
+    _token = md5.convert(utf8.encode(server.password + _salt)).toString();
+  }
 
   /// Generates the query parameters for auth
   Map<String, String> getAuthParams() {
-    final salt = DateTime.now().millisecondsSinceEpoch.toString();
-    final token = md5.convert(utf8.encode(server.password + salt)).toString();
-
     return {
       'u': server.username,
-      't': token,
-      's': salt,
+      't': _token,
+      's': _salt,
       'v': apiVersion,
       'c': clientName,
       'f': 'json',
@@ -29,21 +32,34 @@ class SubsonicApi {
   /// Helper to build URI
   Uri _buildUri(String endpoint, [Map<String, String>? extraParams]) {
     String baseUrl = server.url.trim();
-    while (baseUrl.endsWith('/')) {
-      baseUrl = baseUrl.substring(0, baseUrl.length - 1);
-    }
-    if (baseUrl.toLowerCase().endsWith('/rest')) {
-      baseUrl = baseUrl.substring(0, baseUrl.length - 5);
+    try {
+      Uri baseUri = Uri.parse(baseUrl);
+      String cleanUrl = baseUri.origin + baseUri.path;
+      while (cleanUrl.endsWith('/')) {
+        cleanUrl = cleanUrl.substring(0, cleanUrl.length - 1);
+      }
+      if (cleanUrl.toLowerCase().endsWith('/app')) {
+        cleanUrl = cleanUrl.substring(0, cleanUrl.length - 4);
+      }
+      if (cleanUrl.toLowerCase().endsWith('/rest')) {
+        cleanUrl = cleanUrl.substring(0, cleanUrl.length - 5);
+      }
+      while (cleanUrl.endsWith('/')) {
+        cleanUrl = cleanUrl.substring(0, cleanUrl.length - 1);
+      }
+      baseUrl = cleanUrl;
+    } catch (_) {
+      // If parsing fails, fall back to simple trim
     }
     
-    // Subsonic API officially uses .view suffix for endpoints
-    final uri = Uri.parse('$baseUrl/rest/$endpoint.view');
+    // Only use .view for JSON endpoints, binary endpoints shouldn't need it
+    String suffix = (endpoint == 'stream' || endpoint == 'getCoverArt') ? '' : '.view';
+    final uri = Uri.parse('$baseUrl/rest/$endpoint$suffix');
     final queryParams = getAuthParams();
     if (extraParams != null) {
       queryParams.addAll(extraParams);
     }
     
-    // uri.replace(queryParameters: queryParams) works well for merging
     return uri.replace(queryParameters: queryParams);
   }
 

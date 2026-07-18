@@ -2,6 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zenify/providers/app_providers.dart';
+import 'package:zenify/providers/audio_provider.dart';
+import 'package:zenify/components/mini_player.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 class AlbumDetailScreen extends ConsumerWidget {
@@ -146,7 +148,9 @@ class AlbumDetailScreen extends ConsumerWidget {
                                 const SizedBox(height: 16),
                                 ShadButton(
                                   onPressed: () {
-                                    // TODO: Play all
+                                    if (songList.isNotEmpty) {
+                                      ref.read(audioProvider.notifier).playQueue(songList, 0);
+                                    }
                                   },
                                   child: const Row(
                                     mainAxisSize: MainAxisSize.min,
@@ -197,7 +201,7 @@ class AlbumDetailScreen extends ConsumerWidget {
                         style: TextStyle(color: colorScheme.mutedForeground),
                       ),
                       onTap: () {
-                        // TODO: Play song
+                        ref.read(audioProvider.notifier).playQueue(songList, index);
                       },
                     );
                   },
@@ -211,6 +215,7 @@ class AlbumDetailScreen extends ConsumerWidget {
         loading: () => Center(child: CircularProgressIndicator(color: colorScheme.foreground)),
         error: (err, stack) => Center(child: Text('加載失敗: $err', style: TextStyle(color: colorScheme.destructive))),
       ),
+      bottomNavigationBar: const MiniPlayer(),
     );
   }
 }

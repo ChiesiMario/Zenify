@@ -1,0 +1,214 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:zenify/providers/audio_provider.dart';
+import 'package:zenify/providers/app_providers.dart';
+
+class FullPlayerScreen extends ConsumerWidget {
+  const FullPlayerScreen({super.key});
+
+  String _formatDuration(Duration duration) {
+    final minutes = duration.inMinutes;
+    final seconds = duration.inSeconds % 60;
+    return '$minutes:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final audioState = ref.watch(audioProvider);
+    final audioNotifier = ref.read(audioProvider.notifier);
+    final api = ref.watch(subsonicApiProvider);
+    final currentSong = audioState.currentSong;
+    
+    final theme = ShadTheme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    if (currentSong == null) {
+      return Container(
+        color: colorScheme.background,
+        child: const Center(child: Text('無播放中的歌曲')),
+      );
+    }
+
+    final coverUrl = api != null && currentSong['coverArt'] != null
+        ? api.getCoverArtUrl(currentSong['coverArt'], size: 800)
+        : null;
+
+    final position = audioState.position;
+    final duration = audioState.duration;
+    double sliderValue = duration.inMilliseconds > 0 
+        ? position.inMilliseconds / duration.inMilliseconds 
+        : 0.0;
+    sliderValue = sliderValue.clamp(0.0, 1.0);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colorScheme.background,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: SafeArea(
+        child: Column(
+          children: [
+            // Top Drag Handle & Close Button
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: colorScheme.mutedForeground.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      icon: Icon(LucideIcons.chevronDown, color: colorScheme.foreground),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Album Cover
+                    Flexible(
+                      child: AspectRatio(
+                        aspectRatio: 1,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: colorScheme.muted,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 30,
+                                offset: const Offset(0, 15),
+                              ),
+                            ],
+                            image: coverUrl != null 
+                              ? DecorationImage(
+                                  image: NetworkImage(coverUrl),
+                                  fit: BoxFit.cover,
+                                ) 
+                              : null,
+                          ),
+                          child: coverUrl == null 
+                              ? Center(child: Icon(LucideIcons.music, size: 80, color: colorScheme.mutedForeground))
+                              : null,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 48),
+                    
+                    // Song Info
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            currentSong['title'] ?? '未知歌曲',
+                            style: TextStyle(
+                              color: colorScheme.foreground,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            currentSong['artist'] ?? '未知藝術家',
+                            style: TextStyle(
+                              color: colorScheme.mutedForeground,
+                              fontSize: 18,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Progress Bar
+                    Slider(
+                      value: sliderValue,
+                      min: 0.0,
+                      max: 1.0,
+                      activeColor: colorScheme.foreground,
+                      inactiveColor: colorScheme.muted,
+                      onChanged: (val) {
+                        final newPos = Duration(milliseconds: (val * duration.inMilliseconds).round());
+                        audioNotifier.seek(newPos);
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(_formatDuration(position), style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12)),
+                        Text(_formatDuration(duration), style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12)),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Controls
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        IconButton(
+                          icon: Icon(LucideIcons.shuffle, color: colorScheme.mutedForeground),
+                          onPressed: () {},
+                        ),
+                        IconButton(
+                          icon: Icon(LucideIcons.skipBack, color: colorScheme.foreground),
+                          iconSize: 36,
+                          onPressed: () => audioNotifier.skipToPrevious(),
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: colorScheme.primary,
+                          ),
+                          child: IconButton(
+                            icon: Icon(
+                              audioState.isPlaying ? LucideIcons.pause : LucideIcons.play, 
+                              color: colorScheme.primaryForeground
+                            ),
+                            iconSize: 48,
+                            onPressed: () => audioNotifier.togglePlayPause(),
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(LucideIcons.skipForward, color: colorScheme.foreground),
+                          iconSize: 36,
+                          onPressed: () => audioNotifier.skipToNext(),
+                        ),
+                        IconButton(
+                          icon: Icon(LucideIcons.repeat, color: colorScheme.mutedForeground),
+                          onPressed: () {},
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

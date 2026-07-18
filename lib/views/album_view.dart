@@ -25,73 +25,90 @@ class AlbumView extends ConsumerWidget {
         return albumsAsync.when(
           data: (albums) {
             if (albums.isEmpty) {
-              return Center(child: Text('沒有找到專輯', style: TextStyle(color: colorScheme.mutedForeground)));
+              return Center(child: Text('沒有找到任何專輯', style: TextStyle(color: colorScheme.mutedForeground)));
             }
 
-            return GridView.builder(
-              padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3, // Change depending on screen width
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 0.8,
-              ),
-              itemCount: albums.length,
-              itemBuilder: (context, index) {
-                final album = albums[index];
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                int crossAxisCount = (constraints.maxWidth / 150).floor();
+                if (crossAxisCount < 2) crossAxisCount = 2;
                 
-                // Get cover art URL
-                final api = ref.watch(subsonicApiProvider);
-                final coverUrl = api != null && album['coverArt'] != null
-                    ? api.getCoverArtUrl(album['coverArt'])
-                    : null;
+                const double spacing = 32.0;
+                final double totalSpacing = spacing * (crossAxisCount - 1) + spacing * 2;
+                final double itemWidth = (constraints.maxWidth - totalSpacing) / crossAxisCount;
+                
+                // Image is square (itemWidth), text area takes ~48px
+                final double itemHeight = itemWidth + 48.0; 
+                final double childAspectRatio = itemWidth / itemHeight;
 
-                return InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AlbumDetailScreen(albumId: album['id']),
+                return GridView.builder(
+                  padding: const EdgeInsets.all(32.0),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    crossAxisSpacing: spacing,
+                    mainAxisSpacing: spacing,
+                    childAspectRatio: childAspectRatio,
+                  ),
+                  itemCount: albums.length,
+                  itemBuilder: (context, index) {
+                    final album = albums[index];
+                    
+                    final api = ref.watch(subsonicApiProvider);
+                    final coverUrl = api != null && album['coverArt'] != null
+                        ? api.getCoverArtUrl(album['coverArt'])
+                        : null;
+
+                    return InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AlbumDetailScreen(albumId: album['id']),
+                          ),
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AspectRatio(
+                            aspectRatio: 1.0,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: colorScheme.muted,
+                                borderRadius: BorderRadius.circular(8),
+                                image: coverUrl != null
+                                    ? DecorationImage(
+                                        image: NetworkImage(coverUrl),
+                                        fit: BoxFit.cover,
+                                      )
+                                    : null,
+                              ),
+                              child: coverUrl == null
+                                  ? Center(child: Icon(LucideIcons.music, color: colorScheme.mutedForeground, size: 40))
+                                  : null,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            album['name'] ?? '未知專輯',
+                            style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.bold, fontSize: 14),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.left,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            album['artist'] ?? '未知藝術家',
+                            style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.left,
+                          ),
+                        ],
                       ),
                     );
                   },
-                  borderRadius: BorderRadius.circular(8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: colorScheme.muted,
-                            borderRadius: BorderRadius.circular(8),
-                            image: coverUrl != null
-                                ? DecorationImage(
-                                    image: NetworkImage(coverUrl),
-                                    fit: BoxFit.cover,
-                                  )
-                                : null,
-                          ),
-                          child: coverUrl == null
-                              ? Center(child: Icon(LucideIcons.music, color: colorScheme.mutedForeground, size: 40))
-                              : null,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        album['name'] ?? '未知專輯',
-                        style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.bold),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        album['artist'] ?? '未知藝術家',
-                        style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
                 );
               },
             );

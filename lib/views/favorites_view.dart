@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:zenify/providers/audio_provider.dart';
 
 class FavoritesView extends ConsumerWidget {
   const FavoritesView({super.key});
@@ -75,7 +76,7 @@ class FavoritesView extends ConsumerWidget {
                   ),
                   trailing: Icon(LucideIcons.heart, color: colorScheme.primary),
                   onTap: () {
-                     // TODO: Play song
+                    ref.read(audioProvider.notifier).playQueue(songs, index);
                   },
                 );
               },
