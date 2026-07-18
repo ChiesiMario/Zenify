@@ -2,11 +2,15 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:zenify/providers/theme_provider.dart';
 import 'package:zenify/screens/home_screen.dart';
+import 'package:zenify/components/custom_title_bar.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
 
   // Initialize window_manager for desktop platforms
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
@@ -14,34 +18,123 @@ void main() async {
 
     WindowOptions windowOptions = const WindowOptions(
       size: Size(1024, 768),
-      minimumSize: Size(800, 600),
+      minimumSize: Size(400, 500),
       center: true,
       backgroundColor: Colors.transparent,
       skipTaskbar: false,
       titleBarStyle: TitleBarStyle.hidden,
       title: 'Zenify',
     );
+    
     windowManager.waitUntilReadyToShow(windowOptions, () async {
+      final double? x = prefs.getDouble('window_x');
+      final double? y = prefs.getDouble('window_y');
+      final double? width = prefs.getDouble('window_width');
+      final double? height = prefs.getDouble('window_height');
+
+      if (x != null && y != null && width != null && height != null) {
+        await windowManager.setBounds(Rect.fromLTWH(x, y, width, height));
+      } else {
+        await windowManager.setSize(const Size(1024, 768));
+        await windowManager.center();
+      }
+
       await windowManager.show();
       await windowManager.focus();
     });
   }
 
-  runApp(const ProviderScope(child: ZenifyApp()));
+  runApp(
+    ProviderScope(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+      ],
+      child: const ZenifyApp(),
+    ),
+  );
 }
 
-class ZenifyApp extends StatelessWidget {
+class ZenifyApp extends ConsumerStatefulWidget {
   const ZenifyApp({super.key});
 
   @override
+  ConsumerState<ZenifyApp> createState() => _ZenifyAppState();
+}
+
+class _ZenifyAppState extends ConsumerState<ZenifyApp> with WindowListener {
+  @override
+  void initState() {
+    super.initState();
+    windowManager.addListener(this);
+  }
+
+  @override
+  void dispose() {
+    windowManager.removeListener(this);
+    super.dispose();
+  }
+
+  Future<void> _saveWindowBounds() async {
+    final bounds = await windowManager.getBounds();
+    final prefs = ref.read(sharedPreferencesProvider);
+    await prefs.setDouble('window_x', bounds.left);
+    await prefs.setDouble('window_y', bounds.top);
+    await prefs.setDouble('window_width', bounds.width);
+    await prefs.setDouble('window_height', bounds.height);
+  }
+
+  @override
+  void onWindowMoved() {
+    _saveWindowBounds();
+  }
+
+  @override
+  void onWindowResized() {
+    _saveWindowBounds();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final themeMode = ref.watch(themeModeProvider);
+
     return ShadApp(
       title: 'Zenify',
-      themeMode: ThemeMode.dark, // Default to dark mode for Zenist style
+      themeMode: themeMode,
+      theme: ShadThemeData(
+        brightness: Brightness.light,
+        colorScheme: const ShadZincColorScheme.light(),
+      ),
       darkTheme: ShadThemeData(
         brightness: Brightness.dark,
         colorScheme: const ShadZincColorScheme.dark(),
       ),
+      builder: (context, child) {
+        final isDark = themeMode == ThemeMode.dark ||
+            (themeMode == ThemeMode.system &&
+                View.of(context).platformDispatcher.platformBrightness == Brightness.dark);
+        
+        return Directionality(
+          textDirection: TextDirection.ltr,
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 32.0),
+                child: child!,
+              ),
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 32.0,
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: CustomTitleBar(isDark: isDark),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
       home: const HomeScreen(),
     );
   }

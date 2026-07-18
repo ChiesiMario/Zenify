@@ -9,12 +9,14 @@ class AlbumView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final activeServer = ref.watch(activeServerProvider);
+    final theme = ShadTheme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return activeServer.when(
       data: (server) {
         if (server == null) {
-          return const Center(
-            child: Text('未連接伺服器，請先在右上角新增', style: TextStyle(color: Colors.white54)),
+          return Center(
+            child: Text('未連接伺服器，請先在右上角新增', style: TextStyle(color: colorScheme.mutedForeground)),
           );
         }
 
@@ -22,7 +24,7 @@ class AlbumView extends ConsumerWidget {
         return albumsAsync.when(
           data: (albums) {
             if (albums.isEmpty) {
-              return const Center(child: Text('沒有找到專輯', style: TextStyle(color: Colors.white54)));
+              return Center(child: Text('沒有找到專輯', style: TextStyle(color: colorScheme.mutedForeground)));
             }
 
             return GridView.builder(
@@ -49,7 +51,7 @@ class AlbumView extends ConsumerWidget {
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
-                          color: const Color(0xFF2C2C2C),
+                          color: colorScheme.muted,
                           borderRadius: BorderRadius.circular(8),
                           image: coverUrl != null
                               ? DecorationImage(
@@ -59,21 +61,21 @@ class AlbumView extends ConsumerWidget {
                               : null,
                         ),
                         child: coverUrl == null
-                            ? const Center(child: Icon(LucideIcons.music, color: Colors.white54, size: 40))
+                            ? Center(child: Icon(LucideIcons.music, color: colorScheme.mutedForeground, size: 40))
                             : null,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       album['name'] ?? '未知專輯',
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.bold),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Text(
                       album['artist'] ?? '未知藝術家',
-                      style: const TextStyle(color: Colors.white54, fontSize: 12),
+                      style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -82,12 +84,12 @@ class AlbumView extends ConsumerWidget {
               },
             );
           },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) => Center(child: Text('加載專輯失敗: $err', style: const TextStyle(color: Colors.redAccent))),
+          loading: () => Center(child: CircularProgressIndicator(color: colorScheme.foreground)),
+          error: (err, stack) => Center(child: Text('加載專輯失敗: $err', style: TextStyle(color: colorScheme.destructive))),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, stack) => const Center(child: Text('加載伺服器狀態失敗')),
+      loading: () => Center(child: CircularProgressIndicator(color: colorScheme.foreground)),
+      error: (err, stack) => Center(child: Text('加載伺服器狀態失敗', style: TextStyle(color: colorScheme.destructive))),
     );
   }
 }

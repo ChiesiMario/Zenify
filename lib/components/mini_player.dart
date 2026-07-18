@@ -17,13 +17,16 @@ class MiniPlayer extends ConsumerWidget {
       return const SizedBox.shrink(); // Don't show if nothing is playing
     }
 
+    final theme = ShadTheme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Container(
       height: 64,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: const BoxDecoration(
-        color: Color(0xFF1E1E1E),
+      decoration: BoxDecoration(
+        color: colorScheme.card, // Or background, using card gives slight distinction if they differ
         border: Border(
-          top: BorderSide(color: Color(0xFF2C2C2C), width: 1),
+          top: BorderSide(color: colorScheme.border, width: 1),
         ),
       ),
       child: Row(
@@ -33,10 +36,10 @@ class MiniPlayer extends ConsumerWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: const Color(0xFF2C2C2C),
+              color: colorScheme.muted,
               borderRadius: BorderRadius.circular(4),
             ),
-            child: const Icon(LucideIcons.music, color: Colors.white54),
+            child: Icon(LucideIcons.music, color: colorScheme.mutedForeground),
           ),
           const SizedBox(width: 12),
           // Song Info
@@ -47,13 +50,13 @@ class MiniPlayer extends ConsumerWidget {
               children: [
                 Text(
                   currentSong['title'] ?? '未知歌曲',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.bold),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   currentSong['artist'] ?? '未知藝術家',
-                  style: const TextStyle(color: Colors.white54, fontSize: 12),
+                  style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -69,21 +72,21 @@ class MiniPlayer extends ConsumerWidget {
               final playing = playerState?.playing;
               
               if (processingState == ProcessingState.loading || processingState == ProcessingState.buffering) {
-                return const Padding(
-                  padding: EdgeInsets.all(8.0),
+                return Padding(
+                  padding: const EdgeInsets.all(8.0),
                   child: SizedBox(
                     width: 24, height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    child: CircularProgressIndicator(strokeWidth: 2, color: colorScheme.foreground),
                   ),
                 );
               } else if (playing != true) {
                 return IconButton(
-                  icon: const Icon(LucideIcons.play, color: Colors.white),
+                  icon: Icon(LucideIcons.play, color: colorScheme.foreground),
                   onPressed: player.play,
                 );
               } else {
                 return IconButton(
-                  icon: const Icon(LucideIcons.pause, color: Colors.white),
+                  icon: Icon(LucideIcons.pause, color: colorScheme.foreground),
                   onPressed: player.pause,
                 );
               }

@@ -16,20 +16,22 @@ class _ServerManagementScreenState extends ConsumerState<ServerManagementScreen>
   @override
   Widget build(BuildContext context) {
     final serversAsync = ref.watch(serversListProvider);
+    final theme = ShadTheme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: colorScheme.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('伺服器管理', style: TextStyle(color: Colors.white)),
-        iconTheme: const IconThemeData(color: Colors.white),
+        title: Text('伺服器管理', style: TextStyle(color: colorScheme.foreground)),
+        iconTheme: IconThemeData(color: colorScheme.foreground),
       ),
       body: serversAsync.when(
         data: (servers) {
           if (servers.isEmpty) {
-            return const Center(
-              child: Text('目前沒有伺服器，請點擊右下角新增', style: TextStyle(color: Colors.white54)),
+            return Center(
+              child: Text('目前沒有伺服器，請點擊右下角新增', style: TextStyle(color: colorScheme.mutedForeground)),
             );
           }
           return ListView.builder(
@@ -37,9 +39,9 @@ class _ServerManagementScreenState extends ConsumerState<ServerManagementScreen>
             itemBuilder: (context, index) {
               final server = servers[index];
               return ListTile(
-                leading: Icon(LucideIcons.server, color: server.isActive ? Colors.green : Colors.white70),
-                title: Text(server.url, style: const TextStyle(color: Colors.white)),
-                subtitle: Text(server.username, style: const TextStyle(color: Colors.white54)),
+                leading: Icon(LucideIcons.server, color: server.isActive ? Colors.green : colorScheme.mutedForeground),
+                title: Text(server.url, style: TextStyle(color: colorScheme.foreground)),
+                subtitle: Text(server.username, style: TextStyle(color: colorScheme.mutedForeground)),
                 trailing: server.isActive
                     ? const Icon(LucideIcons.check, color: Colors.green)
                     : null,
@@ -56,13 +58,13 @@ class _ServerManagementScreenState extends ConsumerState<ServerManagementScreen>
                   showDialog(
                     context: context,
                     builder: (context) => AlertDialog(
-                      backgroundColor: const Color(0xFF1E1E1E),
-                      title: const Text('刪除伺服器', style: TextStyle(color: Colors.white)),
-                      content: const Text('確定要刪除這個伺服器嗎？', style: TextStyle(color: Colors.white70)),
+                      backgroundColor: colorScheme.card,
+                      title: Text('刪除伺服器', style: TextStyle(color: colorScheme.foreground)),
+                      content: Text('確定要刪除這個伺服器嗎？', style: TextStyle(color: colorScheme.mutedForeground)),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context),
-                          child: const Text('取消', style: TextStyle(color: Colors.white70)),
+                          child: Text('取消', style: TextStyle(color: colorScheme.mutedForeground)),
                         ),
                         TextButton(
                           onPressed: () async {
@@ -75,7 +77,7 @@ class _ServerManagementScreenState extends ConsumerState<ServerManagementScreen>
                               Navigator.pop(context);
                             }
                           },
-                          child: const Text('刪除'),
+                          child: Text('刪除', style: TextStyle(color: colorScheme.destructive)),
                         ),
                       ],
                     ),
@@ -85,15 +87,15 @@ class _ServerManagementScreenState extends ConsumerState<ServerManagementScreen>
             },
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('載入失敗: $err')),
+        loading: () => Center(child: CircularProgressIndicator(color: colorScheme.foreground)),
+        error: (err, stack) => Center(child: Text('載入失敗: $err', style: TextStyle(color: colorScheme.destructive))),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.white,
+        backgroundColor: colorScheme.primary,
         onPressed: () {
           _showAddServerDialog(context, ref);
         },
-        child: const Icon(LucideIcons.plus, color: Colors.black),
+        child: Icon(LucideIcons.plus, color: colorScheme.primaryForeground),
       ),
     );
   }
@@ -102,17 +104,19 @@ class _ServerManagementScreenState extends ConsumerState<ServerManagementScreen>
     final urlController = TextEditingController();
     final usernameController = TextEditingController();
     final passwordController = TextEditingController();
+    final theme = ShadTheme.of(context);
+    final colorScheme = theme.colorScheme;
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: const Color(0xFF1E1E1E),
-          title: const Text('新增伺服器', style: TextStyle(color: Colors.white)),
+          backgroundColor: colorScheme.card,
+          title: Text('新增伺服器', style: TextStyle(color: colorScheme.foreground)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('請輸入 Navidrome / Subsonic 伺服器資訊', style: TextStyle(color: Colors.white70)),
+              Text('請輸入 Navidrome / Subsonic 伺服器資訊', style: TextStyle(color: colorScheme.mutedForeground)),
               const SizedBox(height: 16),
               ShadInput(
                 controller: urlController,
@@ -134,7 +138,7 @@ class _ServerManagementScreenState extends ConsumerState<ServerManagementScreen>
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('取消', style: TextStyle(color: Colors.white70)),
+              child: Text('取消', style: TextStyle(color: colorScheme.mutedForeground)),
             ),
             TextButton(
               onPressed: () async {
@@ -158,7 +162,7 @@ class _ServerManagementScreenState extends ConsumerState<ServerManagementScreen>
                   Navigator.pop(context);
                 }
               },
-              child: const Text('儲存'),
+              child: Text('儲存', style: TextStyle(color: colorScheme.primary)),
             ),
           ],
         );

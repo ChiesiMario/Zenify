@@ -1,37 +1,48 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/screens/server_management_screen.dart';
 import 'package:zenify/views/album_view.dart';
 import 'package:zenify/components/mini_player.dart';
+import 'package:zenify/providers/theme_provider.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _views = [
     const AlbumView(),
-    const Center(child: Text('Artists', style: TextStyle(color: Colors.white))),
-    const Center(child: Text('Songs', style: TextStyle(color: Colors.white))),
-    const Center(child: Text('Favorites', style: TextStyle(color: Colors.white))),
+    const Center(child: Text('Artists')),
+    const Center(child: Text('Songs')),
+    const Center(child: Text('Favorites')),
   ];
 
   @override
   Widget build(BuildContext context) {
+    final theme = ShadTheme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: colorScheme.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('Zenify', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        title: Text('Zenify', style: TextStyle(fontWeight: FontWeight.bold, color: colorScheme.foreground)),
         actions: [
           IconButton(
-            icon: const Icon(LucideIcons.server, color: Colors.white70),
+            icon: Icon(LucideIcons.sunMoon, color: colorScheme.mutedForeground),
+            onPressed: () {
+              ref.read(themeModeProvider.notifier).toggleTheme();
+            },
+          ),
+          IconButton(
+            icon: Icon(LucideIcons.server, color: colorScheme.mutedForeground),
             onPressed: () {
               Navigator.push(
                 context,
@@ -47,15 +58,15 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           const MiniPlayer(),
           Container(
-            decoration: const BoxDecoration(
-              border: Border(top: BorderSide(color: Color(0xFF2C2C2C), width: 1)),
+            decoration: BoxDecoration(
+              border: Border(top: BorderSide(color: colorScheme.border, width: 1)),
             ),
             child: BottomNavigationBar(
               currentIndex: _currentIndex,
               onTap: (index) => setState(() => _currentIndex = index),
-              backgroundColor: const Color(0xFF1E1E1E),
-              selectedItemColor: Colors.white,
-              unselectedItemColor: Colors.white54,
+              backgroundColor: colorScheme.background,
+              selectedItemColor: colorScheme.foreground,
+              unselectedItemColor: colorScheme.mutedForeground,
               type: BottomNavigationBarType.fixed,
               showSelectedLabels: true,
               showUnselectedLabels: true,
