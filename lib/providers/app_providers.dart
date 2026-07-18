@@ -32,3 +32,21 @@ final albumsProvider = FutureProvider<List<dynamic>>((ref) async {
   return await api.getAlbumList(size: 50);
 });
 
+final artistsProvider = FutureProvider<List<dynamic>>((ref) async {
+  final api = ref.watch(subsonicApiProvider);
+  if (api == null) return [];
+  return await api.getArtists();
+});
+
+final favoritesProvider = FutureProvider<Map<String, List<dynamic>>>((ref) async {
+  final api = ref.watch(subsonicApiProvider);
+  if (api == null) return {'artists': [], 'albums': [], 'songs': []};
+  return await api.getStarred();
+});
+
+final albumDetailProvider = FutureProvider.family<Map<String, dynamic>?, String>((ref, id) async {
+  final api = ref.watch(subsonicApiProvider);
+  if (api == null) return null;
+  return await api.getAlbum(id);
+});
+

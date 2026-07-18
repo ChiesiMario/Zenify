@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/screens/server_management_screen.dart';
 import 'package:zenify/views/album_view.dart';
+import 'package:zenify/views/artists_view.dart';
+import 'package:zenify/views/songs_view.dart';
+import 'package:zenify/views/favorites_view.dart';
 import 'package:zenify/components/mini_player.dart';
 import 'package:zenify/providers/theme_provider.dart';
 
@@ -18,9 +21,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   final List<Widget> _views = [
     const AlbumView(),
-    const Center(child: Text('Artists')),
-    const Center(child: Text('Songs')),
-    const Center(child: Text('Favorites')),
+    const ArtistsView(),
+    const SongsView(),
+    const FavoritesView(),
   ];
 
   @override
