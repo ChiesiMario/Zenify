@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/providers/audio_provider.dart';
+import 'package:zenify/components/local_cover_image.dart';
 
 class FavoritesView extends ConsumerWidget {
   const FavoritesView({super.key});
@@ -55,16 +56,15 @@ class FavoritesView extends ConsumerWidget {
                     decoration: BoxDecoration(
                       color: colorScheme.muted,
                       borderRadius: BorderRadius.circular(4),
-                      image: coverUrl != null
-                          ? DecorationImage(
-                              image: NetworkImage(coverUrl),
-                              fit: BoxFit.cover,
-                            )
-                          : null,
                     ),
+                    clipBehavior: Clip.antiAlias,
                     child: coverUrl == null
                         ? Icon(LucideIcons.music, color: colorScheme.mutedForeground)
-                        : null,
+                        : LocalCoverImage(
+                            id: song['coverArt'],
+                            serverId: server.id,
+                            fallbackUrl: coverUrl,
+                          ),
                   ),
                   title: Text(
                     song['title'] ?? '未知歌曲',

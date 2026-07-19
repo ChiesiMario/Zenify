@@ -5,6 +5,7 @@ import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/audio_provider.dart';
 import 'package:zenify/components/mini_player.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:zenify/components/local_cover_image.dart';
 
 class AlbumDetailScreen extends ConsumerWidget {
   final String albumId;
@@ -23,6 +24,7 @@ class AlbumDetailScreen extends ConsumerWidget {
     final colorScheme = theme.colorScheme;
     final albumAsync = ref.watch(albumDetailProvider(albumId));
     final api = ref.watch(subsonicApiProvider);
+    final server = ref.watch(activeServerProvider).value;
 
     return Scaffold(
       backgroundColor: colorScheme.background,
@@ -62,11 +64,18 @@ class AlbumDetailScreen extends ConsumerWidget {
                       Positioned.fill(
                         child: ImageFiltered(
                           imageFilter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
-                          child: Image.network(
-                            coverUrl,
-                            fit: BoxFit.cover,
-                            color: colorScheme.background.withOpacity(0.5),
-                            colorBlendMode: BlendMode.darken,
+                          child: ColorFiltered(
+                            colorFilter: ColorFilter.mode(
+                              colorScheme.background.withOpacity(0.5),
+                              BlendMode.darken,
+                            ),
+                            child: LocalCoverImage(
+                              id: album['coverArt'],
+                              serverId: server?.id ?? 0,
+                              fallbackUrl: coverUrl,
+                              fit: BoxFit.cover,
+                              isThumb: false,
+                            ),
                           ),
                         ),
                       ),
@@ -91,16 +100,16 @@ class AlbumDetailScreen extends ConsumerWidget {
                                   offset: const Offset(0, 10),
                                 ),
                               ],
-                              image: coverUrl != null
-                                  ? DecorationImage(
-                                      image: NetworkImage(coverUrl),
-                                      fit: BoxFit.cover,
-                                    )
-                                  : null,
                             ),
+                            clipBehavior: Clip.antiAlias,
                             child: coverUrl == null
                                 ? Icon(LucideIcons.music, size: 64, color: colorScheme.mutedForeground)
-                                : null,
+                                : LocalCoverImage(
+                                    id: album['coverArt'],
+                                    serverId: server?.id ?? 0,
+                                    fallbackUrl: coverUrl,
+                                    isThumb: false,
+                                  ),
                           ),
                           const SizedBox(width: 32),
                           // Text Details

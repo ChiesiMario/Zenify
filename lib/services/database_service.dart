@@ -1,6 +1,8 @@
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:zenify/models/server.dart';
+import 'package:zenify/models/album.dart';
+import 'package:zenify/models/artist.dart';
 
 class DatabaseService {
   late Future<Isar> db;
@@ -13,7 +15,7 @@ class DatabaseService {
     if (Isar.instanceNames.isEmpty) {
       final dir = await getApplicationDocumentsDirectory();
       return await Isar.open(
-        [ServerSchema],
+        [ServerSchema, AlbumSchema, ArtistSchema],
         directory: dir.path,
         inspector: true,
       );
@@ -64,5 +66,45 @@ class DatabaseService {
         await isar.servers.put(server);
       }
     });
+  }
+
+  /// Get all albums for a server
+  Future<List<Album>> getAlbums(int serverId) async {
+    final isar = await db;
+    return await isar.albums.filter().serverIdEqualTo(serverId).findAll();
+  }
+
+  /// Save multiple albums
+  Future<void> saveAlbums(List<Album> albums) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      await isar.albums.putAll(albums);
+    });
+  }
+
+  /// Get all artists for a server
+  Future<List<Artist>> getArtists(int serverId) async {
+    final isar = await db;
+    return await isar.artists.filter().serverIdEqualTo(serverId).findAll();
+  }
+
+  /// Save multiple artists
+  Future<void> saveArtists(List<Artist> artists) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      await isar.artists.putAll(artists);
+    });
+  }
+
+  /// Get total album count for a server
+  Future<int> getAlbumCount(int serverId) async {
+    final isar = await db;
+    return await isar.albums.filter().serverIdEqualTo(serverId).count();
+  }
+
+  /// Get total artist count for a server
+  Future<int> getArtistCount(int serverId) async {
+    final isar = await db;
+    return await isar.artists.filter().serverIdEqualTo(serverId).count();
   }
 }

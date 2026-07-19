@@ -4,6 +4,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/providers/audio_provider.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/screens/full_player_screen.dart';
+import 'package:zenify/components/local_cover_image.dart';
 
 class MiniPlayer extends ConsumerWidget {
   const MiniPlayer({super.key});
@@ -13,6 +14,7 @@ class MiniPlayer extends ConsumerWidget {
     final audioState = ref.watch(audioProvider);
     final audioNotifier = ref.read(audioProvider.notifier);
     final api = ref.watch(subsonicApiProvider);
+    final server = ref.watch(activeServerProvider).value;
     final currentSong = audioState.currentSong;
 
     if (currentSong == null) {
@@ -46,16 +48,21 @@ class MiniPlayer extends ConsumerWidget {
         ),
         child: Row(
           children: [
-            // Album Art Placeholder or Icon
             Container(
               width: 48,
               height: 48,
               decoration: BoxDecoration(
                 color: colorScheme.muted,
                 borderRadius: BorderRadius.circular(4),
-                image: coverUrl != null ? DecorationImage(image: NetworkImage(coverUrl), fit: BoxFit.cover) : null,
               ),
-              child: coverUrl == null ? Icon(LucideIcons.music, color: colorScheme.mutedForeground) : null,
+              clipBehavior: Clip.antiAlias,
+              child: coverUrl == null
+                  ? Icon(LucideIcons.music, color: colorScheme.mutedForeground)
+                  : LocalCoverImage(
+                      id: currentSong['coverArt'],
+                      serverId: server?.id ?? 0,
+                      fallbackUrl: coverUrl,
+                    ),
             ),
             const SizedBox(width: 12),
             // Song Info

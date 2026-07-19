@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:zenify/components/local_cover_image.dart';
 
 class ArtistsView extends ConsumerWidget {
   const ArtistsView({super.key});
@@ -53,16 +54,15 @@ class ArtistsView extends ConsumerWidget {
                         decoration: BoxDecoration(
                           color: colorScheme.muted,
                           shape: BoxShape.circle,
-                          image: coverUrl != null
-                              ? DecorationImage(
-                                  image: NetworkImage(coverUrl),
-                                  fit: BoxFit.cover,
-                                )
-                              : null,
                         ),
+                        clipBehavior: Clip.antiAlias,
                         child: coverUrl == null
                             ? Center(child: Icon(LucideIcons.user, color: colorScheme.mutedForeground, size: 40))
-                            : null,
+                            : LocalCoverImage(
+                                id: artist['coverArt'],
+                                serverId: server.id,
+                                fallbackUrl: coverUrl,
+                              ),
                       ),
                     ),
                     const SizedBox(height: 8),

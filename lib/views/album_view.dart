@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/screens/album_detail_screen.dart';
-
+import 'package:zenify/components/local_cover_image.dart';
 class AlbumView extends ConsumerWidget {
   const AlbumView({super.key});
 
@@ -77,16 +77,15 @@ class AlbumView extends ConsumerWidget {
                               decoration: BoxDecoration(
                                 color: colorScheme.muted,
                                 borderRadius: BorderRadius.circular(8),
-                                image: coverUrl != null
-                                    ? DecorationImage(
-                                        image: NetworkImage(coverUrl),
-                                        fit: BoxFit.cover,
-                                      )
-                                    : null,
                               ),
+                              clipBehavior: Clip.antiAlias,
                               child: coverUrl == null
                                   ? Center(child: Icon(LucideIcons.music, color: colorScheme.mutedForeground, size: 40))
-                                  : null,
+                                  : LocalCoverImage(
+                                      id: album['coverArt'],
+                                      serverId: server.id,
+                                      fallbackUrl: coverUrl,
+                                    ),
                             ),
                           ),
                           const SizedBox(height: 8),

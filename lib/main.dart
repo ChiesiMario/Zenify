@@ -7,10 +7,17 @@ import 'package:window_manager/window_manager.dart';
 import 'package:zenify/providers/theme_provider.dart';
 import 'package:zenify/screens/home_screen.dart';
 import 'package:zenify/components/custom_title_bar.dart';
+import 'package:zenify/services/image_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // 限制全域圖片快取最大為 50 MB 與 100 張圖片，防止記憶體暴增
+  PaintingBinding.instance.imageCache.maximumSizeBytes = 50 * 1024 * 1024;
+  PaintingBinding.instance.imageCache.maximumSize = 100;
+  
   final prefs = await SharedPreferences.getInstance();
+  await ImageService().init();
 
   // Initialize window_manager for desktop platforms
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {

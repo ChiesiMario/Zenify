@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/providers/audio_provider.dart';
 import 'package:zenify/providers/app_providers.dart';
+import 'package:zenify/components/local_cover_image.dart';
 
 class FullPlayerScreen extends ConsumerWidget {
   const FullPlayerScreen({super.key});
@@ -18,6 +19,7 @@ class FullPlayerScreen extends ConsumerWidget {
     final audioState = ref.watch(audioProvider);
     final audioNotifier = ref.read(audioProvider.notifier);
     final api = ref.watch(subsonicApiProvider);
+    final server = ref.watch(activeServerProvider).value;
     final currentSong = audioState.currentSong;
     
     final theme = ShadTheme.of(context);
@@ -95,16 +97,16 @@ class FullPlayerScreen extends ConsumerWidget {
                                 offset: const Offset(0, 15),
                               ),
                             ],
-                            image: coverUrl != null 
-                              ? DecorationImage(
-                                  image: NetworkImage(coverUrl),
-                                  fit: BoxFit.cover,
-                                ) 
-                              : null,
                           ),
+                          clipBehavior: Clip.antiAlias,
                           child: coverUrl == null 
                               ? Center(child: Icon(LucideIcons.music, size: 80, color: colorScheme.mutedForeground))
-                              : null,
+                              : LocalCoverImage(
+                                  id: currentSong['coverArt'],
+                                  serverId: server?.id ?? 0,
+                                  fallbackUrl: coverUrl,
+                                  isThumb: false,
+                                ),
                         ),
                       ),
                     ),

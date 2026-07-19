@@ -80,11 +80,12 @@ class SubsonicApi {
   }
 
   /// Get Album List
-  Future<List<dynamic>> getAlbumList({String type = 'newest', int size = 20}) async {
+  Future<List<dynamic>> getAlbumList({String type = 'newest', int size = 20, int offset = 0}) async {
     try {
       final uri = _buildUri('getAlbumList2', {
         'type': type,
         'size': size.toString(),
+        'offset': offset.toString(),
       });
       final response = await http.get(uri);
       
