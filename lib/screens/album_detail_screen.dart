@@ -52,6 +52,21 @@ class AlbumDetailScreen extends ConsumerWidget {
           }
           final songList = songs as List<dynamic>? ?? [];
 
+          final Map<int, List<Map<String, dynamic>>> groupedSongs = {};
+          for (int i = 0; i < songList.length; i++) {
+            final song = songList[i];
+            final discNumber = song['discNumber'] as int? ?? 1;
+            if (!groupedSongs.containsKey(discNumber)) {
+              groupedSongs[discNumber] = [];
+            }
+            groupedSongs[discNumber]!.add({
+              'index': i,
+              'song': song,
+            });
+          }
+          final discNumbers = groupedSongs.keys.toList()..sort();
+          final hasMultipleDiscs = discNumbers.length > 1;
+
           return CustomScrollView(
             slivers: [
               // Header with blurred background
@@ -180,42 +195,69 @@ class AlbumDetailScreen extends ConsumerWidget {
               ),
 
               // Tracklist
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final song = songList[index];
-                    final duration = song['duration'] != null ? _formatDuration(song['duration']) : '--:--';
-                    
-                    return ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 4),
-                      leading: SizedBox(
-                        width: 40,
-                        child: Center(
-                          child: Text(
-                            song['track']?.toString() ?? '${index + 1}',
-                            style: TextStyle(color: colorScheme.mutedForeground),
-                          ),
+              ...discNumbers.expand((discNumber) {
+                final group = groupedSongs[discNumber]!;
+                return [
+                  if (hasMultipleDiscs)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(32, 24, 32, 8),
+                        child: Row(
+                          children: [
+                            Icon(LucideIcons.disc, size: 16, color: colorScheme.mutedForeground),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Disc $discNumber',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.mutedForeground,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      title: Text(
-                        song['title'] ?? '未知歌曲',
-                        style: TextStyle(color: colorScheme.foreground),
-                      ),
-                      subtitle: song['artist'] != album['artist']
-                          ? Text(song['artist'] ?? '', style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12))
-                          : null,
-                      trailing: Text(
-                        duration,
-                        style: TextStyle(color: colorScheme.mutedForeground),
-                      ),
-                      onTap: () {
-                        ref.read(audioProvider.notifier).playQueue(songList, index);
+                    ),
+                  SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, localIndex) {
+                        final item = group[localIndex];
+                        final int absoluteIndex = item['index'];
+                        final song = item['song'];
+                        final duration = song['duration'] != null ? _formatDuration(song['duration']) : '--:--';
+                        
+                        return ListTile(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 4),
+                          leading: SizedBox(
+                            width: 40,
+                            child: Center(
+                              child: Text(
+                                song['track']?.toString() ?? '${localIndex + 1}',
+                                style: TextStyle(color: colorScheme.mutedForeground),
+                              ),
+                            ),
+                          ),
+                          title: Text(
+                            song['title'] ?? '未知歌曲',
+                            style: TextStyle(color: colorScheme.foreground),
+                          ),
+                          subtitle: song['artist'] != album['artist']
+                              ? Text(song['artist'] ?? '', style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12))
+                              : null,
+                          trailing: Text(
+                            duration,
+                            style: TextStyle(color: colorScheme.mutedForeground),
+                          ),
+                          onTap: () {
+                            ref.read(audioProvider.notifier).playQueue(songList, absoluteIndex);
+                          },
+                        );
                       },
-                    );
-                  },
-                  childCount: songList.length,
-                ),
-              ),
+                      childCount: group.length,
+                    ),
+                  ),
+                ];
+              }),
               const SliverToBoxAdapter(child: SizedBox(height: 32)),
             ],
           );
