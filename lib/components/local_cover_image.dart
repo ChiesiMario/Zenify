@@ -6,7 +6,7 @@ import 'package:zenify/services/image_service.dart';
 class LocalCoverImage extends StatefulWidget {
   final String id;
   final int serverId;
-  final String fallbackUrl;
+  final String? fallbackUrl;
   final BoxFit fit;
   final bool isThumb;
 
@@ -14,7 +14,7 @@ class LocalCoverImage extends StatefulWidget {
     super.key,
     required this.id,
     required this.serverId,
-    required this.fallbackUrl,
+    this.fallbackUrl,
     this.fit = BoxFit.cover,
     this.isThumb = true,
   });
@@ -61,8 +61,10 @@ class _LocalCoverImageState extends State<LocalCoverImage> {
     try {
       final path = ImageService().getCoverPathSync(widget.id, widget.serverId, isThumb: widget.isThumb);
       final file = File(path);
-      
-      final success = await ImageService().downloadImage(widget.fallbackUrl, widget.id, widget.serverId, isThumb: widget.isThumb);
+      bool success = false;
+      if (widget.fallbackUrl != null && widget.fallbackUrl!.isNotEmpty) {
+        success = await ImageService().downloadImage(widget.fallbackUrl!, widget.id, widget.serverId, isThumb: widget.isThumb);
+      }
       if (mounted) {
         setState(() {
           _localFile = success ? file : null;

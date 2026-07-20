@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/audio_provider.dart';
-import 'package:zenify/components/mini_player.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/components/local_cover_image.dart';
 
@@ -217,14 +216,13 @@ class AlbumDetailScreen extends ConsumerWidget {
                   childCount: songList.length,
                 ),
               ),
-              const SliverToBoxAdapter(child: SizedBox(height: 100)), // Bottom padding for MiniPlayer
+              const SliverToBoxAdapter(child: SizedBox(height: 32)),
             ],
           );
         },
         loading: () => Center(child: CircularProgressIndicator(color: colorScheme.foreground)),
         error: (err, stack) => Center(child: Text('加載失敗: $err', style: TextStyle(color: colorScheme.destructive))),
       ),
-      bottomNavigationBar: const MiniPlayer(),
     );
   }
 }

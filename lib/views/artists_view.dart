@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/components/local_cover_image.dart';
+import 'package:zenify/screens/artist_detail_screen.dart';
 
 class ArtistsView extends ConsumerWidget {
   const ArtistsView({super.key});
@@ -46,33 +47,48 @@ class ArtistsView extends ConsumerWidget {
                     ? api.getCoverArtUrl(artist['coverArt'])
                     : null;
 
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: colorScheme.muted,
-                          shape: BoxShape.circle,
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ArtistDetailScreen(
+                          artistId: artist['id'],
+                          artistName: artist['name'] ?? '未知藝術家',
+                          coverUrl: coverUrl,
                         ),
-                        clipBehavior: Clip.antiAlias,
-                        child: coverUrl == null
-                            ? Center(child: Icon(LucideIcons.user, color: colorScheme.mutedForeground, size: 40))
-                            : LocalCoverImage(
-                                id: artist['coverArt'],
-                                serverId: server.id,
-                                fallbackUrl: coverUrl,
-                              ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      artist['name'] ?? '未知藝術家',
-                      style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.bold),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                    );
+                  },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: colorScheme.muted,
+                            shape: BoxShape.circle,
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: coverUrl == null
+                              ? Center(child: Icon(LucideIcons.user, color: colorScheme.mutedForeground, size: 40))
+                              : LocalCoverImage(
+                                  id: artist['coverArt'],
+                                  serverId: server.id,
+                                  fallbackUrl: coverUrl,
+                                  isThumb: true,
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        artist['name'] ?? '未知藝術家',
+                        style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.bold),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 );
               },
             );

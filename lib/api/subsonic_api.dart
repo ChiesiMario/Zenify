@@ -235,4 +235,68 @@ class SubsonicApi {
     }
     return _buildUri('getCoverArt', params).toString();
   }
+
+  /// Get Artist Details (with albums)
+  Future<Map<String, dynamic>?> getArtist(String id) async {
+    try {
+      final uri = _buildUri('getArtist', {'id': id});
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        final responseData = json['subsonic-response'];
+        if (responseData['status'] == 'ok') {
+          return responseData['artist'];
+        }
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Get Artist Info (Biography etc)
+  Future<Map<String, dynamic>?> getArtistInfo2(String id) async {
+    try {
+      final uri = _buildUri('getArtistInfo2', {'id': id});
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        final responseData = json['subsonic-response'];
+        if (responseData['status'] == 'ok') {
+          return responseData['artistInfo2'];
+        }
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Get Top Songs for an artist
+  Future<List<dynamic>> getTopSongs(String artistName, {int count = 10}) async {
+    try {
+      final uri = _buildUri('getTopSongs', {
+        'artist': artistName,
+        'count': count.toString(),
+      });
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        final responseData = json['subsonic-response'];
+        if (responseData['status'] == 'ok') {
+          final topSongsNode = responseData['topSongs'];
+          if (topSongsNode != null) {
+            var songList = topSongsNode['song'];
+            if (songList != null) {
+              if (songList is! List) songList = [songList];
+              return songList;
+            }
+          }
+        }
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
 }

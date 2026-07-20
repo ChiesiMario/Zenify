@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/screens/server_management_screen.dart';
@@ -22,6 +23,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _currentIndex = 0;
   final _popoverController = ShadPopoverController();
 
+  final List<GlobalKey<NavigatorState>> _navigatorKeys = [
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
+  ];
+
   final List<Widget> _views = [
     const AlbumView(),
     const ArtistsView(),
@@ -43,6 +51,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.dispose();
   }
 
+  Widget _buildTabNavigator(int index, Widget child) {
+    return Navigator(
+      key: _navigatorKeys[index],
+      onGenerateRoute: (settings) {
+        return MaterialPageRoute(
+          builder: (context) => child,
+          settings: settings,
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
@@ -52,9 +72,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Scaffold(
       backgroundColor: colorScheme.background,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: colorScheme.background,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         elevation: 0,
-        title: Text('Zenify', style: TextStyle(fontWeight: FontWeight.bold, color: colorScheme.foreground)),
+        title: Text('Zenify.', style: TextStyle(fontWeight: FontWeight.bold, color: colorScheme.foreground)),
         actions: [
           ShadPopover(
             controller: _popoverController,
@@ -83,7 +105,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ],
       ),
-      body: _views[_currentIndex],
+      body: PopScope(
+        canPop: false,
+        onPopInvoked: (didPop) async {
+          if (didPop) return;
+          
+          final navigator = _navigatorKeys[_currentIndex].currentState;
+          bool handled = false;
+          if (navigator != null) {
+            handled = await navigator.maybePop();
+          }
+          
+          if (!handled) {
+            if (_currentIndex != 0) {
+              setState(() {
+                _currentIndex = 0;
+              });
+            } else {
+              SystemNavigator.pop();
+            }
+          }
+        },
+        child: IndexedStack(
+          index: _currentIndex,
+          children: _views.asMap().entries.map((entry) {
+            return _buildTabNavigator(entry.key, entry.value);
+          }).toList(),
+        ),
+      ),
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -94,7 +143,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             child: BottomNavigationBar(
               currentIndex: _currentIndex,
-              onTap: (index) => setState(() => _currentIndex = index),
+              onTap: (index) {
+                if (_currentIndex == index) {
+                  _navigatorKeys[index].currentState?.popUntil((route) => route.isFirst);
+                } else {
+                  setState(() => _currentIndex = index);
+                }
+              },
               backgroundColor: colorScheme.background,
               selectedItemColor: colorScheme.foreground,
               unselectedItemColor: colorScheme.mutedForeground,
