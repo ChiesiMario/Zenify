@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/screens/search_screen.dart';
-import 'package:zenify/screens/server_management_screen.dart';
+import 'package:zenify/screens/settings_screen.dart';
 import 'package:zenify/views/album_view.dart';
 import 'package:zenify/views/artists_view.dart';
 import 'package:zenify/views/songs_view.dart';
@@ -170,7 +170,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
         actions: [
           IconButton(
-            icon: Icon(LucideIcons.search, color: colorScheme.foreground),
+            icon: Icon(LucideIcons.search, color: colorScheme.foreground, size: 20),
             onPressed: () {
               Navigator.push(
                 context,
@@ -182,24 +182,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             controller: _popoverController,
             popover: (context) => const SyncPopoverContent(),
             child: IconButton(
-              icon: Icon(LucideIcons.refreshCw, color: syncState.isSyncing ? colorScheme.primary : colorScheme.mutedForeground),
+              icon: Icon(LucideIcons.refreshCw, color: syncState.isSyncing ? colorScheme.primary : colorScheme.mutedForeground, size: 20),
               onPressed: () {
                 _popoverController.toggle();
               },
             ),
           ),
           IconButton(
-            icon: Icon(LucideIcons.sunMoon, color: colorScheme.mutedForeground),
-            onPressed: () {
-              ref.read(themeModeProvider.notifier).toggleTheme();
-            },
-          ),
-          IconButton(
-            icon: Icon(LucideIcons.server, color: colorScheme.mutedForeground),
+            icon: Icon(LucideIcons.settings, color: colorScheme.mutedForeground, size: 20),
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const ServerManagementScreen()),
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
               );
             },
           ),
