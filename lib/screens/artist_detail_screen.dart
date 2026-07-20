@@ -57,23 +57,11 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
           
           return CustomScrollView(
             slivers: [
-              // SliverAppBar for Cover Art
-              SliverAppBar(
-                expandedHeight: 300,
-                pinned: true,
-                backgroundColor: colorScheme.background,
-                surfaceTintColor: Colors.transparent,
-                flexibleSpace: FlexibleSpaceBar(
-                  titlePadding: const EdgeInsets.only(left: 16, bottom: 16),
-                  title: Text(
-                    name,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      shadows: [Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 4)],
-                    ),
-                  ),
-                  background: Stack(
+              // Cover Art
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 300,
+                  child: Stack(
                     fit: StackFit.expand,
                     children: [
                       LocalCoverImage(
@@ -96,14 +84,20 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
                           ),
                         ),
                       ),
+                      Positioned(
+                        left: 24,
+                        bottom: 24,
+                        child: Text(
+                          name,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            shadows: [Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 8)],
+                          ),
+                        ),
+                      ),
                     ],
-                  ),
-                ),
-                leading: IconButton(
-                  icon: const Icon(LucideIcons.arrowLeft, color: Colors.white),
-                  onPressed: () => Navigator.pop(context),
-                  style: IconButton.styleFrom(
-                    backgroundColor: Colors.black.withOpacity(0.3),
                   ),
                 ),
               ),

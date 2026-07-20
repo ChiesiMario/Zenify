@@ -19,8 +19,27 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
+class _TabObserver extends NavigatorObserver {
+  final VoidCallback onNavigated;
+  _TabObserver(this.onNavigated);
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) => onNavigated();
+  
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) => onNavigated();
+  
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) => onNavigated();
+  
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) => onNavigated();
+}
+
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _currentIndex = 0;
+  bool _canPop = false;
+  late final List<NavigatorObserver> _observers;
   final _popoverController = ShadPopoverController();
 
   final List<GlobalKey<NavigatorState>> _navigatorKeys = [
@@ -37,9 +56,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     const FavoritesView(),
   ];
 
+  void _updateCanPop() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final navigator = _navigatorKeys[_currentIndex].currentState;
+        final canPop = navigator?.canPop() ?? false;
+        if (_canPop != canPop) {
+          setState(() {
+            _canPop = canPop;
+          });
+        }
+      }
+    });
+  }
+
   @override
   void initState() {
     super.initState();
+    _observers = List.generate(4, (index) => _TabObserver(_updateCanPop));
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(syncProvider.notifier).startSync();
     });
@@ -54,6 +88,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildTabNavigator(int index, Widget child) {
     return Navigator(
       key: _navigatorKeys[index],
+      observers: [_observers[index]],
       onGenerateRoute: (settings) {
         return MaterialPageRoute(
           builder: (context) => child,
@@ -76,7 +111,56 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         surfaceTintColor: Colors.transparent,
         scrolledUnderElevation: 0,
         elevation: 0,
-        title: Text('Zenify.', style: TextStyle(fontWeight: FontWeight.bold, color: colorScheme.foreground)),
+        titleSpacing: 16,
+        automaticallyImplyLeading: false,
+        title: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 350),
+          layoutBuilder: (Widget? currentChild, List<Widget> previousChildren) {
+            return Stack(
+              alignment: Alignment.centerLeft,
+              children: <Widget>[
+                ...previousChildren,
+                if (currentChild != null) currentChild,
+              ],
+            );
+          },
+          transitionBuilder: (child, animation) {
+            final isBackBtn = child.key == const ValueKey('back_btn');
+            
+            final slideTween = isBackBtn
+                ? Tween<Offset>(begin: const Offset(0.15, 0.0), end: Offset.zero)
+                : Tween<Offset>(begin: const Offset(-0.15, 0.0), end: Offset.zero);
+
+            return FadeTransition(
+              opacity: CurvedAnimation(
+                parent: animation,
+                curve: const Interval(0.5, 1.0, curve: Curves.easeOut),
+              ),
+              child: SlideTransition(
+                position: slideTween.animate(CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeOutQuint, // very smooth deceleration
+                )),
+                child: child,
+              ),
+            );
+          },
+          child: _canPop
+              ? Container(
+                  key: const ValueKey('back_btn'),
+                  transform: Matrix4.translationValues(-8.0, 0.0, 0.0),
+                  child: IconButton(
+                    icon: Icon(LucideIcons.arrowLeft, color: colorScheme.foreground),
+                    onPressed: () {
+                      _navigatorKeys[_currentIndex].currentState?.maybePop();
+                    },
+                  ),
+                )
+              : Container(
+                  key: const ValueKey('title'),
+                  child: Text('Zenify.', style: TextStyle(fontWeight: FontWeight.bold, color: colorScheme.foreground)),
+                ),
+        ),
         actions: [
           ShadPopover(
             controller: _popoverController,
@@ -148,6 +232,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   _navigatorKeys[index].currentState?.popUntil((route) => route.isFirst);
                 } else {
                   setState(() => _currentIndex = index);
+                  _updateCanPop();
                 }
               },
               backgroundColor: colorScheme.background,
