@@ -109,7 +109,7 @@ class AudioNotifier extends Notifier<AudioState> {
         artUri: coverUrl != null ? Uri.parse(coverUrl) : null,
       );
 
-      await _player.setAudioSource(LockCachingAudioSource(
+      await _player.setAudioSource(AudioSource.uri(
         Uri.parse(url),
         tag: mediaItem,
       ));
