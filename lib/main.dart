@@ -9,9 +9,14 @@ import 'package:zenify/screens/home_screen.dart';
 import 'package:zenify/components/custom_title_bar.dart';
 import 'package:zenify/services/image_service.dart';
 import 'package:just_audio_background/just_audio_background.dart';
+import 'package:media_kit/media_kit.dart';
+import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  MediaKit.ensureInitialized();
+  JustAudioMediaKit.ensureInitialized();
   
   await JustAudioBackground.init(
     androidNotificationChannelId: 'com.ryanheise.bg_demo.channel.audio',

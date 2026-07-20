@@ -45,8 +45,11 @@ dependencies:
   http: ^1.6.0
   path_provider: ^2.1.6
   device_info_plus: ^13.2.0
-  just_audio_windows: ^0.2.3
   just_audio_background: ^0.0.1-beta.17
+  media_kit: ^1.2.6
+  media_kit_video: ^2.0.1
+  media_kit_libs_video: ^1.0.7
+  just_audio_media_kit: ^2.1.0
 
 dev_dependencies:
   flutter_test:

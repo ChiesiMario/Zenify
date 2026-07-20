@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/audio_provider.dart';
+import 'package:zenify/providers/download_provider.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/components/local_cover_image.dart';
 
@@ -235,9 +236,51 @@ class AlbumDetailScreen extends ConsumerWidget {
                           subtitle: song['artist'] != album['artist']
                               ? Text(song['artist'] ?? '', style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12))
                               : null,
-                          trailing: Text(
-                            duration,
-                            style: TextStyle(color: colorScheme.mutedForeground),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Consumer(
+                                builder: (context, ref, child) {
+                                  final songId = song['id'].toString();
+                                  final progressMap = ref.watch(downloadProgressProvider);
+                                  final tracksAsync = ref.watch(downloadedTracksProvider);
+                                  
+                                  final isDownloaded = tracksAsync.when(
+                                    data: (tracks) => tracks.any((t) => t.songId == songId),
+                                    loading: () => false,
+                                    error: (_, __) => false,
+                                  );
+
+                                  if (isDownloaded) {
+                                    return Icon(LucideIcons.checkCircle2, color: colorScheme.primary, size: 20);
+                                  }
+
+                                  final progress = progressMap[songId];
+                                  if (progress != null && progress < 1.0) {
+                                    return SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(value: progress, strokeWidth: 2, color: colorScheme.primary),
+                                    );
+                                  }
+
+                                  return IconButton(
+                                    icon: Icon(LucideIcons.downloadCloud, color: colorScheme.mutedForeground, size: 20),
+                                    onPressed: () {
+                                      if (server != null) {
+                                        ref.read(downloadServiceProvider).downloadSong(song, server.id);
+                                      }
+                                    },
+                                    tooltip: '下載歌曲',
+                                  );
+                                },
+                              ),
+                              const SizedBox(width: 16),
+                              Text(
+                                duration,
+                                style: TextStyle(color: colorScheme.mutedForeground),
+                              ),
+                            ],
                           ),
                           onTap: () {
                             ref.read(audioProvider.notifier).playQueue(songList, absoluteIndex);

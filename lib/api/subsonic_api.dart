@@ -376,4 +376,26 @@ class SubsonicApi {
       return null;
     }
   }
+
+  /// Scrobble a song
+  Future<void> scrobble({required String id, bool submission = true}) async {
+    try {
+      final time = DateTime.now().millisecondsSinceEpoch;
+      final uri = _buildUri('scrobble', {
+        'id': id,
+        'time': time.toString(),
+        'submission': submission ? 'true' : 'false',
+      });
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        final responseData = json['subsonic-response'];
+        if (responseData['status'] != 'ok') {
+          print('Subsonic API Error (Scrobble): ${responseData['error']}');
+        }
+      }
+    } catch (e) {
+      print('Exception in scrobble: $e');
+    }
+  }
 }

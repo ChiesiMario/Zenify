@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:zenify/providers/app_providers.dart';
+import 'dart:io';
 
 class AudioState {
   final List<dynamic> queue;
@@ -43,6 +44,7 @@ class AudioState {
 
 class AudioNotifier extends Notifier<AudioState> {
   final AudioPlayer _player = AudioPlayer();
+  bool _hasScrobbledCurrent = false;
 
   @override
   AudioState build() {
@@ -72,6 +74,17 @@ class AudioNotifier extends Notifier<AudioState> {
 
     _player.positionStream.listen((pos) {
       this.state = this.state.copyWith(position: pos);
+      
+      final dur = state.duration;
+      if (dur.inMilliseconds > 0 && pos.inMilliseconds > dur.inMilliseconds / 2) {
+        if (!_hasScrobbledCurrent && state.currentSong != null) {
+          _hasScrobbledCurrent = true;
+          final api = ref.read(subsonicApiProvider);
+          if (api != null) {
+            api.scrobble(id: state.currentSong['id'].toString(), submission: true);
+          }
+        }
+      }
     });
 
     _player.durationStream.listen((dur) {
@@ -109,10 +122,29 @@ class AudioNotifier extends Notifier<AudioState> {
         artUri: coverUrl != null ? Uri.parse(coverUrl) : null,
       );
 
-      await _player.setAudioSource(AudioSource.uri(
-        Uri.parse(url),
-        tag: mediaItem,
-      ));
+      // Check if downloaded
+      final db = ref.read(databaseProvider);
+      final downloadedTrack = await db.getDownloadedTrack(song['id'].toString());
+      
+      AudioSource audioSource;
+      if (downloadedTrack != null && File(downloadedTrack.localPath).existsSync()) {
+        audioSource = AudioSource.file(
+          downloadedTrack.localPath,
+          tag: mediaItem,
+        );
+      } else {
+        audioSource = AudioSource.uri(
+          Uri.parse(url),
+          tag: mediaItem,
+        );
+      }
+
+      await _player.setAudioSource(audioSource);
+      
+      // Send Now Playing scrobble
+      _hasScrobbledCurrent = false;
+      api.scrobble(id: song['id'].toString(), submission: false);
+      
       _player.play();
     } catch (e) {
       print('AudioPlayer Error in _playIndex: $e');

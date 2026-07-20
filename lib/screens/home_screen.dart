@@ -9,6 +9,7 @@ import 'package:zenify/views/artists_view.dart';
 import 'package:zenify/views/songs_view.dart';
 import 'package:zenify/views/favorites_view.dart';
 import 'package:zenify/views/playlists_view.dart';
+import 'package:zenify/views/downloads_view.dart';
 import 'package:zenify/components/mini_player.dart';
 import 'package:zenify/providers/theme_provider.dart';
 import 'package:zenify/services/sync_service.dart';
@@ -50,6 +51,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
   ];
 
   final List<Widget> _views = [
@@ -58,6 +60,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     const SongsView(),
     const PlaylistsView(),
     const FavoritesView(),
+    const DownloadsView(),
   ];
 
   void _updateCanPop() {
@@ -77,7 +80,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _observers = List.generate(5, (index) => _TabObserver(_updateCanPop));
+    _observers = List.generate(6, (index) => _TabObserver(_updateCanPop));
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(syncProvider.notifier).startSync();
     });
@@ -274,6 +277,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 BottomNavigationBarItem(
                   icon: Icon(LucideIcons.heart),
                   label: '喜愛',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(LucideIcons.downloadCloud),
+                  label: '下載',
                 ),
               ],
             ),

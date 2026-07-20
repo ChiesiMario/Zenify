@@ -3,6 +3,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:zenify/models/server.dart';
 import 'package:zenify/models/album.dart';
 import 'package:zenify/models/artist.dart';
+import 'package:zenify/models/downloaded_track.dart';
 
 class DatabaseService {
   late Future<Isar> db;
@@ -15,7 +16,7 @@ class DatabaseService {
     if (Isar.instanceNames.isEmpty) {
       final dir = await getApplicationDocumentsDirectory();
       return await Isar.open(
-        [ServerSchema, AlbumSchema, ArtistSchema],
+        [ServerSchema, AlbumSchema, ArtistSchema, DownloadedTrackSchema],
         directory: dir.path,
         inspector: true,
       );
@@ -106,5 +107,33 @@ class DatabaseService {
   Future<int> getArtistCount(int serverId) async {
     final isar = await db;
     return await isar.artists.filter().serverIdEqualTo(serverId).count();
+  }
+
+  /// Get all downloaded tracks for a server
+  Future<List<DownloadedTrack>> getDownloadedTracks(int serverId) async {
+    final isar = await db;
+    return await isar.downloadedTracks.filter().serverIdEqualTo(serverId).findAll();
+  }
+
+  /// Get a single downloaded track by song ID
+  Future<DownloadedTrack?> getDownloadedTrack(String songId) async {
+    final isar = await db;
+    return await isar.downloadedTracks.filter().songIdEqualTo(songId).findFirst();
+  }
+
+  /// Save or update a downloaded track
+  Future<void> saveDownloadedTrack(DownloadedTrack track) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      await isar.downloadedTracks.put(track);
+    });
+  }
+
+  /// Delete a downloaded track by ID (local path needs to be deleted separately)
+  Future<void> deleteDownloadedTrack(Id id) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      await isar.downloadedTracks.delete(id);
+    });
   }
 }
