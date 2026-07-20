@@ -8,9 +8,16 @@ import 'package:zenify/providers/theme_provider.dart';
 import 'package:zenify/screens/home_screen.dart';
 import 'package:zenify/components/custom_title_bar.dart';
 import 'package:zenify/services/image_service.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  await JustAudioBackground.init(
+    androidNotificationChannelId: 'com.ryanheise.bg_demo.channel.audio',
+    androidNotificationChannelName: 'Audio playback',
+    androidNotificationOngoing: true,
+  );
   
   // 限制全域圖片快取最大為 50 MB 與 100 張圖片，防止記憶體暴增
   PaintingBinding.instance.imageCache.maximumSizeBytes = 50 * 1024 * 1024;

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 import 'package:zenify/providers/app_providers.dart';
 
 class AudioState {
@@ -97,8 +98,21 @@ class AudioNotifier extends Notifier<AudioState> {
       this.state = this.state.copyWith(currentIndex: index);
       final song = state.queue[index];
       final url = api.getStreamUrl(song['id'].toString());
+      final coverId = song['coverArt'] ?? song['albumId'];
+      final coverUrl = coverId != null ? api.getCoverArtUrl(coverId) : null;
       
-      await _player.setAudioSource(AudioSource.uri(Uri.parse(url)));
+      final mediaItem = MediaItem(
+        id: song['id'].toString(),
+        album: song['album']?.toString(),
+        title: song['title']?.toString() ?? 'Unknown',
+        artist: song['artist']?.toString(),
+        artUri: coverUrl != null ? Uri.parse(coverUrl) : null,
+      );
+
+      await _player.setAudioSource(LockCachingAudioSource(
+        Uri.parse(url),
+        tag: mediaItem,
+      ));
       _player.play();
     } catch (e) {
       print('AudioPlayer Error in _playIndex: $e');

@@ -299,4 +299,81 @@ class SubsonicApi {
       return [];
     }
   }
+  /// Global Search (search3)
+  Future<Map<String, List<dynamic>>> search3(String query, {int count = 20}) async {
+    try {
+      final uri = _buildUri('search3', {
+        'query': query,
+        'artistCount': count.toString(),
+        'albumCount': count.toString(),
+        'songCount': count.toString(),
+      });
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        final responseData = json['subsonic-response'];
+        if (responseData['status'] == 'ok') {
+          final searchResult = responseData['searchResult3'] ?? {};
+          
+          List<dynamic> _ensureList(dynamic data) {
+            if (data == null) return [];
+            if (data is List) return data;
+            return [data];
+          }
+
+          return {
+            'artists': _ensureList(searchResult['artist']),
+            'albums': _ensureList(searchResult['album']),
+            'songs': _ensureList(searchResult['song']),
+          };
+        }
+      }
+      return {'artists': [], 'albums': [], 'songs': []};
+    } catch (e) {
+      return {'artists': [], 'albums': [], 'songs': []};
+    }
+  }
+
+  /// Get all Playlists
+  Future<List<dynamic>> getPlaylists() async {
+    try {
+      final uri = _buildUri('getPlaylists');
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        final responseData = json['subsonic-response'];
+        if (responseData['status'] == 'ok') {
+          final playlistsNode = responseData['playlists'];
+          if (playlistsNode != null) {
+            var playlistList = playlistsNode['playlist'];
+            if (playlistList != null) {
+              if (playlistList is! List) playlistList = [playlistList];
+              return playlistList;
+            }
+          }
+        }
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /// Get details of a single Playlist (including songs)
+  Future<Map<String, dynamic>?> getPlaylist(String id) async {
+    try {
+      final uri = _buildUri('getPlaylist', {'id': id});
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        final responseData = json['subsonic-response'];
+        if (responseData['status'] == 'ok') {
+          return responseData['playlist'];
+        }
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
 }
