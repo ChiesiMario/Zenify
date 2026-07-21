@@ -119,13 +119,22 @@ class _ZenifyAppState extends ConsumerState<ZenifyApp> with WindowListener {
     return ShadApp(
       title: 'Zenify',
       themeMode: themeMode,
+      materialThemeBuilder: (context, theme) => theme.copyWith(
+        textTheme: theme.textTheme.apply(fontFamilyFallback: ['NotoSansSC']),
+      ),
       theme: ShadThemeData(
         brightness: Brightness.light,
         colorScheme: const ShadZincColorScheme.light(),
+        textTheme: ShadTextTheme(
+          family: 'NotoSansTC',
+        ),
       ),
       darkTheme: ShadThemeData(
         brightness: Brightness.dark,
         colorScheme: const ShadZincColorScheme.dark(),
+        textTheme: ShadTextTheme(
+          family: 'NotoSansTC',
+        ),
       ),
       builder: (context, child) {
         final isDark = themeMode == ThemeMode.dark ||
@@ -134,12 +143,17 @@ class _ZenifyAppState extends ConsumerState<ZenifyApp> with WindowListener {
         
         return Directionality(
           textDirection: TextDirection.ltr,
-          child: Stack(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 32.0),
-                child: child!,
-              ),
+          child: DefaultTextStyle(
+            style: const TextStyle(
+              fontFamily: 'NotoSansTC',
+              fontFamilyFallback: ['NotoSansSC'],
+            ),
+            child: Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 32.0),
+                  child: child!,
+                ),
               Positioned(
                 top: 0,
                 left: 0,
@@ -152,8 +166,9 @@ class _ZenifyAppState extends ConsumerState<ZenifyApp> with WindowListener {
               ),
             ],
           ),
-        );
-      },
+        ),
+      );
+    },
       home: const HomeScreen(),
     );
   }

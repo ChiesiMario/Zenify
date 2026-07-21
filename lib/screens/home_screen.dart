@@ -11,9 +11,10 @@ import 'package:zenify/views/favorites_view.dart';
 import 'package:zenify/views/playlists_view.dart';
 import 'package:zenify/views/downloads_view.dart';
 import 'package:zenify/components/mini_player.dart';
-import 'package:zenify/providers/theme_provider.dart';
+
 import 'package:zenify/services/sync_service.dart';
 import 'package:zenify/providers/app_providers.dart';
+import 'package:zenify/providers/sort_providers.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -44,6 +45,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _canPop = false;
   late final List<NavigatorObserver> _observers;
   final _popoverController = ShadPopoverController();
+  final _sortPopoverController = ShadPopoverController();
 
   final List<GlobalKey<NavigatorState>> _navigatorKeys = [
     GlobalKey<NavigatorState>(),
@@ -89,6 +91,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void dispose() {
     _popoverController.dispose();
+    _sortPopoverController.dispose();
     super.dispose();
   }
 
@@ -169,6 +172,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
         ),
         actions: [
+          if (_currentIndex == 0 || _currentIndex == 1)
+            ShadPopover(
+              controller: _sortPopoverController,
+              popover: (context) => SortPopoverContent(
+                currentIndex: _currentIndex,
+                onClose: () => _sortPopoverController.hide(),
+              ),
+              child: IconButton(
+                icon: Icon(LucideIcons.arrowUpDown, color: colorScheme.foreground, size: 20),
+                onPressed: () {
+                  _sortPopoverController.toggle();
+                },
+              ),
+            ),
           IconButton(
             icon: Icon(LucideIcons.search, color: colorScheme.foreground, size: 20),
             onPressed: () {
@@ -369,6 +386,121 @@ class SyncPopoverContent extends ConsumerWidget {
         Text(label, style: TextStyle(color: colorScheme.mutedForeground)),
         Text(value, style: TextStyle(fontWeight: FontWeight.bold, color: colorScheme.popoverForeground)),
       ],
+    );
+  }
+}
+
+class SortPopoverContent extends ConsumerWidget {
+  final int currentIndex;
+  final VoidCallback onClose;
+
+  const SortPopoverContent({super.key, required this.currentIndex, required this.onClose});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = ShadTheme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    if (currentIndex == 0) {
+      final currentSort = ref.watch(albumSortProvider);
+      return _buildMenu<AlbumSortOption>(
+        context, ref, colorScheme, currentSort,
+        [
+          (AlbumSortOption.defaultOrder, '預設排序'),
+          (AlbumSortOption.nameAsc, '名稱 (A-Z)'),
+          (AlbumSortOption.nameDesc, '名稱 (Z-A)'),
+          (AlbumSortOption.yearDesc, '年份 (新到舊)'),
+          (AlbumSortOption.yearAsc, '年份 (舊到新)'),
+          (AlbumSortOption.random, '隨機排列'),
+        ]
+      );
+    } else if (currentIndex == 1) {
+      final currentSort = ref.watch(artistSortProvider);
+      return _buildMenu<ArtistSortOption>(
+        context, ref, colorScheme, currentSort,
+        [
+          (ArtistSortOption.defaultOrder, '預設排序'),
+          (ArtistSortOption.nameAsc, '名稱 (A-Z)'),
+          (ArtistSortOption.nameDesc, '名稱 (Z-A)'),
+          (ArtistSortOption.albumCountDesc, '專輯數量 (多到少)'),
+          (ArtistSortOption.random, '隨機排列'),
+        ]
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+
+  Widget _buildMenu<T>(
+    BuildContext context, 
+    WidgetRef ref, 
+    ShadColorScheme colorScheme, 
+    T currentValue,
+    List<(T, String)> options,
+  ) {
+    return Container(
+      width: 200,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        color: colorScheme.popover,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: colorScheme.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: options.map((option) => _buildOption<T>(
+          context, ref, option.$2, option.$1, currentValue, colorScheme
+        )).toList(),
+      ),
+    );
+  }
+
+  Widget _buildOption<T>(
+    BuildContext context, 
+    WidgetRef ref, 
+    String label, 
+    T value, 
+    T currentValue,
+    ShadColorScheme colorScheme,
+  ) {
+    final isSelected = value == currentValue;
+    return InkWell(
+      onTap: () {
+        if (value is AlbumSortOption) {
+          ref.read(albumSortProvider.notifier).state = value;
+        } else if (value is ArtistSortOption) {
+          ref.read(artistSortProvider.notifier).state = value;
+        }
+        onClose();
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        color: isSelected ? colorScheme.accent : Colors.transparent,
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? colorScheme.accentForeground : colorScheme.popoverForeground,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+            ),
+            if (isSelected)
+              Icon(LucideIcons.check, size: 16, color: colorScheme.accentForeground),
+          ],
+        ),
+      ),
     );
   }
 }

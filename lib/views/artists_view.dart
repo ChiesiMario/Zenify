@@ -4,7 +4,7 @@ import 'package:zenify/providers/app_providers.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/components/local_cover_image.dart';
 import 'package:zenify/screens/artist_detail_screen.dart';
-import 'package:zenify/providers/sort_providers.dart';
+
 
 class ArtistsView extends ConsumerWidget {
   const ArtistsView({super.key});
@@ -32,39 +32,7 @@ class ArtistsView extends ConsumerWidget {
 
             return Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(32, 16, 32, 0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      ShadSelect<ArtistSortOption>(
-                        placeholder: const Text('排序方式'),
-                        initialValue: ref.read(artistSortProvider),
-                        onChanged: (value) {
-                          if (value != null) {
-                            ref.read(artistSortProvider.notifier).state = value;
-                          }
-                        },
-                        options: [
-                          const ShadOption(value: ArtistSortOption.defaultOrder, child: Text('預設排序')),
-                          const ShadOption(value: ArtistSortOption.nameAsc, child: Text('名稱 (A-Z)')),
-                          const ShadOption(value: ArtistSortOption.nameDesc, child: Text('名稱 (Z-A)')),
-                          const ShadOption(value: ArtistSortOption.albumCountDesc, child: Text('專輯數量 (多到少)')),
-                          const ShadOption(value: ArtistSortOption.random, child: Text('隨機排列')),
-                        ],
-                        selectedOptionBuilder: (context, value) {
-                          switch (value) {
-                            case ArtistSortOption.nameAsc: return const Text('名稱 (A-Z)');
-                            case ArtistSortOption.nameDesc: return const Text('名稱 (Z-A)');
-                            case ArtistSortOption.albumCountDesc: return const Text('專輯數量 (多到少)');
-                            case ArtistSortOption.random: return const Text('隨機排列');
-                            default: return const Text('預設排序');
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                ),
+
                 Expanded(
                   child: GridView.builder(
               padding: const EdgeInsets.all(16),
