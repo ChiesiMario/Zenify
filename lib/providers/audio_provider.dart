@@ -9,6 +9,7 @@ import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/download_provider.dart';
 import 'package:zenify/providers/theme_provider.dart';
 import 'package:zenify/utils/zenify_caching_audio_source.dart';
+import 'package:zenify/api/subsonic_api.dart';
 
 enum AudioRepeatMode { off, all, one }
 
@@ -69,7 +70,6 @@ class AudioNotifier extends Notifier<AudioState> {
 
   @override
   AudioState build() {
-    _init();
     ref.onDispose(() {
       _player.dispose();
     });
@@ -103,13 +103,19 @@ class AudioNotifier extends Notifier<AudioState> {
     // Ensure index is valid
     if (currentIndex >= queue.length) currentIndex = -1;
 
-    return AudioState(
+    final initialState = AudioState(
       queue: queue,
       originalQueue: originalQueue,
       currentIndex: currentIndex,
       isShuffled: savedShuffle,
       repeatMode: repeatMode,
     );
+
+    Future.microtask(() {
+      _init();
+    });
+
+    return initialState;
   }
 
   void _saveQueueState() {
@@ -237,8 +243,12 @@ class AudioNotifier extends Notifier<AudioState> {
     if (index < 0 || index >= state.queue.length) return;
     
     try {
-      final api = ref.read(subsonicApiProvider);
-      if (api == null) return;
+      SubsonicApi? api = ref.read(subsonicApiProvider);
+      if (api == null) {
+        final server = await ref.read(activeServerProvider.future);
+        if (server == null) return;
+        api = SubsonicApi(server);
+      }
       this.state = this.state.copyWith(currentIndex: index);
       _saveQueueState();
       
