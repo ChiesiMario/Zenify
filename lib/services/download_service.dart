@@ -17,9 +17,9 @@ class DownloadService {
     if (_api == null) return;
     final songId = song['id'].toString();
 
-    // Check if already downloaded
+    // Check if already completely downloaded
     final existing = await _db.getDownloadedTrack(songId);
-    if (existing != null) return;
+    if (existing != null && existing.isComplete) return;
 
     final dir = await getApplicationDocumentsDirectory();
     final downloadDir = Directory('${dir.path}/zenify_downloads');

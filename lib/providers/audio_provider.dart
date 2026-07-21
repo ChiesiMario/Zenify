@@ -1,8 +1,13 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:zenify/models/downloaded_track.dart';
 import 'package:zenify/providers/app_providers.dart';
-import 'dart:io';
+import 'package:zenify/providers/download_provider.dart';
+import 'package:zenify/utils/zenify_caching_audio_source.dart';
 
 class AudioState {
   final List<dynamic> queue;
@@ -45,6 +50,7 @@ class AudioState {
 class AudioNotifier extends Notifier<AudioState> {
   final AudioPlayer _player = AudioPlayer();
   bool _hasScrobbledCurrent = false;
+  bool _isCachingCurrentSong = false;
 
   @override
   AudioState build() {
@@ -92,6 +98,29 @@ class AudioNotifier extends Notifier<AudioState> {
         this.state = this.state.copyWith(duration: dur);
       }
     });
+
+    _player.bufferedPositionStream.listen((bufferedPosition) async {
+      if (_isCachingCurrentSong) {
+        final dur = state.duration;
+        // If buffered position is very close to or exceeds duration
+        if (dur.inMilliseconds > 0 && bufferedPosition.inMilliseconds >= dur.inMilliseconds - 200) {
+          _isCachingCurrentSong = false;
+          final current = state.currentSong;
+          if (current != null) {
+            final songId = current['id'].toString();
+            final db = ref.read(databaseProvider);
+            final track = await db.getDownloadedTrack(songId);
+            if (track != null && !track.isComplete) {
+              track.isComplete = true;
+              try {
+                track.sizeBytes = File(track.localPath).lengthSync();
+              } catch (_) {}
+              await db.saveDownloadedTrack(track);
+            }
+          }
+        }
+      }
+    });
   }
 
   Future<void> playQueue(List<dynamic> songs, int initialIndex) async {
@@ -127,16 +156,69 @@ class AudioNotifier extends Notifier<AudioState> {
       final downloadedTrack = await db.getDownloadedTrack(song['id'].toString());
       
       AudioSource audioSource;
-      if (downloadedTrack != null && File(downloadedTrack.localPath).existsSync()) {
+      _isCachingCurrentSong = false;
+      
+      if (downloadedTrack != null && downloadedTrack.isComplete && File(downloadedTrack.localPath).existsSync()) {
         audioSource = AudioSource.file(
           downloadedTrack.localPath,
           tag: mediaItem,
         );
       } else {
-        audioSource = AudioSource.uri(
+        final dir = await getApplicationDocumentsDirectory();
+        final downloadDir = Directory('${dir.path}/zenify_downloads');
+        if (!downloadDir.existsSync()) {
+          downloadDir.createSync(recursive: true);
+        }
+        final localPath = '${downloadDir.path}/${song['id']}.mp3';
+
+        final zenifySource = ZenifyCachingAudioSource(
           Uri.parse(url),
+          cacheFile: File(localPath),
           tag: mediaItem,
         );
+        audioSource = zenifySource;
+        _isCachingCurrentSong = true;
+
+        zenifySource.downloadProgressStream.listen((progress) async {
+          if (progress >= 1.0) {
+             final db = ref.read(databaseProvider);
+             final dt = await db.getDownloadedTrack(song['id'].toString());
+             if (dt != null && !dt.isComplete) {
+                dt.isComplete = true;
+                final file = File(dt.localPath);
+                if (file.existsSync()) {
+                  dt.sizeBytes = file.lengthSync();
+                }
+                await db.saveDownloadedTrack(dt);
+                ref.invalidate(downloadedTracksProvider);
+             }
+          }
+        });
+
+        if (downloadedTrack == null) {
+          final server = await db.getActiveServer();
+          final serverId = server?.id ?? 0;
+          
+          final track = DownloadedTrack()
+            ..songId = song['id'].toString()
+            ..serverId = serverId
+            ..title = song['title'] ?? 'Unknown'
+            ..artist = song['artist'] ?? 'Unknown'
+            ..album = song['album']
+            ..albumId = song['albumId']?.toString()
+            ..coverArt = song['coverArt']
+            ..duration = song['duration'] ?? 0
+            ..localPath = localPath
+            ..sizeBytes = 0
+            ..downloadedAt = DateTime.now()
+            ..rawData = jsonEncode(song)
+            ..isComplete = false;
+
+          await db.saveDownloadedTrack(track);
+        } else if (!downloadedTrack.isComplete) {
+          downloadedTrack.downloadedAt = DateTime.now();
+          await db.saveDownloadedTrack(downloadedTrack);
+        }
       }
 
       await _player.setAudioSource(audioSource);

@@ -47,33 +47,38 @@ const DownloadedTrackSchema = CollectionSchema(
       name: r'duration',
       type: IsarType.long,
     ),
-    r'localPath': PropertySchema(
+    r'isComplete': PropertySchema(
       id: 6,
+      name: r'isComplete',
+      type: IsarType.bool,
+    ),
+    r'localPath': PropertySchema(
+      id: 7,
       name: r'localPath',
       type: IsarType.string,
     ),
     r'rawData': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'rawData',
       type: IsarType.string,
     ),
     r'serverId': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'serverId',
       type: IsarType.long,
     ),
     r'sizeBytes': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'sizeBytes',
       type: IsarType.long,
     ),
     r'songId': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'songId',
       type: IsarType.string,
     ),
     r'title': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'title',
       type: IsarType.string,
     )
@@ -150,12 +155,13 @@ void _downloadedTrackSerialize(
   writer.writeString(offsets[3], object.coverArt);
   writer.writeDateTime(offsets[4], object.downloadedAt);
   writer.writeLong(offsets[5], object.duration);
-  writer.writeString(offsets[6], object.localPath);
-  writer.writeString(offsets[7], object.rawData);
-  writer.writeLong(offsets[8], object.serverId);
-  writer.writeLong(offsets[9], object.sizeBytes);
-  writer.writeString(offsets[10], object.songId);
-  writer.writeString(offsets[11], object.title);
+  writer.writeBool(offsets[6], object.isComplete);
+  writer.writeString(offsets[7], object.localPath);
+  writer.writeString(offsets[8], object.rawData);
+  writer.writeLong(offsets[9], object.serverId);
+  writer.writeLong(offsets[10], object.sizeBytes);
+  writer.writeString(offsets[11], object.songId);
+  writer.writeString(offsets[12], object.title);
 }
 
 DownloadedTrack _downloadedTrackDeserialize(
@@ -172,12 +178,13 @@ DownloadedTrack _downloadedTrackDeserialize(
   object.downloadedAt = reader.readDateTime(offsets[4]);
   object.duration = reader.readLong(offsets[5]);
   object.id = id;
-  object.localPath = reader.readString(offsets[6]);
-  object.rawData = reader.readString(offsets[7]);
-  object.serverId = reader.readLong(offsets[8]);
-  object.sizeBytes = reader.readLong(offsets[9]);
-  object.songId = reader.readString(offsets[10]);
-  object.title = reader.readString(offsets[11]);
+  object.isComplete = reader.readBool(offsets[6]);
+  object.localPath = reader.readString(offsets[7]);
+  object.rawData = reader.readString(offsets[8]);
+  object.serverId = reader.readLong(offsets[9]);
+  object.sizeBytes = reader.readLong(offsets[10]);
+  object.songId = reader.readString(offsets[11]);
+  object.title = reader.readString(offsets[12]);
   return object;
 }
 
@@ -201,16 +208,18 @@ P _downloadedTrackDeserializeProp<P>(
     case 5:
       return (reader.readLong(offset)) as P;
     case 6:
-      return (reader.readString(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 7:
       return (reader.readString(offset)) as P;
     case 8:
-      return (reader.readLong(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 9:
       return (reader.readLong(offset)) as P;
     case 10:
-      return (reader.readString(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 11:
+      return (reader.readString(offset)) as P;
+    case 12:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1179,6 +1188,16 @@ extension DownloadedTrackQueryFilter
   }
 
   QueryBuilder<DownloadedTrack, DownloadedTrack, QAfterFilterCondition>
+      isCompleteEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isComplete',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DownloadedTrack, DownloadedTrack, QAfterFilterCondition>
       localPathEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -1925,6 +1944,20 @@ extension DownloadedTrackQuerySortBy
   }
 
   QueryBuilder<DownloadedTrack, DownloadedTrack, QAfterSortBy>
+      sortByIsComplete() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isComplete', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DownloadedTrack, DownloadedTrack, QAfterSortBy>
+      sortByIsCompleteDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isComplete', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DownloadedTrack, DownloadedTrack, QAfterSortBy>
       sortByLocalPath() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'localPath', Sort.asc);
@@ -2102,6 +2135,20 @@ extension DownloadedTrackQuerySortThenBy
   }
 
   QueryBuilder<DownloadedTrack, DownloadedTrack, QAfterSortBy>
+      thenByIsComplete() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isComplete', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DownloadedTrack, DownloadedTrack, QAfterSortBy>
+      thenByIsCompleteDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isComplete', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DownloadedTrack, DownloadedTrack, QAfterSortBy>
       thenByLocalPath() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'localPath', Sort.asc);
@@ -2227,6 +2274,13 @@ extension DownloadedTrackQueryWhereDistinct
     });
   }
 
+  QueryBuilder<DownloadedTrack, DownloadedTrack, QDistinct>
+      distinctByIsComplete() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isComplete');
+    });
+  }
+
   QueryBuilder<DownloadedTrack, DownloadedTrack, QDistinct> distinctByLocalPath(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -2312,6 +2366,12 @@ extension DownloadedTrackQueryProperty
   QueryBuilder<DownloadedTrack, int, QQueryOperations> durationProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'duration');
+    });
+  }
+
+  QueryBuilder<DownloadedTrack, bool, QQueryOperations> isCompleteProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isComplete');
     });
   }
 

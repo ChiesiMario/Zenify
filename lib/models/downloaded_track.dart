@@ -24,4 +24,6 @@ class DownloadedTrack {
 
   // Save the raw JSON string so we can easily convert it back to dynamic map
   late String rawData;
+
+  bool isComplete = true; // Indicates whether the download finished
 }
