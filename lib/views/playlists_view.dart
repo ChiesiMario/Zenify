@@ -21,6 +21,10 @@ class PlaylistsView extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: colorScheme.background,
+      appBar: AppBar(
+        backgroundColor: colorScheme.background,
+        title: const Text('播放清單'),
+      ),
       body: playlistsAsync.when(
         data: (playlists) {
           if (playlists.isEmpty) {

@@ -4,6 +4,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/providers/audio_provider.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/components/local_cover_image.dart';
+import 'package:zenify/components/play_queue_sheet.dart';
 
 class FullPlayerScreen extends ConsumerWidget {
   const FullPlayerScreen({super.key});
@@ -165,13 +166,15 @@ class FullPlayerScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 32),
 
-                    // Controls
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         IconButton(
-                          icon: Icon(LucideIcons.shuffle, color: colorScheme.mutedForeground),
-                          onPressed: () {},
+                          icon: Icon(
+                            LucideIcons.shuffle, 
+                            color: audioState.isShuffled ? colorScheme.primary : colorScheme.mutedForeground
+                          ),
+                          onPressed: () => audioNotifier.toggleShuffle(),
                         ),
                         IconButton(
                           icon: Icon(LucideIcons.skipBack, color: colorScheme.foreground),
@@ -198,12 +201,39 @@ class FullPlayerScreen extends ConsumerWidget {
                           onPressed: () => audioNotifier.skipToNext(),
                         ),
                         IconButton(
-                          icon: Icon(LucideIcons.repeat, color: colorScheme.mutedForeground),
-                          onPressed: () {},
+                          icon: Icon(
+                            audioState.repeatMode == AudioRepeatMode.one 
+                                ? LucideIcons.repeat1 
+                                : LucideIcons.repeat,
+                            color: audioState.repeatMode != AudioRepeatMode.off 
+                                ? colorScheme.primary 
+                                : colorScheme.mutedForeground,
+                          ),
+                          onPressed: () => audioNotifier.toggleRepeat(),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        IconButton(
+                          icon: Icon(LucideIcons.listMusic, color: colorScheme.mutedForeground),
+                          onPressed: () {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) => FractionallySizedBox(
+                                heightFactor: 0.8,
+                                child: const PlayQueueSheet(),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),

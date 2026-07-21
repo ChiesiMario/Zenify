@@ -29,101 +29,95 @@ class DownloadsView extends ConsumerWidget {
     final downloadsAsync = ref.watch(downloadedTracksProvider);
     final api = ref.watch(subsonicApiProvider);
 
-    return downloadsAsync.when(
-      data: (tracks) {
-        if (tracks.isEmpty) {
-          return Center(
-            child: Text(
-              '尚無下載的音樂',
-              style: TextStyle(color: colorScheme.mutedForeground),
-            ),
-          );
-        }
+    return Scaffold(
+      backgroundColor: colorScheme.background,
+      appBar: AppBar(
+        backgroundColor: colorScheme.background,
+        title: const Text('已下載'),
+      ),
+      body: downloadsAsync.when(
+        data: (tracks) {
+          if (tracks.isEmpty) {
+            return Center(
+              child: Text(
+                '尚無下載的音樂',
+                style: TextStyle(color: colorScheme.mutedForeground),
+              ),
+            );
+          }
 
-        // Check if files actually exist
-        final validTracks = tracks.where((t) => File(t.localPath).existsSync()).toList();
+          // Check if files actually exist
+          final validTracks = tracks.where((t) => File(t.localPath).existsSync()).toList();
 
-        return CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(32, 48, 32, 16),
-                child: Text(
-                  '下載管理',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.foreground,
-                  ),
+          return CustomScrollView(
+            slivers: [
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final track = validTracks[index];
+                    final duration = _formatDuration(track.duration);
+                    final size = _formatSize(track.sizeBytes);
+
+                    return ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      leading: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: colorScheme.muted,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: track.coverArt != null
+                            ? LocalCoverImage(
+                                id: track.coverArt!,
+                                serverId: track.serverId,
+                                fallbackUrl: api?.getCoverArtUrl(track.coverArt!),
+                              )
+                            : Icon(LucideIcons.music, color: colorScheme.mutedForeground),
+                      ),
+                      title: Text(
+                        track.title,
+                        style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.w500),
+                      ),
+                      subtitle: Text(
+                        '${track.artist} • $size',
+                        style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12),
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: Icon(LucideIcons.trash2, color: colorScheme.destructive, size: 20),
+                            onPressed: () async {
+                              await ref.read(downloadServiceProvider).deleteDownload(track.songId);
+                              ref.invalidate(downloadedTracksProvider);
+                            },
+                            tooltip: '刪除',
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            duration,
+                            style: TextStyle(color: colorScheme.mutedForeground),
+                          ),
+                        ],
+                      ),
+                      onTap: () {
+                        final allSongs = validTracks.map((t) => jsonDecode(t.rawData)).toList();
+                        ref.read(audioProvider.notifier).playQueue(allSongs, index);
+                      },
+                    );
+                  },
+                  childCount: validTracks.length,
                 ),
               ),
-            ),
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final track = validTracks[index];
-                  final duration = _formatDuration(track.duration);
-                  final size = _formatSize(track.sizeBytes);
-
-                  return ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
-                    leading: Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: colorScheme.muted,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      child: track.coverArt != null
-                          ? LocalCoverImage(
-                              id: track.coverArt!,
-                              serverId: track.serverId,
-                              fallbackUrl: api?.getCoverArtUrl(track.coverArt!),
-                            )
-                          : Icon(LucideIcons.music, color: colorScheme.mutedForeground),
-                    ),
-                    title: Text(
-                      track.title,
-                      style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.w500),
-                    ),
-                    subtitle: Text(
-                      '${track.artist} • $size',
-                      style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12),
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: Icon(LucideIcons.trash2, color: colorScheme.destructive, size: 20),
-                          onPressed: () async {
-                            await ref.read(downloadServiceProvider).deleteDownload(track.songId);
-                            ref.invalidate(downloadedTracksProvider);
-                          },
-                          tooltip: '刪除',
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          duration,
-                          style: TextStyle(color: colorScheme.mutedForeground),
-                        ),
-                      ],
-                    ),
-                    onTap: () {
-                      final allSongs = validTracks.map((t) => jsonDecode(t.rawData)).toList();
-                      ref.read(audioProvider.notifier).playQueue(allSongs, index);
-                    },
-                  );
-                },
-                childCount: validTracks.length,
-              ),
-            ),
-          ],
-        );
-      },
-      loading: () => Center(child: CircularProgressIndicator(color: colorScheme.foreground)),
-      error: (err, stack) => Center(
-        child: Text('加載失敗: $err', style: TextStyle(color: colorScheme.destructive)),
+            ],
+          );
+        },
+        loading: () => Center(child: CircularProgressIndicator(color: colorScheme.foreground)),
+        error: (err, stack) => Center(
+          child: Text('加載失敗: $err', style: TextStyle(color: colorScheme.destructive)),
+        ),
       ),
     );
   }

@@ -1,93 +1,101 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:zenify/providers/app_providers.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:zenify/providers/audio_provider.dart';
-import 'package:zenify/components/local_cover_image.dart';
+import 'package:zenify/screens/favorite_songs_screen.dart';
+import 'package:zenify/screens/favorite_albums_screen.dart';
+import 'package:zenify/views/playlists_view.dart';
+import 'package:zenify/views/downloads_view.dart';
 
-class FavoritesView extends ConsumerWidget {
+class FavoritesView extends StatelessWidget {
   const FavoritesView({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final activeServer = ref.watch(activeServerProvider);
+  Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return activeServer.when(
-      data: (server) {
-        if (server == null) {
-          return Center(
-            child: Text('未連接伺服器，請先在右上角新增', style: TextStyle(color: colorScheme.mutedForeground)),
-          );
-        }
-
-        final favoritesAsync = ref.watch(favoritesProvider);
-        return favoritesAsync.when(
-          data: (favorites) {
-            final songs = favorites['songs'] ?? [];
-            final albums = favorites['albums'] ?? [];
-            final artists = favorites['artists'] ?? [];
-
-            if (songs.isEmpty && albums.isEmpty && artists.isEmpty) {
-              return Center(child: Text('目前沒有任何喜愛的項目', style: TextStyle(color: colorScheme.mutedForeground)));
-            }
-
-            // Simple implementation: display a list of all favorite songs
-            if (songs.isEmpty) {
-               return Center(child: Text('沒有喜愛的歌曲（目前僅顯示歌曲）', style: TextStyle(color: colorScheme.mutedForeground)));
-            }
-
-            return ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: songs.length,
-              itemBuilder: (context, index) {
-                final song = songs[index];
-                
-                final api = ref.watch(subsonicApiProvider);
-                final coverUrl = api != null && song['coverArt'] != null
-                    ? api.getCoverArtUrl(song['coverArt'])
-                    : null;
-
-                return ListTile(
-                  leading: Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: colorScheme.muted,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    child: coverUrl == null
-                        ? Icon(LucideIcons.music, color: colorScheme.mutedForeground)
-                        : LocalCoverImage(
-                            id: song['coverArt'],
-                            serverId: server.id,
-                            fallbackUrl: coverUrl,
-                          ),
-                  ),
-                  title: Text(
-                    song['title'] ?? '未知歌曲',
-                    style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text(
-                    song['artist'] ?? '未知藝術家',
-                    style: TextStyle(color: colorScheme.mutedForeground),
-                  ),
-                  trailing: Icon(LucideIcons.heart, color: colorScheme.primary),
-                  onTap: () {
-                    ref.read(audioProvider.notifier).playQueue(songs, index);
-                  },
-                );
-              },
-            );
-          },
-          loading: () => Center(child: CircularProgressIndicator(color: colorScheme.foreground)),
-          error: (err, stack) => Center(child: Text('加載喜愛項目失敗: $err', style: TextStyle(color: colorScheme.destructive))),
-        );
+    final List<Map<String, dynamic>> hubItems = [
+      {
+        'title': '歌曲',
+        'icon': LucideIcons.music,
+        'color': Colors.redAccent,
+        'onTap': () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const FavoriteSongsScreen()),
+            ),
       },
-      loading: () => Center(child: CircularProgressIndicator(color: colorScheme.foreground)),
-      error: (err, stack) => Center(child: Text('加載伺服器狀態失敗', style: TextStyle(color: colorScheme.destructive))),
+      {
+        'title': '專輯',
+        'icon': LucideIcons.disc,
+        'color': Colors.blueAccent,
+        'onTap': () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const FavoriteAlbumsScreen()),
+            ),
+      },
+      {
+        'title': '播放清單',
+        'icon': LucideIcons.listMusic,
+        'color': Colors.green,
+        'onTap': () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const PlaylistsView()),
+            ),
+      },
+      {
+        'title': '已下載',
+        'icon': LucideIcons.downloadCloud,
+        'color': Colors.orangeAccent,
+        'onTap': () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const DownloadsView()),
+            ),
+      },
+    ];
+
+    return Scaffold(
+      backgroundColor: colorScheme.background,
+      body: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        itemCount: hubItems.length,
+        separatorBuilder: (context, index) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          final item = hubItems[index];
+          return Card(
+            color: colorScheme.card,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: colorScheme.border, width: 1),
+            ),
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              leading: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: (item['color'] as Color).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  item['icon'] as IconData,
+                  color: item['color'] as Color,
+                  size: 24,
+                ),
+              ),
+              title: Text(
+                item['title'] as String,
+                style: TextStyle(
+                  color: colorScheme.foreground,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              trailing: Icon(LucideIcons.chevronRight, color: colorScheme.mutedForeground),
+              onTap: item['onTap'] as VoidCallback,
+            ),
+          );
+        },
+      ),
     );
   }
 }

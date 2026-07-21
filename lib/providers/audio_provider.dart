@@ -7,42 +7,57 @@ import 'package:path_provider/path_provider.dart';
 import 'package:zenify/models/downloaded_track.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/download_provider.dart';
+import 'package:zenify/providers/theme_provider.dart';
 import 'package:zenify/utils/zenify_caching_audio_source.dart';
+
+enum AudioRepeatMode { off, all, one }
 
 class AudioState {
   final List<dynamic> queue;
+  final List<dynamic> originalQueue;
   final int currentIndex;
   final bool isPlaying;
   final bool isBuffering;
   final Duration position;
   final Duration duration;
+  final bool isShuffled;
+  final AudioRepeatMode repeatMode;
 
   AudioState({
     this.queue = const [],
+    this.originalQueue = const [],
     this.currentIndex = -1,
     this.isPlaying = false,
     this.isBuffering = false,
     this.position = Duration.zero,
     this.duration = Duration.zero,
+    this.isShuffled = false,
+    this.repeatMode = AudioRepeatMode.off,
   });
 
   dynamic get currentSong => (currentIndex >= 0 && currentIndex < queue.length) ? queue[currentIndex] : null;
 
   AudioState copyWith({
     List<dynamic>? queue,
+    List<dynamic>? originalQueue,
     int? currentIndex,
     bool? isPlaying,
     bool? isBuffering,
     Duration? position,
     Duration? duration,
+    bool? isShuffled,
+    AudioRepeatMode? repeatMode,
   }) {
     return AudioState(
       queue: queue ?? this.queue,
+      originalQueue: originalQueue ?? this.originalQueue,
       currentIndex: currentIndex ?? this.currentIndex,
       isPlaying: isPlaying ?? this.isPlaying,
       isBuffering: isBuffering ?? this.isBuffering,
       position: position ?? this.position,
       duration: duration ?? this.duration,
+      isShuffled: isShuffled ?? this.isShuffled,
+      repeatMode: repeatMode ?? this.repeatMode,
     );
   }
 }
@@ -58,7 +73,20 @@ class AudioNotifier extends Notifier<AudioState> {
     ref.onDispose(() {
       _player.dispose();
     });
-    return AudioState();
+
+    final prefs = ref.watch(sharedPreferencesProvider);
+    final savedShuffle = prefs.getBool('audio_is_shuffled') ?? false;
+    final savedRepeat = prefs.getInt('audio_repeat_mode') ?? 0;
+    
+    AudioRepeatMode repeatMode = AudioRepeatMode.off;
+    if (savedRepeat >= 0 && savedRepeat < AudioRepeatMode.values.length) {
+      repeatMode = AudioRepeatMode.values[savedRepeat];
+    }
+
+    return AudioState(
+      isShuffled: savedShuffle,
+      repeatMode: repeatMode,
+    );
   }
 
   void _init() {
@@ -69,8 +97,13 @@ class AudioNotifier extends Notifier<AudioState> {
       );
 
       if (playerState.processingState == ProcessingState.completed) {
-        if (state.currentIndex >= 0 && state.currentIndex < state.queue.length - 1) {
+        if (state.repeatMode == AudioRepeatMode.one) {
+          _player.seek(Duration.zero);
+          _player.play();
+        } else if (state.currentIndex >= 0 && state.currentIndex < state.queue.length - 1) {
           skipToNext();
+        } else if (state.repeatMode == AudioRepeatMode.all && state.queue.isNotEmpty) {
+          _playIndex(0);
         } else {
           _player.stop();
           this.state = AudioState(); // 什麼都不做，清空播放狀態
@@ -124,10 +157,31 @@ class AudioNotifier extends Notifier<AudioState> {
   }
 
   Future<void> playQueue(List<dynamic> songs, int initialIndex) async {
-    this.state = this.state.copyWith(
-      queue: songs,
-    );
-    await _playIndex(initialIndex);
+    final prefs = ref.read(sharedPreferencesProvider);
+    final isShuffled = prefs.getBool('audio_is_shuffled') ?? false;
+
+    if (isShuffled && songs.isNotEmpty) {
+      final initialSong = songs[initialIndex];
+      final remaining = List<dynamic>.from(songs);
+      remaining.removeAt(initialIndex);
+      remaining.shuffle();
+      
+      final newQueue = [initialSong, ...remaining];
+      
+      this.state = this.state.copyWith(
+        queue: newQueue,
+        originalQueue: songs,
+        isShuffled: true,
+      );
+      await _playIndex(0);
+    } else {
+      this.state = this.state.copyWith(
+        queue: songs,
+        originalQueue: songs,
+        isShuffled: false,
+      );
+      await _playIndex(initialIndex);
+    }
   }
 
   Future<void> _playIndex(int index) async {
@@ -238,14 +292,78 @@ class AudioNotifier extends Notifier<AudioState> {
   Future<void> seek(Duration position) async => await _player.seek(position);
   
   Future<void> skipToNext() async {
-    await _playIndex(state.currentIndex + 1);
+    if (state.currentIndex >= state.queue.length - 1) {
+      if (state.repeatMode == AudioRepeatMode.all) {
+        await _playIndex(0);
+      }
+    } else {
+      await _playIndex(state.currentIndex + 1);
+    }
   }
 
   Future<void> skipToPrevious() async {
     if (state.position.inSeconds > 3) {
       await _player.seek(Duration.zero);
     } else {
-      await _playIndex(state.currentIndex - 1);
+      if (state.currentIndex == 0 && state.repeatMode == AudioRepeatMode.all) {
+        await _playIndex(state.queue.length - 1);
+      } else if (state.currentIndex > 0) {
+        await _playIndex(state.currentIndex - 1);
+      }
+    }
+  }
+
+  void toggleRepeat() {
+    AudioRepeatMode nextMode;
+    switch (state.repeatMode) {
+      case AudioRepeatMode.off: nextMode = AudioRepeatMode.all; break;
+      case AudioRepeatMode.all: nextMode = AudioRepeatMode.one; break;
+      case AudioRepeatMode.one: nextMode = AudioRepeatMode.off; break;
+    }
+    this.state = this.state.copyWith(repeatMode: nextMode);
+    ref.read(sharedPreferencesProvider).setInt('audio_repeat_mode', nextMode.index);
+  }
+
+  void toggleShuffle() {
+    final prefs = ref.read(sharedPreferencesProvider);
+    if (state.isShuffled) {
+      // Turn off shuffle
+      final currentSong = state.currentSong;
+      final original = List<dynamic>.from(state.originalQueue);
+      int newIndex = -1;
+      if (currentSong != null) {
+        newIndex = original.indexWhere((s) => s['id'] == currentSong['id']);
+      }
+      this.state = this.state.copyWith(
+        isShuffled: false,
+        queue: original,
+        currentIndex: newIndex != -1 ? newIndex : 0,
+      );
+      prefs.setBool('audio_is_shuffled', false);
+    } else {
+      // Turn on shuffle
+      final currentSong = state.currentSong;
+      final original = state.queue.isEmpty ? <dynamic>[] : List<dynamic>.from(state.queue);
+      final remaining = List<dynamic>.from(original);
+      
+      if (currentSong != null) {
+        remaining.removeWhere((s) => s['id'] == currentSong['id']);
+      }
+      remaining.shuffle();
+      
+      final newQueue = <dynamic>[];
+      if (currentSong != null) {
+        newQueue.add(currentSong);
+      }
+      newQueue.addAll(remaining);
+
+      this.state = this.state.copyWith(
+        isShuffled: true,
+        originalQueue: original,
+        queue: newQueue,
+        currentIndex: currentSong != null ? 0 : (newQueue.isNotEmpty ? 0 : -1),
+      );
+      prefs.setBool('audio_is_shuffled', true);
     }
   }
 
