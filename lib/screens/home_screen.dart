@@ -8,6 +8,8 @@ import 'package:zenify/views/album_view.dart';
 import 'package:zenify/views/artists_view.dart';
 import 'package:zenify/views/favorites_view.dart';
 import 'package:zenify/components/mini_player.dart';
+import 'package:zenify/screens/full_player_screen.dart';
+import 'package:zenify/components/local_cover_image.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:zenify/services/sync_service.dart';
@@ -98,6 +100,40 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           settings: settings,
         );
       },
+    );
+  }
+
+  Widget _buildNavItem(int index, IconData icon, String label, ShadColorScheme colorScheme) {
+    final isSelected = _currentIndex == index;
+    final color = isSelected ? colorScheme.foreground : colorScheme.mutedForeground;
+    
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          if (_currentIndex == index) {
+            _navigatorKeys[index].currentState?.popUntil((route) => route.isFirst);
+          } else {
+            setState(() => _currentIndex = index);
+            _updateCanPop();
+          }
+        },
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 24),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -251,41 +287,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const MiniPlayer(),
           Container(
             decoration: BoxDecoration(
+              color: colorScheme.background,
               border: Border(top: BorderSide(color: colorScheme.border, width: 1)),
             ),
-            child: BottomNavigationBar(
-              currentIndex: _currentIndex,
-              onTap: (index) {
-                if (_currentIndex == index) {
-                  _navigatorKeys[index].currentState?.popUntil((route) => route.isFirst);
-                } else {
-                  setState(() => _currentIndex = index);
-                  _updateCanPop();
-                }
-              },
-              backgroundColor: colorScheme.background,
-              selectedItemColor: colorScheme.foreground,
-              unselectedItemColor: colorScheme.mutedForeground,
-              type: BottomNavigationBarType.fixed,
-              showSelectedLabels: true,
-              showUnselectedLabels: true,
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Icon(LucideIcons.disc),
-                  label: '專輯',
+            child: SafeArea(
+              child: SizedBox(
+                height: 64, // Default bottom nav height
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildNavItem(0, LucideIcons.disc, '專輯', colorScheme),
+                    _buildNavItem(1, LucideIcons.users, '藝術家', colorScheme),
+                    _buildNavItem(2, LucideIcons.heart, '最愛', colorScheme),
+                    Expanded(
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (context) => const FullPlayerScreen(),
+                          );
+                        },
+                        child: const Center(
+                          child: NowPlayingTabIcon(),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                BottomNavigationBarItem(
-                  icon: Icon(LucideIcons.users),
-                  label: '藝術家',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(LucideIcons.heart),
-                  label: '最愛',
-                ),
-              ],
+              ),
             ),
           ),
         ],
@@ -491,6 +525,79 @@ class SortPopoverContent extends ConsumerWidget {
             if (isSelected)
               Icon(LucideIcons.check, size: 16, color: colorScheme.accentForeground),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class NowPlayingTabIcon extends ConsumerStatefulWidget {
+  const NowPlayingTabIcon({super.key});
+
+  @override
+  ConsumerState<NowPlayingTabIcon> createState() => _NowPlayingTabIconState();
+}
+
+class _NowPlayingTabIconState extends ConsumerState<NowPlayingTabIcon> with SingleTickerProviderStateMixin {
+  late AnimationController _rotationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _rotationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 10),
+    );
+  }
+
+  @override
+  void dispose() {
+    _rotationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final audioState = ref.watch(audioProvider);
+    final currentSong = audioState.currentSong;
+    final theme = ShadTheme.of(context);
+    final colorScheme = theme.colorScheme;
+    
+    if (audioState.isPlaying) {
+      if (!_rotationController.isAnimating) {
+        _rotationController.repeat();
+      }
+    } else {
+      if (_rotationController.isAnimating) {
+        _rotationController.stop();
+      }
+    }
+
+    if (currentSong == null) {
+      return Icon(LucideIcons.playCircle, color: colorScheme.mutedForeground, size: 28);
+    }
+    
+    final api = ref.watch(subsonicApiProvider);
+    final server = ref.watch(activeServerProvider).value;
+    
+    final coverUrl = api != null && currentSong['coverArt'] != null
+        ? api.getCoverArtUrl(currentSong['coverArt'])
+        : null;
+
+    return SizedBox(
+      width: 40,
+      height: 40,
+      child: RotationTransition(
+        turns: _rotationController,
+        child: ClipOval(
+          child: coverUrl == null
+              ? Container(color: colorScheme.muted, child: Icon(LucideIcons.music, size: 24, color: colorScheme.mutedForeground))
+              : LocalCoverImage(
+                  id: currentSong['coverArt'],
+                  serverId: server?.id ?? 0,
+                  fallbackUrl: coverUrl,
+                  isThumb: true,
+                ),
         ),
       ),
     );
