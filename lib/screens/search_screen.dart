@@ -221,11 +221,19 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: SizedBox(
-                                        width: 120,
-                                        height: 120,
+                                    Container(
+                                      width: 120,
+                                      height: 120,
+                                      decoration: BoxDecoration(
+                                        color: colorScheme.muted,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      foregroundDecoration: BoxDecoration(
+                                        border: Border.all(color: colorScheme.border, width: 0.8),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
                                         child: LocalCoverImage(
                                           id: coverId,
                                           serverId: server?.id ?? 0,

@@ -74,14 +74,20 @@ class FavoriteAlbumsScreen extends ConsumerWidget {
                               color: colorScheme.muted,
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            clipBehavior: Clip.antiAlias,
-                            child: coverUrl == null
-                                ? Icon(LucideIcons.disc, size: 48, color: colorScheme.mutedForeground)
-                                : LocalCoverImage(
-                                    id: album['coverArt'],
-                                    serverId: server.id,
-                                    fallbackUrl: coverUrl,
-                                  ),
+                            foregroundDecoration: BoxDecoration(
+                              border: Border.all(color: colorScheme.border, width: 0.8),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: coverUrl == null
+                                  ? Icon(LucideIcons.disc, size: 48, color: colorScheme.mutedForeground)
+                                  : LocalCoverImage(
+                                      id: album['coverArt'],
+                                      serverId: server.id,
+                                      fallbackUrl: coverUrl,
+                                    ),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 8),

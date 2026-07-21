@@ -99,15 +99,21 @@ class FullPlayerScreen extends ConsumerWidget {
                               ),
                             ],
                           ),
-                          clipBehavior: Clip.antiAlias,
-                          child: coverUrl == null 
-                              ? Center(child: Icon(LucideIcons.music, size: 80, color: colorScheme.mutedForeground))
-                              : LocalCoverImage(
-                                  id: currentSong['coverArt'],
-                                  serverId: server?.id ?? 0,
-                                  fallbackUrl: coverUrl,
-                                  isThumb: false,
-                                ),
+                          foregroundDecoration: BoxDecoration(
+                            border: Border.all(color: colorScheme.border, width: 0.8),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: coverUrl == null 
+                                ? Center(child: Icon(LucideIcons.music, size: 80, color: colorScheme.mutedForeground))
+                                : LocalCoverImage(
+                                    id: currentSong['coverArt'],
+                                    serverId: server?.id ?? 0,
+                                    fallbackUrl: coverUrl,
+                                    isThumb: false,
+                                  ),
+                          ),
                         ),
                       ),
                     ),

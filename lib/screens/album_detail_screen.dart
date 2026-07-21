@@ -107,15 +107,21 @@ class AlbumDetailScreen extends ConsumerWidget {
                                 ),
                               ],
                             ),
-                            clipBehavior: Clip.antiAlias,
-                            child: coverUrl == null
-                                ? Icon(LucideIcons.music, size: 64, color: colorScheme.mutedForeground)
-                                : LocalCoverImage(
-                                    id: album['coverArt'],
-                                    serverId: server?.id ?? 0,
-                                    fallbackUrl: coverUrl,
-                                    isThumb: false,
-                                  ),
+                            foregroundDecoration: BoxDecoration(
+                              border: Border.all(color: colorScheme.border, width: 0.8),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: coverUrl == null
+                                  ? Icon(LucideIcons.music, size: 64, color: colorScheme.mutedForeground)
+                                  : LocalCoverImage(
+                                      id: album['coverArt'],
+                                      serverId: server?.id ?? 0,
+                                      fallbackUrl: coverUrl,
+                                      isThumb: false,
+                                    ),
+                            ),
                           ),
                           const SizedBox(width: 32),
                           // Text Details

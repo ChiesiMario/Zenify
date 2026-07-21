@@ -220,13 +220,23 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
                                 children: [
                                   AspectRatio(
                                     aspectRatio: 1,
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: LocalCoverImage(
-                                        id: albumCoverId ?? '',
-                                        serverId: server?.id ?? 0,
-                                        fallbackUrl: fallbackUrl,
-                                        isThumb: true,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: colorScheme.muted,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      foregroundDecoration: BoxDecoration(
+                                        border: Border.all(color: colorScheme.border, width: 0.8),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: LocalCoverImage(
+                                          id: albumCoverId ?? '',
+                                          serverId: server?.id ?? 0,
+                                          fallbackUrl: fallbackUrl,
+                                          isThumb: true,
+                                        ),
                                       ),
                                     ),
                                   ),

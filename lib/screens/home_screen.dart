@@ -144,117 +144,126 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final syncState = ref.watch(syncProvider);
 
     return Scaffold(
+      extendBody: true,
       backgroundColor: colorScheme.background,
-      appBar: AppBar(
-        backgroundColor: colorScheme.background,
-        surfaceTintColor: Colors.transparent,
-        scrolledUnderElevation: 0,
-        elevation: 0,
-        titleSpacing: 16,
-        automaticallyImplyLeading: false,
-        title: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 350),
-          layoutBuilder: (Widget? currentChild, List<Widget> previousChildren) {
-            return Stack(
-              alignment: Alignment.centerLeft,
-              children: <Widget>[
-                ...previousChildren,
-                if (currentChild != null) currentChild,
-              ],
-            );
-          },
-          transitionBuilder: (child, animation) {
-            final isBackBtn = child.key == const ValueKey('back_btn');
-            
-            final slideTween = isBackBtn
-                ? Tween<Offset>(begin: const Offset(0.15, 0.0), end: Offset.zero)
-                : Tween<Offset>(begin: const Offset(-0.15, 0.0), end: Offset.zero);
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 800),
+            child: AppBar(
+              backgroundColor: colorScheme.background,
+              surfaceTintColor: Colors.transparent,
+              scrolledUnderElevation: 0,
+              elevation: 0,
+              titleSpacing: 16,
+              automaticallyImplyLeading: false,
+              title: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 350),
+                layoutBuilder: (Widget? currentChild, List<Widget> previousChildren) {
+                  return Stack(
+                    alignment: Alignment.centerLeft,
+                    children: <Widget>[
+                      ...previousChildren,
+                      if (currentChild != null) currentChild,
+                    ],
+                  );
+                },
+                transitionBuilder: (child, animation) {
+                  final isBackBtn = child.key == const ValueKey('back_btn');
+                  
+                  final slideTween = isBackBtn
+                      ? Tween<Offset>(begin: const Offset(0.15, 0.0), end: Offset.zero)
+                      : Tween<Offset>(begin: const Offset(-0.15, 0.0), end: Offset.zero);
 
-            return FadeTransition(
-              opacity: CurvedAnimation(
-                parent: animation,
-                curve: const Interval(0.5, 1.0, curve: Curves.easeOut),
+                  return FadeTransition(
+                    opacity: CurvedAnimation(
+                      parent: animation,
+                      curve: const Interval(0.5, 1.0, curve: Curves.easeOut),
+                    ),
+                    child: SlideTransition(
+                      position: slideTween.animate(CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutQuint, // very smooth deceleration
+                      )),
+                      child: child,
+                    ),
+                  );
+                },
+                child: _canPop
+                    ? Container(
+                        key: const ValueKey('back_btn'),
+                        transform: Matrix4.translationValues(-8.0, 0.0, 0.0),
+                        child: IconButton(
+                          icon: Icon(LucideIcons.arrowLeft, color: colorScheme.foreground),
+                          onPressed: () {
+                            _navigatorKeys[_currentIndex].currentState?.maybePop();
+                          },
+                        ),
+                      )
+                    : Container(
+                        key: const ValueKey('title'),
+                        child: Text('Zenify.', style: TextStyle(fontWeight: FontWeight.bold, color: colorScheme.foreground)),
+                      ),
               ),
-              child: SlideTransition(
-                position: slideTween.animate(CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeOutQuint, // very smooth deceleration
-                )),
-                child: child,
-              ),
-            );
-          },
-          child: _canPop
-              ? Container(
-                  key: const ValueKey('back_btn'),
-                  transform: Matrix4.translationValues(-8.0, 0.0, 0.0),
+              actions: [
+                if (_currentIndex == 0 || _currentIndex == 1)
+                  ShadPopover(
+                    controller: _sortPopoverController,
+                    popover: (context) => SortPopoverContent(
+                      currentIndex: _currentIndex,
+                      onClose: () => _sortPopoverController.hide(),
+                    ),
+                    child: IconButton(
+                      icon: Icon(LucideIcons.arrowUpDown, color: colorScheme.foreground, size: 20),
+                      onPressed: () {
+                        _sortPopoverController.toggle();
+                      },
+                    ),
+                  ),
+                IconButton(
+                  icon: Icon(LucideIcons.search, color: colorScheme.foreground, size: 20),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const SearchScreen()),
+                    );
+                  },
+                ),
+                ShadPopover(
+                  controller: _popoverController,
+                  popover: (context) => const SyncPopoverContent(),
                   child: IconButton(
-                    icon: Icon(LucideIcons.arrowLeft, color: colorScheme.foreground),
+                    icon: Icon(LucideIcons.refreshCw, color: syncState.isSyncing ? colorScheme.primary : colorScheme.mutedForeground, size: 20),
                     onPressed: () {
-                      _navigatorKeys[_currentIndex].currentState?.maybePop();
+                      _popoverController.toggle();
                     },
                   ),
-                )
-              : Container(
-                  key: const ValueKey('title'),
-                  child: Text('Zenify.', style: TextStyle(fontWeight: FontWeight.bold, color: colorScheme.foreground)),
                 ),
+                if (kDebugMode)
+                  IconButton(
+                    icon: Icon(LucideIcons.bug, color: Colors.red.withOpacity(0.5), size: 20),
+                    tooltip: 'Dispose AudioPlayer (for Shift+R)',
+                    onPressed: () {
+                      ref.read(audioProvider.notifier).disposePlayer();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('AudioPlayer disposed! Safe to Shift+R now.')),
+                      );
+                    },
+                  ),
+                IconButton(
+                  icon: Icon(LucideIcons.settings, color: colorScheme.mutedForeground, size: 20),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
         ),
-        actions: [
-          if (_currentIndex == 0 || _currentIndex == 1)
-            ShadPopover(
-              controller: _sortPopoverController,
-              popover: (context) => SortPopoverContent(
-                currentIndex: _currentIndex,
-                onClose: () => _sortPopoverController.hide(),
-              ),
-              child: IconButton(
-                icon: Icon(LucideIcons.arrowUpDown, color: colorScheme.foreground, size: 20),
-                onPressed: () {
-                  _sortPopoverController.toggle();
-                },
-              ),
-            ),
-          IconButton(
-            icon: Icon(LucideIcons.search, color: colorScheme.foreground, size: 20),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SearchScreen()),
-              );
-            },
-          ),
-          ShadPopover(
-            controller: _popoverController,
-            popover: (context) => const SyncPopoverContent(),
-            child: IconButton(
-              icon: Icon(LucideIcons.refreshCw, color: syncState.isSyncing ? colorScheme.primary : colorScheme.mutedForeground, size: 20),
-              onPressed: () {
-                _popoverController.toggle();
-              },
-            ),
-          ),
-          if (kDebugMode)
-            IconButton(
-              icon: Icon(LucideIcons.bug, color: Colors.red.withOpacity(0.5), size: 20),
-              tooltip: 'Dispose AudioPlayer (for Shift+R)',
-              onPressed: () {
-                ref.read(audioProvider.notifier).disposePlayer();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('AudioPlayer disposed! Safe to Shift+R now.')),
-                );
-              },
-            ),
-          IconButton(
-            icon: Icon(LucideIcons.settings, color: colorScheme.mutedForeground, size: 20),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
-              );
-            },
-          ),
-        ],
       ),
       body: PopScope(
         canPop: false,
@@ -277,52 +286,85 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             }
           }
         },
-        child: IndexedStack(
-          index: _currentIndex,
-          children: _views.asMap().entries.map((entry) {
-            return _buildTabNavigator(entry.key, entry.value);
-          }).toList(),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 800),
+            child: IndexedStack(
+              index: _currentIndex,
+              children: _views.asMap().entries.map((entry) {
+                return _buildTabNavigator(entry.key, entry.value);
+              }).toList(),
+            ),
+          ),
         ),
       ),
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              color: colorScheme.background,
-              border: Border(top: BorderSide(color: colorScheme.border, width: 1)),
-            ),
-            child: SafeArea(
-              child: SizedBox(
-                height: 64, // Default bottom nav height
+      bottomNavigationBar: SafeArea(
+        bottom: true,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 24),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Left navigation card
+              Container(
+                width: 250,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: colorScheme.background,
+                  border: Border.all(color: colorScheme.border, width: 0.8),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.15),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _buildNavItem(0, LucideIcons.disc, '專輯', colorScheme),
                     _buildNavItem(1, LucideIcons.users, '藝術家', colorScheme),
                     _buildNavItem(2, LucideIcons.heart, '最愛', colorScheme),
-                    Expanded(
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTap: () {
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (context) => const FullPlayerScreen(),
-                          );
-                        },
-                        child: const Center(
-                          child: NowPlayingTabIcon(),
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
-            ),
+              const SizedBox(width: 12),
+              // Right player status card
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (context) => const FullPlayerScreen(),
+                  );
+                },
+                child: Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: colorScheme.background,
+                    border: Border.all(color: colorScheme.border, width: 0.8),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.15),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: NowPlayingTabIcon(),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
