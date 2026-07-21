@@ -9,8 +9,10 @@ import 'package:zenify/views/artists_view.dart';
 import 'package:zenify/views/favorites_view.dart';
 import 'package:zenify/components/mini_player.dart';
 
+import 'package:flutter/foundation.dart';
 import 'package:zenify/services/sync_service.dart';
 import 'package:zenify/providers/app_providers.dart';
+import 'package:zenify/providers/audio_provider.dart';
 import 'package:zenify/providers/sort_providers.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -196,6 +198,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               },
             ),
           ),
+          if (kDebugMode)
+            IconButton(
+              icon: Icon(LucideIcons.bug, color: Colors.red.withOpacity(0.5), size: 20),
+              tooltip: 'Dispose AudioPlayer (for Shift+R)',
+              onPressed: () {
+                ref.read(audioProvider.notifier).disposePlayer();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('AudioPlayer disposed! Safe to Shift+R now.')),
+                );
+              },
+            ),
           IconButton(
             icon: Icon(LucideIcons.settings, color: colorScheme.mutedForeground, size: 20),
             onPressed: () {

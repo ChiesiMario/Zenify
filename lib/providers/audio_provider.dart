@@ -82,11 +82,50 @@ class AudioNotifier extends Notifier<AudioState> {
     if (savedRepeat >= 0 && savedRepeat < AudioRepeatMode.values.length) {
       repeatMode = AudioRepeatMode.values[savedRepeat];
     }
+    
+    List<dynamic> queue = [];
+    List<dynamic> originalQueue = [];
+    int currentIndex = prefs.getInt('audio_current_index') ?? -1;
+
+    try {
+      final qStr = prefs.getString('audio_queue');
+      if (qStr != null) {
+        queue = jsonDecode(qStr) as List<dynamic>;
+      }
+      final oqStr = prefs.getString('audio_original_queue');
+      if (oqStr != null) {
+        originalQueue = jsonDecode(oqStr) as List<dynamic>;
+      }
+    } catch (e) {
+      print('Failed to decode saved queue: $e');
+    }
+    
+    // Ensure index is valid
+    if (currentIndex >= queue.length) currentIndex = -1;
 
     return AudioState(
+      queue: queue,
+      originalQueue: originalQueue,
+      currentIndex: currentIndex,
       isShuffled: savedShuffle,
       repeatMode: repeatMode,
     );
+  }
+
+  void _saveQueueState() {
+    final prefs = ref.read(sharedPreferencesProvider);
+    prefs.setString('audio_queue', jsonEncode(state.queue));
+    prefs.setString('audio_original_queue', jsonEncode(state.originalQueue));
+    prefs.setInt('audio_current_index', state.currentIndex);
+  }
+
+  Future<void> _restorePlaybackState() async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    final position = prefs.getInt('audio_position') ?? 0;
+    if (state.currentIndex >= 0 && state.currentIndex < state.queue.length) {
+      // Load the track but do not auto-play
+      await _playIndex(state.currentIndex, autoPlay: false, startPosition: Duration(milliseconds: position));
+    }
   }
 
   void _init() {
@@ -107,21 +146,6 @@ class AudioNotifier extends Notifier<AudioState> {
         } else {
           _player.stop();
           this.state = AudioState(); // 什麼都不做，清空播放狀態
-        }
-      }
-    });
-
-    _player.positionStream.listen((pos) {
-      this.state = this.state.copyWith(position: pos);
-      
-      final dur = state.duration;
-      if (dur.inMilliseconds > 0 && pos.inMilliseconds > dur.inMilliseconds / 2) {
-        if (!_hasScrobbledCurrent && state.currentSong != null) {
-          _hasScrobbledCurrent = true;
-          final api = ref.read(subsonicApiProvider);
-          if (api != null) {
-            api.scrobble(id: state.currentSong['id'].toString(), submission: true);
-          }
         }
       }
     });
@@ -154,6 +178,30 @@ class AudioNotifier extends Notifier<AudioState> {
         }
       }
     });
+
+    int _lastPositionSave = 0;
+    _player.positionStream.listen((pos) {
+      this.state = this.state.copyWith(position: pos);
+      
+      final dur = state.duration;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (now - _lastPositionSave > 2000) {
+        _lastPositionSave = now;
+        ref.read(sharedPreferencesProvider).setInt('audio_position', pos.inMilliseconds);
+      }
+
+      if (dur.inMilliseconds > 0 && pos.inMilliseconds > dur.inMilliseconds / 2) {
+        if (!_hasScrobbledCurrent && state.currentSong != null) {
+          _hasScrobbledCurrent = true;
+          final api = ref.read(subsonicApiProvider);
+          if (api != null) {
+            api.scrobble(id: state.currentSong['id'].toString(), submission: true);
+          }
+        }
+      }
+    });
+
+    _restorePlaybackState();
   }
 
   Future<void> playQueue(List<dynamic> songs, int initialIndex) async {
@@ -180,18 +228,20 @@ class AudioNotifier extends Notifier<AudioState> {
         originalQueue: songs,
         isShuffled: false,
       );
+      _saveQueueState();
       await _playIndex(initialIndex);
     }
   }
 
-  Future<void> _playIndex(int index) async {
+  Future<void> _playIndex(int index, {bool autoPlay = true, Duration? startPosition}) async {
     if (index < 0 || index >= state.queue.length) return;
     
     try {
       final api = ref.read(subsonicApiProvider);
       if (api == null) return;
-      
       this.state = this.state.copyWith(currentIndex: index);
+      _saveQueueState();
+      
       final song = state.queue[index];
       final url = api.getStreamUrl(song['id'].toString());
       final coverId = song['coverArt'] ?? song['albumId'];
@@ -278,10 +328,18 @@ class AudioNotifier extends Notifier<AudioState> {
       await _player.setAudioSource(audioSource);
       
       // Send Now Playing scrobble
-      _hasScrobbledCurrent = false;
-      api.scrobble(id: song['id'].toString(), submission: false);
+      if (autoPlay) {
+        _hasScrobbledCurrent = false;
+        api.scrobble(id: song['id'].toString(), submission: false);
+      }
       
-      _player.play();
+      if (startPosition != null) {
+        await _player.seek(startPosition);
+      }
+      
+      if (autoPlay) {
+        _player.play();
+      }
     } catch (e) {
       print('AudioPlayer Error in _playIndex: $e');
     }
@@ -290,6 +348,10 @@ class AudioNotifier extends Notifier<AudioState> {
   Future<void> play() async => await _player.play();
   Future<void> pause() async => await _player.pause();
   Future<void> seek(Duration position) async => await _player.seek(position);
+  
+  Future<void> disposePlayer() async {
+    await _player.dispose();
+  }
   
   Future<void> skipToNext() async {
     if (state.currentIndex >= state.queue.length - 1) {
@@ -340,6 +402,7 @@ class AudioNotifier extends Notifier<AudioState> {
         currentIndex: newIndex != -1 ? newIndex : 0,
       );
       prefs.setBool('audio_is_shuffled', false);
+      _saveQueueState();
     } else {
       // Turn on shuffle
       final currentSong = state.currentSong;
@@ -364,6 +427,7 @@ class AudioNotifier extends Notifier<AudioState> {
         currentIndex: currentSong != null ? 0 : (newQueue.isNotEmpty ? 0 : -1),
       );
       prefs.setBool('audio_is_shuffled', true);
+      _saveQueueState();
     }
   }
 

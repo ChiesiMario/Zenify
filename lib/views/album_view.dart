@@ -35,16 +35,19 @@ class AlbumView extends ConsumerWidget {
                 Expanded(
                   child: LayoutBuilder(
                     builder: (context, constraints) {
-                int crossAxisCount = (constraints.maxWidth / 150).floor();
-                if (crossAxisCount < 2) crossAxisCount = 2;
-                
+                const double fixedItemWidth = 150.0;
                 const double spacing = 32.0;
-                final double totalSpacing = spacing * (crossAxisCount - 1) + spacing * 2;
-                final double itemWidth = (constraints.maxWidth - totalSpacing) / crossAxisCount;
                 
-                // Image is square (itemWidth), text area takes ~48px
-                final double itemHeight = itemWidth + 48.0; 
-                final double childAspectRatio = itemWidth / itemHeight;
+                // Calculate how many columns can fit with fixed width and spacing
+                int crossAxisCount = (constraints.maxWidth - 32) ~/ (fixedItemWidth + spacing);
+                if (crossAxisCount < 2) crossAxisCount = 2; // At least 2 columns
+                
+                final double totalSpacing = spacing * (crossAxisCount - 1) + 64; // 64 is for padding (32*2)
+                final double cellWidth = (constraints.maxWidth - totalSpacing) / crossAxisCount;
+                
+                // The cell height will exactly fit the 150px image + 48px text
+                const double cellHeight = fixedItemWidth + 48.0; 
+                final double childAspectRatio = cellWidth / cellHeight;
 
                 return GridView.builder(
                   padding: const EdgeInsets.all(32.0),
@@ -73,43 +76,47 @@ class AlbumView extends ConsumerWidget {
                         );
                       },
                       borderRadius: BorderRadius.circular(8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          AspectRatio(
-                            aspectRatio: 1.0,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: colorScheme.muted,
-                                borderRadius: BorderRadius.circular(8),
+                      child: Center(
+                        child: SizedBox(
+                          width: fixedItemWidth,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: fixedItemWidth,
+                                height: fixedItemWidth,
+                                decoration: BoxDecoration(
+                                  color: colorScheme.muted,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                clipBehavior: Clip.antiAlias,
+                                child: coverUrl == null
+                                    ? Center(child: Icon(LucideIcons.music, color: colorScheme.mutedForeground, size: 40))
+                                    : LocalCoverImage(
+                                        id: album['coverArt'],
+                                        serverId: server.id,
+                                        fallbackUrl: coverUrl,
+                                      ),
                               ),
-                              clipBehavior: Clip.antiAlias,
-                              child: coverUrl == null
-                                  ? Center(child: Icon(LucideIcons.music, color: colorScheme.mutedForeground, size: 40))
-                                  : LocalCoverImage(
-                                      id: album['coverArt'],
-                                      serverId: server.id,
-                                      fallbackUrl: coverUrl,
-                                    ),
-                            ),
+                              const SizedBox(height: 8),
+                              Text(
+                                album['name'] ?? '未知專輯',
+                                style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.bold, fontSize: 14),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.left,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                album['artist'] ?? '未知藝術家',
+                                style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.left,
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            album['name'] ?? '未知專輯',
-                            style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.bold, fontSize: 14),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.left,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            album['artist'] ?? '未知藝術家',
-                            style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.left,
-                          ),
-                        ],
+                        ),
                       ),
                     );
                   },
