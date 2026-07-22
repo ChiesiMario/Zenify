@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/screens/album_detail_screen.dart';
-import 'package:zenify/components/local_cover_image.dart';
+import 'package:zenify/components/album_card.dart';
 
 class FavoriteAlbumsScreen extends ConsumerWidget {
   const FavoriteAlbumsScreen({super.key});
@@ -41,7 +41,7 @@ class FavoriteAlbumsScreen extends ConsumerWidget {
                 padding: const EdgeInsets.all(16),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  childAspectRatio: 0.75,
+                  childAspectRatio: 0.68,
                   crossAxisSpacing: 16,
                   mainAxisSpacing: 16,
                 ),
@@ -53,64 +53,25 @@ class FavoriteAlbumsScreen extends ConsumerWidget {
                       ? api.getCoverArtUrl(album['coverArt'])
                       : null;
 
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AlbumDetailScreen(
-                            albumId: album['id'].toString(),
-                          ),
-                        ),
-                      );
-                    },
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        AspectRatio(
-                          aspectRatio: 1,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: colorScheme.muted,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            foregroundDecoration: BoxDecoration(
-                              border: Border.all(color: colorScheme.border, width: 0.8),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: coverUrl == null
-                                  ? Icon(LucideIcons.disc, size: 48, color: colorScheme.mutedForeground)
-                                  : LocalCoverImage(
-                                      id: album['coverArt'],
-                                      serverId: server.id,
-                                      fallbackUrl: coverUrl,
-                                    ),
+                  return Center(
+                    child: AlbumCard(
+                      title: album['title'] ?? album['name'] ?? 'Unknown Album',
+                      artist: album['artist'] ?? 'Unknown Artist',
+                      coverArtId: album['coverArt'],
+                      fallbackCoverUrl: coverUrl,
+                      serverId: server.id,
+                      width: 140,
+                      padding: 8,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AlbumDetailScreen(
+                              albumId: album['id'].toString(),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          album['title'] ?? album['name'] ?? 'Unknown Album',
-                          style: TextStyle(
-                            color: colorScheme.foreground,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          album['artist'] ?? 'Unknown Artist',
-                          style: TextStyle(
-                            color: colorScheme.mutedForeground,
-                            fontSize: 12,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+                        );
+                      },
                     ),
                   );
                 },

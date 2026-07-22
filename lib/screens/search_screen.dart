@@ -4,6 +4,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/audio_provider.dart';
 import 'package:zenify/components/local_cover_image.dart';
+import 'package:zenify/components/album_card.dart';
 import 'package:zenify/screens/album_detail_screen.dart';
 import 'package:zenify/screens/artist_detail_screen.dart';
 import 'dart:async';
@@ -196,7 +197,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       Text('專輯', style: theme.textTheme.h4),
                       const SizedBox(height: 16),
                       SizedBox(
-                        height: 180,
+                        height: 215,
                         child: ListView.builder(
                           scrollDirection: Axis.horizontal,
                           itemCount: _albums.length,
@@ -206,57 +207,24 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                             final coverId = album['coverArt'] ?? id;
                             final fallbackUrl = api != null ? api.getCoverArtUrl(coverId, size: 250) : null;
                             
-                            return GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => AlbumDetailScreen(albumId: id),
-                                  ),
-                                );
-                              },
-                              child: Container(
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: AlbumCard(
+                                title: album['title'] ?? album['name'] ?? 'Unknown',
+                                artist: album['artist'] ?? '',
+                                coverArtId: coverId,
+                                fallbackCoverUrl: fallbackUrl,
+                                serverId: server?.id ?? 0,
                                 width: 120,
-                                margin: const EdgeInsets.only(right: 16),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                      width: 120,
-                                      height: 120,
-                                      decoration: BoxDecoration(
-                                        color: colorScheme.muted,
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      foregroundDecoration: BoxDecoration(
-                                        border: Border.all(color: colorScheme.border, width: 0.8),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(8),
-                                        child: LocalCoverImage(
-                                          id: coverId,
-                                          serverId: server?.id ?? 0,
-                                          fallbackUrl: fallbackUrl,
-                                          isThumb: true,
-                                        ),
-                                      ),
+                                padding: 8,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => AlbumDetailScreen(albumId: id),
                                     ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      album['title'] ?? album['name'] ?? 'Unknown',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                    Text(
-                                      album['artist'] ?? '',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12),
-                                    ),
-                                  ],
-                                ),
+                                  );
+                                },
                               ),
                             );
                           },

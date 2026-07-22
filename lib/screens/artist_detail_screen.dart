@@ -1,8 +1,8 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/components/local_cover_image.dart';
+import 'package:zenify/components/album_card.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/audio_provider.dart';
 import 'package:zenify/screens/album_detail_screen.dart';
@@ -191,10 +191,10 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent: 200,
+                            maxCrossAxisExtent: 180,
                             crossAxisSpacing: 16,
                             mainAxisSpacing: 16,
-                            childAspectRatio: 0.8,
+                            childAspectRatio: 0.68,
                           ),
                           itemCount: albums.length,
                           itemBuilder: (context, index) {
@@ -204,7 +204,14 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
                             final albumCoverId = album['coverArt'] ?? album['id'];
                             final fallbackUrl = api != null && albumCoverId != null ? api.getCoverArtUrl(albumCoverId, size: 250) : null;
                             
-                            return GestureDetector(
+                            return AlbumCard(
+                              title: title,
+                              artist: year != null ? year.toString() : name,
+                              coverArtId: albumCoverId,
+                              fallbackCoverUrl: fallbackUrl,
+                              serverId: server?.id ?? 0,
+                              width: 140,
+                              padding: 8,
                               onTap: () {
                                 Navigator.push(
                                   context,
@@ -215,45 +222,6 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
                                   ),
                                 );
                               },
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  AspectRatio(
-                                    aspectRatio: 1,
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: colorScheme.muted,
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      foregroundDecoration: BoxDecoration(
-                                        border: Border.all(color: colorScheme.border, width: 0.8),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(8),
-                                        child: LocalCoverImage(
-                                          id: albumCoverId ?? '',
-                                          serverId: server?.id ?? 0,
-                                          fallbackUrl: fallbackUrl,
-                                          isThumb: true,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    title,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(fontWeight: FontWeight.bold, color: colorScheme.foreground),
-                                  ),
-                                  if (year != null)
-                                    Text(
-                                      year.toString(),
-                                      style: TextStyle(fontSize: 12, color: colorScheme.mutedForeground),
-                                    ),
-                                ],
-                              ),
                             );
                           },
                         ),

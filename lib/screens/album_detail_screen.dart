@@ -101,26 +101,39 @@ class AlbumDetailScreen extends ConsumerWidget {
                               borderRadius: BorderRadius.circular(12),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.3),
+                                  color: Colors.black.withValues(alpha: 0.3),
                                   blurRadius: 20,
                                   offset: const Offset(0, 10),
                                 ),
                               ],
                             ),
-                            foregroundDecoration: BoxDecoration(
-                              border: Border.all(color: colorScheme.border, width: 0.8),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(12),
-                              child: coverUrl == null
-                                  ? Icon(LucideIcons.music, size: 64, color: colorScheme.mutedForeground)
-                                  : LocalCoverImage(
-                                      id: album['coverArt'],
-                                      serverId: server?.id ?? 0,
-                                      fallbackUrl: coverUrl,
-                                      isThumb: false,
+                              clipBehavior: Clip.antiAliasWithSaveLayer,
+                              child: Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  coverUrl == null
+                                      ? Icon(LucideIcons.music, size: 64, color: colorScheme.mutedForeground)
+                                      : LocalCoverImage(
+                                          id: album['coverArt'],
+                                          serverId: server?.id ?? 0,
+                                          fallbackUrl: coverUrl,
+                                          isThumb: false,
+                                        ),
+                                  IgnorePointer(
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: colorScheme.foreground.withValues(alpha: 0.08),
+                                          width: 1.0,
+                                        ),
+                                      ),
                                     ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                           const SizedBox(width: 32),
