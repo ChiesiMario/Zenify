@@ -120,20 +120,23 @@ class _ZenifyAppState extends ConsumerState<ZenifyApp> with WindowListener {
       title: 'Zenify',
       themeMode: themeMode,
       materialThemeBuilder: (context, theme) => theme.copyWith(
-        textTheme: theme.textTheme.apply(fontFamilyFallback: ['NotoSansSC']),
+        textTheme: theme.textTheme.apply(
+          fontFamily: 'Nunito',
+          fontFamilyFallback: const ['NotoSansTC', 'NotoSansSC', 'Microsoft JhengHei UI', 'Microsoft YaHei UI', 'Segoe UI', 'sans-serif'],
+        ),
       ),
       theme: ShadThemeData(
         brightness: Brightness.light,
         colorScheme: const ShadZincColorScheme.light(),
         textTheme: ShadTextTheme(
-          family: 'NotoSansTC',
+          family: 'Nunito',
         ),
       ),
       darkTheme: ShadThemeData(
         brightness: Brightness.dark,
         colorScheme: const ShadZincColorScheme.dark(),
         textTheme: ShadTextTheme(
-          family: 'NotoSansTC',
+          family: 'Nunito',
         ),
       ),
       builder: (context, child) {
@@ -145,8 +148,8 @@ class _ZenifyAppState extends ConsumerState<ZenifyApp> with WindowListener {
           textDirection: TextDirection.ltr,
           child: DefaultTextStyle(
             style: const TextStyle(
-              fontFamily: 'NotoSansTC',
-              fontFamilyFallback: ['NotoSansSC'],
+              fontFamily: 'Nunito',
+              fontFamilyFallback: ['NotoSansTC', 'NotoSansSC', 'Microsoft JhengHei UI', 'Microsoft YaHei UI', 'Segoe UI', 'sans-serif'],
             ),
             child: Stack(
               children: [

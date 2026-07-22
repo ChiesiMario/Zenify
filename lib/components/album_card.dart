@@ -186,7 +186,8 @@ class _AlbumCardState extends State<AlbumCard> {
                     color: colorScheme.foreground,
                     fontWeight: FontWeight.w600,
                     fontSize: 13,
-                    height: 1.1,
+                    letterSpacing: 0.1,
+                    height: 1.15,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -207,8 +208,9 @@ class _AlbumCardState extends State<AlbumCard> {
                             ? colorScheme.foreground
                             : colorScheme.mutedForeground,
                         fontSize: 11,
-                        fontWeight: FontWeight.w400,
-                        height: 1.1,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0.15,
+                        height: 1.15,
                         decoration: _isArtistHovered && widget.onArtistTap != null
                             ? TextDecoration.underline
                             : TextDecoration.none,
