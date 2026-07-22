@@ -26,4 +26,5 @@ class DownloadedTrack {
   late String rawData;
 
   bool isComplete = true; // Indicates whether the download finished
+  bool isManualDownload = false; // Indicates whether user manually downloaded or auto-cached
 }

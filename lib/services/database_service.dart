@@ -136,4 +136,16 @@ class DatabaseService {
       await isar.downloadedTracks.delete(id);
     });
   }
+
+  /// Delete all auto-cache tracks from database
+  Future<List<DownloadedTrack>> deleteCacheTracks() async {
+    final isar = await db;
+    final cacheTracks = await isar.downloadedTracks.filter().isManualDownloadEqualTo(false).findAll();
+    await isar.writeTxn(() async {
+      for (var t in cacheTracks) {
+        await isar.downloadedTracks.delete(t.id);
+      }
+    });
+    return cacheTracks;
+  }
 }

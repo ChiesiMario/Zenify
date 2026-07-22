@@ -326,7 +326,8 @@ class AudioNotifier extends Notifier<AudioState> {
             ..sizeBytes = 0
             ..downloadedAt = DateTime.now()
             ..rawData = jsonEncode(song)
-            ..isComplete = false;
+            ..isComplete = false
+            ..isManualDownload = false;
 
           await db.saveDownloadedTrack(track);
         } else if (!downloadedTrack.isComplete) {

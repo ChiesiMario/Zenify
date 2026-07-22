@@ -252,7 +252,7 @@ class AlbumDetailScreen extends ConsumerWidget {
                                   final tracksAsync = ref.watch(downloadedTracksProvider);
                                   
                                   final isDownloaded = tracksAsync.when(
-                                    data: (tracks) => tracks.any((t) => t.songId == songId),
+                                    data: (tracks) => tracks.any((t) => t.songId == songId && t.isManualDownload && t.isComplete),
                                     loading: () => false,
                                     error: (_, __) => false,
                                   );

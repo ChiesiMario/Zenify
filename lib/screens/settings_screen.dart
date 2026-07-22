@@ -1,17 +1,25 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:zenify/providers/download_provider.dart';
 import 'package:zenify/providers/theme_provider.dart';
 import 'package:zenify/screens/server_management_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
+  String _formatSize(int bytes) {
+    final mb = bytes / (1024 * 1024);
+    return '${mb.toStringAsFixed(1)} MB';
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
     final themeMode = ref.watch(themeModeProvider);
+    final downloadsAsync = ref.watch(downloadedTracksProvider);
 
     return Scaffold(
       backgroundColor: colorScheme.background,
@@ -74,11 +82,61 @@ class SettingsScreen extends ConsumerWidget {
                       case ThemeMode.dark:
                         return const Text('深色模式');
                       case ThemeMode.system:
-                      default:
                         return const Text('自動 (系統)');
                     }
                   },
                 ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 32),
+          _buildSectionHeader('儲存與快取', colorScheme),
+          const SizedBox(height: 12),
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: colorScheme.border),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: downloadsAsync.when(
+              data: (tracks) {
+                final cacheTracks = tracks.where((t) => !t.isManualDownload && File(t.localPath).existsSync()).toList();
+                final totalSizeBytes = cacheTracks.fold<int>(0, (sum, t) => sum + t.sizeBytes);
+                final formattedSize = _formatSize(totalSizeBytes);
+
+                return ListTile(
+                  leading: Icon(LucideIcons.hardDrive, color: colorScheme.foreground),
+                  title: Text('播放快取管理', style: TextStyle(color: colorScheme.foreground)),
+                  subtitle: Text(
+                    '已使用快取: $formattedSize (${cacheTracks.length} 首歌曲)',
+                    style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12),
+                  ),
+                  trailing: ShadButton.outline(
+                    size: ShadButtonSize.sm,
+                    enabled: cacheTracks.isNotEmpty,
+                    onPressed: () async {
+                      await ref.read(downloadServiceProvider).clearAllCaches();
+                      ref.invalidate(downloadedTracksProvider);
+                    },
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(LucideIcons.trash2, size: 14),
+                        SizedBox(width: 6),
+                        Text('清除快取'),
+                      ],
+                    ),
+                  ),
+                );
+              },
+              loading: () => ListTile(
+                leading: Icon(LucideIcons.hardDrive, color: colorScheme.foreground),
+                title: Text('播放快取管理', style: TextStyle(color: colorScheme.foreground)),
+                subtitle: Text('計算快取容量中...', style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12)),
+              ),
+              error: (err, _) => ListTile(
+                leading: Icon(LucideIcons.hardDrive, color: colorScheme.foreground),
+                title: Text('播放快取管理', style: TextStyle(color: colorScheme.foreground)),
+                subtitle: Text('讀取快取資訊失敗', style: TextStyle(color: colorScheme.destructive, fontSize: 12)),
               ),
             ),
           ),

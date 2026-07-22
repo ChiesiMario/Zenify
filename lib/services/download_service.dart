@@ -17,9 +17,25 @@ class DownloadService {
     if (_api == null) return;
     final songId = song['id'].toString();
 
-    // Check if already completely downloaded
+    // Check if existing record exists
     final existing = await _db.getDownloadedTrack(songId);
-    if (existing != null && existing.isComplete) return;
+    if (existing != null) {
+      if (existing.isManualDownload && existing.isComplete) return;
+
+      if (existing.isComplete && File(existing.localPath).existsSync()) {
+        // Upgrade auto-cache track to manual download
+        existing.isManualDownload = true;
+        await _db.saveDownloadedTrack(existing);
+        if (onProgress != null) {
+          onProgress!(songId, 1.0);
+        }
+        return;
+      } else if (!existing.isComplete) {
+        // Mark as manual download so when stream finishes it stays as manual download
+        existing.isManualDownload = true;
+        await _db.saveDownloadedTrack(existing);
+      }
+    }
 
     final dir = await getApplicationDocumentsDirectory();
     final downloadDir = Directory('${dir.path}/zenify_downloads');
@@ -51,7 +67,8 @@ class DownloadService {
       await sink.close();
 
       // Save to database
-      final track = DownloadedTrack()
+      final track = existing ?? DownloadedTrack();
+      track
         ..songId = songId
         ..serverId = serverId
         ..title = song['title'] ?? 'Unknown'
@@ -63,7 +80,9 @@ class DownloadService {
         ..localPath = localPath
         ..sizeBytes = downloaded
         ..downloadedAt = DateTime.now()
-        ..rawData = jsonEncode(song);
+        ..rawData = jsonEncode(song)
+        ..isComplete = true
+        ..isManualDownload = true;
 
       await _db.saveDownloadedTrack(track);
 
@@ -83,6 +102,18 @@ class DownloadService {
         file.deleteSync();
       }
       await _db.deleteDownloadedTrack(track.id);
+    }
+  }
+
+  Future<void> clearAllCaches() async {
+    final deleted = await _db.deleteCacheTracks();
+    for (final track in deleted) {
+      final file = File(track.localPath);
+      if (file.existsSync()) {
+        try {
+          file.deleteSync();
+        } catch (_) {}
+      }
     }
   }
 }
