@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:zenify/components/album_card.dart';
+import 'package:zenify/components/artist_card.dart';
 import 'package:zenify/providers/app_providers.dart';
-import 'package:zenify/screens/album_detail_screen.dart';
+import 'package:zenify/screens/artist_detail_screen.dart';
 
-class AlbumsGrid extends ConsumerWidget {
-  final List<dynamic> albums;
+class ArtistsGrid extends ConsumerWidget {
+  final List<dynamic> artists;
   final bool shrinkWrap;
   final ScrollPhysics? physics;
   final EdgeInsetsGeometry padding;
 
-  const AlbumsGrid({
+  const ArtistsGrid({
     super.key,
-    required this.albums,
+    required this.artists,
     this.shrinkWrap = true,
     this.physics = const NeverScrollableScrollPhysics(),
     this.padding = EdgeInsets.zero,
@@ -25,8 +25,8 @@ class AlbumsGrid extends ConsumerWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        const double maxExtent = 160.0;
-        const double spacing = 16.0;
+        const double maxExtent = 120.0;
+        const double spacing = 0.0;
         
         final double availableWidth = constraints.maxWidth - padding.horizontal;
         int crossAxisCount = (availableWidth / maxExtent).ceil();
@@ -35,8 +35,8 @@ class AlbumsGrid extends ConsumerWidget {
         final double totalHorizontalSpacing = spacing * (crossAxisCount - 1);
         final double cellWidth = (availableWidth - totalHorizontalSpacing) / crossAxisCount;
         
-        // cellHeight = square image (cellWidth) + text height (~50px)
-        final double cellHeight = cellWidth + 50.0; 
+        // cellHeight = square image (cellWidth) + text height (~40px)
+        final double cellHeight = cellWidth + 40.0; 
         final double childAspectRatio = cellWidth / cellHeight;
 
         return GridView.builder(
@@ -46,32 +46,35 @@ class AlbumsGrid extends ConsumerWidget {
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
             crossAxisSpacing: spacing,
-            mainAxisSpacing: 24,
+            mainAxisSpacing: 16,
             childAspectRatio: childAspectRatio,
           ),
-          itemCount: albums.length,
+          itemCount: artists.length,
           itemBuilder: (context, index) {
-            final album = albums[index];
-            final title = album['title'] ?? album['name'] ?? '未知專輯';
-            final artist = album['artist'] ?? album['year']?.toString() ?? '未知藝術家';
-            final albumCoverId = album['coverArt'] ?? album['id'];
-            final fallbackUrl = api != null && albumCoverId != null 
-                ? api.getCoverArtUrl(albumCoverId, size: 250) 
+            final artist = artists[index];
+            final name = artist['name'] ?? '未知藝術家';
+            final artistId = artist['id'];
+            final coverArtId = artist['coverArt'] ?? artistId;
+            final fallbackUrl = api != null && coverArtId != null 
+                ? api.getCoverArtUrl(coverArtId, size: 250) 
                 : null;
             
-            return AlbumCard(
-              title: title,
-              artist: artist,
-              coverArtId: albumCoverId,
+            return ArtistCard(
+              name: name,
+              artistId: artistId,
+              coverArtId: coverArtId,
               fallbackCoverUrl: fallbackUrl,
               serverId: server?.id ?? 0,
-              padding: 0,
               onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    settings: RouteSettings(name: title),
-                    builder: (context) => AlbumDetailScreen(albumId: album['id']),
+                    settings: RouteSettings(name: name),
+                    builder: (context) => ArtistDetailScreen(
+                      artistId: artistId,
+                      artistName: name,
+                      coverUrl: fallbackUrl,
+                    ),
                   ),
                 );
               },

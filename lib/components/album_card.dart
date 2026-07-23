@@ -12,7 +12,6 @@ class AlbumCard extends StatefulWidget {
   final VoidCallback? onPlayTap;
   final VoidCallback? onMoreTap;
   final VoidCallback? onArtistTap;
-  final double width;
   final double padding;
 
   const AlbumCard({
@@ -26,7 +25,6 @@ class AlbumCard extends StatefulWidget {
     this.onPlayTap,
     this.onMoreTap,
     this.onArtistTap,
-    this.width = 150.0,
     this.padding = 10.0,
   });
 
@@ -51,20 +49,19 @@ class _AlbumCardState extends State<AlbumCard> {
         onTap: widget.onTap,
         behavior: HitTestBehavior.opaque,
         child: Container(
-          width: widget.width + (widget.padding * 2),
           padding: EdgeInsets.all(widget.padding),
           decoration: const BoxDecoration(
             color: Colors.transparent,
           ),
           child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Apple Music Web Album Cover Container
-                AnimatedContainer(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Apple Music Web Album Cover Container
+              AspectRatio(
+                aspectRatio: 1,
+                child: AnimatedContainer(
                   duration: const Duration(milliseconds: 120),
-                  width: widget.width,
-                  height: widget.width,
                   decoration: BoxDecoration(
                     color: colorScheme.muted,
                     borderRadius: BorderRadius.circular(8),
@@ -91,10 +88,14 @@ class _AlbumCardState extends State<AlbumCard> {
                         // Fallback Music Icon
                         if ((widget.coverArtId == null || widget.coverArtId!.isEmpty) && widget.fallbackCoverUrl == null)
                           Center(
-                            child: Icon(
-                              LucideIcons.music,
-                              color: colorScheme.mutedForeground,
-                              size: widget.width * 0.28,
+                            child: LayoutBuilder(
+                              builder: (context, constraints) {
+                                return Icon(
+                                  LucideIcons.music,
+                                  color: colorScheme.mutedForeground,
+                                  size: constraints.maxWidth * 0.28,
+                                );
+                              },
                             ),
                           ),
                         // Apple Music Sub-pixel Inner Border
@@ -165,53 +166,54 @@ class _AlbumCardState extends State<AlbumCard> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 2),
-                // Title (Apple Music w600 weight)
-                Text(
-                  widget.title,
-                  style: TextStyle(
-                    color: colorScheme.foreground,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                    letterSpacing: 0.1,
-                    height: 1.15,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.left,
+              ),
+              const SizedBox(height: 2),
+              // Title (Apple Music w600 weight)
+              Text(
+                widget.title,
+                style: TextStyle(
+                  color: colorScheme.foreground,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                  letterSpacing: 0.1,
+                  height: 1.15,
                 ),
-                const SizedBox(height: 2),
-                // Artist (Apple Music 11px muted text, clickable)
-                MouseRegion(
-                  cursor: widget.onArtistTap != null ? SystemMouseCursors.click : SystemMouseCursors.basic,
-                  onEnter: (_) => setState(() => _isArtistHovered = true),
-                  onExit: (_) => setState(() => _isArtistHovered = false),
-                  child: GestureDetector(
-                    onTap: widget.onArtistTap,
-                    child: Text(
-                      widget.artist,
-                      style: TextStyle(
-                        color: _isArtistHovered && widget.onArtistTap != null
-                            ? colorScheme.foreground
-                            : colorScheme.mutedForeground,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w400,
-                        letterSpacing: 0.15,
-                        height: 1.15,
-                        decoration: _isArtistHovered && widget.onArtistTap != null
-                            ? TextDecoration.underline
-                            : TextDecoration.none,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.left,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.left,
+              ),
+              const SizedBox(height: 2),
+              // Artist (Apple Music 11px muted text, clickable)
+              MouseRegion(
+                cursor: widget.onArtistTap != null ? SystemMouseCursors.click : SystemMouseCursors.basic,
+                onEnter: (_) => setState(() => _isArtistHovered = true),
+                onExit: (_) => setState(() => _isArtistHovered = false),
+                child: GestureDetector(
+                  onTap: widget.onArtistTap,
+                  child: Text(
+                    widget.artist,
+                    style: TextStyle(
+                      color: _isArtistHovered && widget.onArtistTap != null
+                          ? colorScheme.foreground
+                          : colorScheme.mutedForeground,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w400,
+                      letterSpacing: 0.15,
+                      height: 1.15,
+                      decoration: _isArtistHovered && widget.onArtistTap != null
+                          ? TextDecoration.underline
+                          : TextDecoration.none,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.left,
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
-      );
+      ),
+    );
   }
 }

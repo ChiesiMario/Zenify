@@ -145,25 +145,27 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                             
                             return Padding(
                               padding: const EdgeInsets.only(right: 16.0),
-                              child: ArtistCard(
-                                name: artist['name'] ?? 'Unknown',
-                                artistId: id,
-                                coverArtId: coverId,
-                                fallbackCoverUrl: fallbackUrl,
-                                serverId: server?.id ?? 0,
+                              child: SizedBox(
                                 width: 80,
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      settings: RouteSettings(name: artist['name'] ?? 'Unknown'),
-                                      builder: (context) => ArtistDetailScreen(
-                                        artistId: id,
-                                        artistName: artist['name'] ?? 'Unknown',
+                                child: ArtistCard(
+                                  name: artist['name'] ?? 'Unknown',
+                                  artistId: id,
+                                  coverArtId: coverId,
+                                  fallbackCoverUrl: fallbackUrl,
+                                  serverId: server?.id ?? 0,
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        settings: RouteSettings(name: artist['name'] ?? 'Unknown'),
+                                        builder: (context) => ArtistDetailScreen(
+                                          artistId: id,
+                                          artistName: artist['name'] ?? 'Unknown',
+                                        ),
                                       ),
-                                    ),
-                                  );
-                                },
+                                    );
+                                  },
+                                ),
                               ),
                             );
                           },

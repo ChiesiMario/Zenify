@@ -9,7 +9,6 @@ class ArtistCard extends StatefulWidget {
   final String? fallbackCoverUrl;
   final int serverId;
   final VoidCallback onTap;
-  final double width;
 
   const ArtistCard({
     super.key,
@@ -19,7 +18,6 @@ class ArtistCard extends StatefulWidget {
     required this.fallbackCoverUrl,
     required this.serverId,
     required this.onTap,
-    this.width = 100.0,
   });
 
   @override
@@ -41,60 +39,70 @@ class _ArtistCardState extends State<ArtistCard> {
       child: GestureDetector(
         onTap: widget.onTap,
         behavior: HitTestBehavior.opaque,
-        child: SizedBox(
-          width: widget.width,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                width: widget.width,
-                height: widget.width,
-                decoration: BoxDecoration(
-                  color: colorScheme.muted,
-                  shape: BoxShape.circle,
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    if ((widget.coverArtId == null || widget.coverArtId!.isEmpty) && widget.fallbackCoverUrl == null)
-                      Center(child: Icon(LucideIcons.user, color: colorScheme.mutedForeground, size: widget.width * 0.24))
-                    else
-                      LocalCoverImage(
-                        id: widget.coverArtId ?? widget.artistId,
-                        serverId: widget.serverId,
-                        fallbackUrl: widget.fallbackCoverUrl,
-                        isThumb: true,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14.0),
+              child: AspectRatio(
+                aspectRatio: 1,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 120),
+                  decoration: BoxDecoration(
+                    color: colorScheme.muted,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: _isHovered ? 0.15 : 0.05),
+                        blurRadius: _isHovered ? 16 : 8,
+                        offset: Offset(0, _isHovered ? 6 : 4),
                       ),
-                    // Translucent darkening mask on hover (50%)
-                    Positioned.fill(
-                      child: AnimatedOpacity(
-                        opacity: _isHovered ? 1.0 : 0.0,
-                        duration: const Duration(milliseconds: 150),
-                        child: Container(
-                          color: Colors.black.withValues(alpha: 0.50),
+                    ],
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      if ((widget.coverArtId == null || widget.coverArtId!.isEmpty) && widget.fallbackCoverUrl == null)
+                        Center(child: Icon(LucideIcons.user, color: colorScheme.mutedForeground, size: 40))
+                      else
+                        LocalCoverImage(
+                          id: widget.coverArtId ?? widget.artistId,
+                          serverId: widget.serverId,
+                          fallbackUrl: widget.fallbackCoverUrl,
+                          isThumb: true,
+                        ),
+                      // Translucent darkening mask on hover (50%)
+                      Positioned.fill(
+                        child: AnimatedOpacity(
+                          opacity: _isHovered ? 1.0 : 0.0,
+                          duration: const Duration(milliseconds: 150),
+                          child: Container(
+                            color: Colors.black.withValues(alpha: 0.50),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                widget.name,
-                style: TextStyle(
-                  color: colorScheme.foreground,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                  decoration: _isHovered ? TextDecoration.underline : TextDecoration.none,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              widget.name,
+              style: TextStyle(
+                color: colorScheme.foreground,
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                letterSpacing: 0.1,
+                decoration: _isHovered ? TextDecoration.underline : TextDecoration.none,
               ),
-            ],
-          ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       ),
     );
