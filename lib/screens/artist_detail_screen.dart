@@ -187,39 +187,57 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
                       if (albums.isNotEmpty) ...[
                         Text('歷年專輯', style: theme.textTheme.h4),
                         const SizedBox(height: 16),
-                        GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent: 180,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                            childAspectRatio: 0.68,
-                          ),
-                          itemCount: albums.length,
-                          itemBuilder: (context, index) {
-                            final album = albums[index];
-                            final title = album['title'] ?? album['name'] ?? 'Unknown';
-                            final year = album['year'];
-                            final albumCoverId = album['coverArt'] ?? album['id'];
-                            final fallbackUrl = api != null && albumCoverId != null ? api.getCoverArtUrl(albumCoverId, size: 250) : null;
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            const double cardWidth = 140.0;
+                            const double cardPadding = 8.0;
+                            const double cardTotalWidth = cardWidth + (cardPadding * 2);
+                            const double spacing = 16.0;
                             
-                            return AlbumCard(
-                              title: title,
-                              artist: year != null ? year.toString() : name,
-                              coverArtId: albumCoverId,
-                              fallbackCoverUrl: fallbackUrl,
-                              serverId: server?.id ?? 0,
-                              width: 140,
-                              padding: 8,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => AlbumDetailScreen(
-                                      albumId: album['id'],
-                                    ),
-                                  ),
+                            int crossAxisCount = (constraints.maxWidth) ~/ (cardTotalWidth + spacing);
+                            if (crossAxisCount < 2) crossAxisCount = 2;
+                            
+                            final double totalHorizontalSpacing = spacing * (crossAxisCount - 1);
+                            final double cellWidth = (constraints.maxWidth - totalHorizontalSpacing) / crossAxisCount;
+                            
+                            const double fixedCellHeight = 194.0;
+                            final double childAspectRatio = cellWidth / fixedCellHeight;
+
+                            return GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: crossAxisCount,
+                                crossAxisSpacing: spacing,
+                                mainAxisSpacing: 12.0,
+                                childAspectRatio: childAspectRatio,
+                              ),
+                              itemCount: albums.length,
+                              itemBuilder: (context, index) {
+                                final album = albums[index];
+                                final title = album['title'] ?? album['name'] ?? 'Unknown';
+                                final year = album['year'];
+                                final albumCoverId = album['coverArt'] ?? album['id'];
+                                final fallbackUrl = api != null && albumCoverId != null ? api.getCoverArtUrl(albumCoverId, size: 250) : null;
+                                
+                                return AlbumCard(
+                                  title: title,
+                                  artist: year != null ? year.toString() : name,
+                                  coverArtId: albumCoverId,
+                                  fallbackCoverUrl: fallbackUrl,
+                                  serverId: server?.id ?? 0,
+                                  width: 140,
+                                  padding: 8,
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => AlbumDetailScreen(
+                                          albumId: album['id'],
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 );
                               },
                             );

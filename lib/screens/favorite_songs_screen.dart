@@ -16,10 +16,6 @@ class FavoriteSongsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: colorScheme.background,
-      appBar: AppBar(
-        backgroundColor: colorScheme.background,
-        title: const Text('歌曲'),
-      ),
       body: activeServer.when(
         data: (server) {
           if (server == null) {
@@ -37,48 +33,53 @@ class FavoriteSongsScreen extends ConsumerWidget {
                 return Center(child: Text('目前沒有任何喜愛的歌曲', style: TextStyle(color: colorScheme.mutedForeground)));
               }
 
-              return ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: songs.length,
-                itemBuilder: (context, index) {
-                  final song = songs[index];
-                  
-                  final api = ref.watch(subsonicApiProvider);
-                  final coverUrl = api != null && song['coverArt'] != null
-                      ? api.getCoverArtUrl(song['coverArt'])
-                      : null;
+              return Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: songs.length,
+                    itemBuilder: (context, index) {
+                      final song = songs[index];
+                      
+                      final api = ref.watch(subsonicApiProvider);
+                      final coverUrl = api != null && song['coverArt'] != null
+                          ? api.getCoverArtUrl(song['coverArt'])
+                          : null;
 
-                  return ListTile(
-                    leading: Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: colorScheme.muted,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      child: coverUrl == null
-                          ? Icon(LucideIcons.music, color: colorScheme.mutedForeground)
-                          : LocalCoverImage(
-                              id: song['coverArt'],
-                              serverId: server.id,
-                              fallbackUrl: coverUrl,
-                            ),
-                    ),
-                    title: Text(
-                      song['title'] ?? '未知歌曲',
-                      style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Text(
-                      song['artist'] ?? '未知藝術家',
-                      style: TextStyle(color: colorScheme.mutedForeground),
-                    ),
-                    trailing: Icon(LucideIcons.heart, color: colorScheme.primary),
-                    onTap: () {
-                      ref.read(audioProvider.notifier).playQueue(songs, index);
+                      return ListTile(
+                        leading: Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: colorScheme.muted,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: coverUrl == null
+                              ? Icon(LucideIcons.music, color: colorScheme.mutedForeground)
+                              : LocalCoverImage(
+                                  id: song['coverArt'],
+                                  serverId: server.id,
+                                  fallbackUrl: coverUrl,
+                                ),
+                        ),
+                        title: Text(
+                          song['title'] ?? '未知歌曲',
+                          style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(
+                          song['artist'] ?? '未知藝術家',
+                          style: TextStyle(color: colorScheme.mutedForeground),
+                        ),
+                        trailing: Icon(LucideIcons.heart, color: colorScheme.primary),
+                        onTap: () {
+                          ref.read(audioProvider.notifier).playQueue(songs, index);
+                        },
+                      );
                     },
-                  );
-                },
+                  ),
+                ),
               );
             },
             loading: () => Center(child: CircularProgressIndicator(color: colorScheme.foreground)),

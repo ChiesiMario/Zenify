@@ -35,20 +35,29 @@ class DownloadsView extends ConsumerWidget {
       child: Scaffold(
         backgroundColor: colorScheme.background,
         appBar: AppBar(
+          toolbarHeight: 0,
           backgroundColor: colorScheme.background,
           surfaceTintColor: Colors.transparent,
           scrolledUnderElevation: 0,
           elevation: 0,
-          title: Text('音樂快取與下載', style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.bold)),
-          bottom: TabBar(
-            labelColor: colorScheme.primary,
-            unselectedLabelColor: colorScheme.mutedForeground,
-            indicatorColor: colorScheme.primary,
-            indicatorSize: TabBarIndicatorSize.tab,
-            tabs: const [
-              Tab(text: '手動下載'),
-              Tab(text: '播放快取'),
-            ],
+          automaticallyImplyLeading: false,
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(48),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: TabBar(
+                  labelColor: colorScheme.primary,
+                  unselectedLabelColor: colorScheme.mutedForeground,
+                  indicatorColor: colorScheme.primary,
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  tabs: const [
+                    Tab(text: '手動下載'),
+                    Tab(text: '播放快取'),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
         body: downloadsAsync.when(
@@ -57,24 +66,29 @@ class DownloadsView extends ConsumerWidget {
             final manualTracks = validTracks.where((t) => t.isManualDownload).toList();
             final cacheTracks = validTracks.where((t) => !t.isManualDownload).toList();
 
-            return TabBarView(
-              children: [
-                _buildTrackList(
-                  context: context,
-                  ref: ref,
-                  tracks: manualTracks,
-                  emptyText: '尚無手動下載的音樂',
-                  colorScheme: colorScheme,
-                  api: api,
+            return Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: TabBarView(
+                  children: [
+                    _buildTrackList(
+                      context: context,
+                      ref: ref,
+                      tracks: manualTracks,
+                      emptyText: '尚無手動下載的音樂',
+                      colorScheme: colorScheme,
+                      api: api,
+                    ),
+                    _buildCacheTab(
+                      context: context,
+                      ref: ref,
+                      cacheTracks: cacheTracks,
+                      colorScheme: colorScheme,
+                      api: api,
+                    ),
+                  ],
                 ),
-                _buildCacheTab(
-                  context: context,
-                  ref: ref,
-                  cacheTracks: cacheTracks,
-                  colorScheme: colorScheme,
-                  api: api,
-                ),
-              ],
+              ),
             );
           },
           loading: () => Center(child: CircularProgressIndicator(color: colorScheme.foreground)),
@@ -102,7 +116,22 @@ class DownloadsView extends ConsumerWidget {
       );
     }
 
-    final totalSizeBytes = cacheTracks.fold<int>(0, (sum, t) => sum + t.sizeBytes);
+    final totalSizeBytes = cacheTracks.fold<int>(0, (sum, t) {
+      int sz = t.sizeBytes;
+      if (sz <= 0) {
+        try {
+          final f = File(t.localPath);
+          if (f.existsSync()) {
+            sz = f.lengthSync();
+            if (sz > 0) {
+              t.sizeBytes = sz;
+              ref.read(databaseProvider).saveDownloadedTrack(t);
+            }
+          }
+        } catch (_) {}
+      }
+      return sum + sz;
+    });
     final formattedTotal = _formatSize(totalSizeBytes);
 
     return Column(
@@ -110,7 +139,7 @@ class DownloadsView extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: colorScheme.muted.withOpacity(0.3),
+            color: colorScheme.muted.withValues(alpha: 0.3),
             border: Border(bottom: BorderSide(color: colorScheme.border, width: 0.5)),
           ),
           child: Row(
@@ -173,8 +202,21 @@ class DownloadsView extends ConsumerWidget {
       itemCount: tracks.length,
       itemBuilder: (context, index) {
         final track = tracks[index];
+        int sizeBytes = track.sizeBytes;
+        if (sizeBytes <= 0) {
+          try {
+            final f = File(track.localPath);
+            if (f.existsSync()) {
+              sizeBytes = f.lengthSync();
+              if (sizeBytes > 0) {
+                track.sizeBytes = sizeBytes;
+                ref.read(databaseProvider).saveDownloadedTrack(track);
+              }
+            }
+          } catch (_) {}
+        }
         final duration = _formatDuration(track.duration);
-        final size = _formatSize(track.sizeBytes);
+        final size = _formatSize(sizeBytes);
 
         return ListTile(
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:zenify/components/local_cover_image.dart';
 import 'package:zenify/screens/artist_detail_screen.dart';
+import 'package:zenify/components/artist_card.dart';
 
 
 class ArtistsView extends ConsumerWidget {
@@ -68,53 +68,27 @@ class ArtistsView extends ConsumerWidget {
                         ? api.getCoverArtUrl(artist['coverArt'])
                         : null;
 
-                    return GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ArtistDetailScreen(
-                              artistId: artist['id'],
-                              artistName: artist['name'] ?? '未知藝術家',
-                              coverUrl: coverUrl,
+                    return Center(
+                      child: ArtistCard(
+                        name: artist['name'] ?? '未知藝術家',
+                        artistId: artist['id'],
+                        coverArtId: artist['coverArt'],
+                        fallbackCoverUrl: coverUrl,
+                        serverId: server.id,
+                        width: fixedItemWidth,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              settings: RouteSettings(name: artist['name'] ?? '未知藝術家'),
+                              builder: (context) => ArtistDetailScreen(
+                                artistId: artist['id'],
+                                artistName: artist['name'] ?? '未知藝術家',
+                                coverUrl: coverUrl,
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                      child: Center(
-                        child: SizedBox(
-                          width: fixedItemWidth,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Container(
-                                width: fixedItemWidth,
-                                height: fixedItemWidth,
-                                decoration: BoxDecoration(
-                                  color: colorScheme.muted,
-                                  shape: BoxShape.circle,
-                                ),
-                                clipBehavior: Clip.antiAlias,
-                                child: coverUrl == null
-                                    ? Center(child: Icon(LucideIcons.user, color: colorScheme.mutedForeground, size: 24))
-                                    : LocalCoverImage(
-                                        id: artist['coverArt'],
-                                        serverId: server.id,
-                                        fallbackUrl: coverUrl,
-                                        isThumb: true,
-                                      ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                artist['name'] ?? '未知藝術家',
-                                style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.bold, fontSize: 12),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                        ),
+                          );
+                        },
                       ),
                     );
                   },

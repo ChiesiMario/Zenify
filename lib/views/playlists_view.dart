@@ -21,10 +21,6 @@ class PlaylistsView extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: colorScheme.background,
-      appBar: AppBar(
-        backgroundColor: colorScheme.background,
-        title: const Text('播放清單'),
-      ),
       body: playlistsAsync.when(
         data: (playlists) {
           if (playlists.isEmpty) {
@@ -64,6 +60,7 @@ class PlaylistsView extends ConsumerWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
+                          settings: RouteSettings(name: title),
                           builder: (context) => PlaylistDetailScreen(
                             playlistId: playlist['id'].toString(),
                             playlistName: title,

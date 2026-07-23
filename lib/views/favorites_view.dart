@@ -20,7 +20,10 @@ class FavoritesView extends StatelessWidget {
         'color': Colors.redAccent,
         'onTap': () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const FavoriteSongsScreen()),
+              MaterialPageRoute(
+                settings: const RouteSettings(name: '歌曲'),
+                builder: (context) => const FavoriteSongsScreen(),
+              ),
             ),
       },
       {
@@ -29,7 +32,10 @@ class FavoritesView extends StatelessWidget {
         'color': Colors.blueAccent,
         'onTap': () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const FavoriteAlbumsScreen()),
+              MaterialPageRoute(
+                settings: const RouteSettings(name: '專輯'),
+                builder: (context) => const FavoriteAlbumsScreen(),
+              ),
             ),
       },
       {
@@ -38,7 +44,10 @@ class FavoritesView extends StatelessWidget {
         'color': Colors.green,
         'onTap': () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const PlaylistsView()),
+              MaterialPageRoute(
+                settings: const RouteSettings(name: '播放清單'),
+                builder: (context) => const PlaylistsView(),
+              ),
             ),
       },
       {
@@ -47,54 +56,62 @@ class FavoritesView extends StatelessWidget {
         'color': Colors.orangeAccent,
         'onTap': () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const DownloadsView()),
+              MaterialPageRoute(
+                settings: const RouteSettings(name: '已下載'),
+                builder: (context) => const DownloadsView(),
+              ),
             ),
       },
     ];
 
     return Scaffold(
       backgroundColor: colorScheme.background,
-      body: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-        itemCount: hubItems.length,
-        separatorBuilder: (context, index) => const SizedBox(height: 12),
-        itemBuilder: (context, index) {
-          final item = hubItems[index];
-          return Card(
-            color: colorScheme.card,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: colorScheme.border, width: 1),
-            ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              leading: Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: (item['color'] as Color).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+            itemCount: hubItems.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final item = hubItems[index];
+              return Card(
+                color: colorScheme.card,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: colorScheme.border, width: 1),
                 ),
-                child: Icon(
-                  item['icon'] as IconData,
-                  color: item['color'] as Color,
-                  size: 24,
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  leading: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: (item['color'] as Color).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      item['icon'] as IconData,
+                      color: item['color'] as Color,
+                      size: 24,
+                    ),
+                  ),
+                  title: Text(
+                    item['title'] as String,
+                    style: TextStyle(
+                      color: colorScheme.foreground,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  trailing: Icon(LucideIcons.chevronRight, color: colorScheme.mutedForeground),
+                  onTap: item['onTap'] as VoidCallback,
                 ),
-              ),
-              title: Text(
-                item['title'] as String,
-                style: TextStyle(
-                  color: colorScheme.foreground,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              trailing: Icon(LucideIcons.chevronRight, color: colorScheme.mutedForeground),
-              onTap: item['onTap'] as VoidCallback,
-            ),
-          );
-        },
+              );
+            },
+          ),
+        ),
       ),
     );
   }

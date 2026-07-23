@@ -164,22 +164,30 @@ class AudioNotifier extends Notifier<AudioState> {
 
     _player.bufferedPositionStream.listen((bufferedPosition) async {
       if (_isCachingCurrentSong) {
-        final dur = state.duration;
-        // If buffered position is very close to or exceeds duration
-        if (dur.inMilliseconds > 0 && bufferedPosition.inMilliseconds >= dur.inMilliseconds - 200) {
-          _isCachingCurrentSong = false;
-          final current = state.currentSong;
-          if (current != null) {
-            final songId = current['id'].toString();
-            final db = ref.read(databaseProvider);
-            final track = await db.getDownloadedTrack(songId);
-            if (track != null && !track.isComplete) {
-              track.isComplete = true;
-              try {
-                track.sizeBytes = File(track.localPath).lengthSync();
-              } catch (_) {}
-              await db.saveDownloadedTrack(track);
-            }
+        final current = state.currentSong;
+        if (current != null) {
+          final songId = current['id'].toString();
+          final db = ref.read(databaseProvider);
+          final track = await db.getDownloadedTrack(songId);
+          if (track != null) {
+            try {
+              final file = File(track.localPath);
+              if (file.existsSync()) {
+                final currentLength = file.lengthSync();
+                final dur = state.duration;
+                final isNearEnd = dur.inMilliseconds > 0 && bufferedPosition.inMilliseconds >= dur.inMilliseconds - 200;
+                
+                if (currentLength != track.sizeBytes || (isNearEnd && !track.isComplete)) {
+                  track.sizeBytes = currentLength;
+                  if (isNearEnd) {
+                    track.isComplete = true;
+                    _isCachingCurrentSong = false;
+                  }
+                  await db.saveDownloadedTrack(track);
+                  ref.invalidate(downloadedTracksProvider);
+                }
+              }
+            } catch (_) {}
           }
         }
       }

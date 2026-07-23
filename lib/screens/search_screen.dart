@@ -5,6 +5,7 @@ import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/audio_provider.dart';
 import 'package:zenify/components/local_cover_image.dart';
 import 'package:zenify/components/album_card.dart';
+import 'package:zenify/components/artist_card.dart';
 import 'package:zenify/screens/album_detail_screen.dart';
 import 'package:zenify/screens/artist_detail_screen.dart';
 import 'dart:async';
@@ -93,10 +94,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       appBar: AppBar(
         backgroundColor: colorScheme.background,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(LucideIcons.arrowLeft, color: colorScheme.foreground),
-          onPressed: () => Navigator.pop(context),
-        ),
+        automaticallyImplyLeading: false,
         title: ShadInput(
           controller: _searchController,
           placeholder: const Text('搜尋歌手、專輯、歌曲...'),
@@ -146,44 +144,27 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                             final coverId = artist['coverArt'] ?? id;
                             final fallbackUrl = api != null ? api.getCoverArtUrl(coverId, size: 250) : null;
                             
-                            return GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ArtistDetailScreen(
-                                      artistId: id,
-                                      artistName: artist['name'] ?? 'Unknown',
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: Container(
-                                width: 100,
-                                margin: const EdgeInsets.only(right: 16),
-                                child: Column(
-                                  children: [
-                                    ClipOval(
-                                      child: SizedBox(
-                                        width: 80,
-                                        height: 80,
-                                        child: LocalCoverImage(
-                                          id: coverId,
-                                          serverId: server?.id ?? 0,
-                                          fallbackUrl: fallbackUrl,
-                                          isThumb: true,
-                                        ),
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 16.0),
+                              child: ArtistCard(
+                                name: artist['name'] ?? 'Unknown',
+                                artistId: id,
+                                coverArtId: coverId,
+                                fallbackCoverUrl: fallbackUrl,
+                                serverId: server?.id ?? 0,
+                                width: 80,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      settings: RouteSettings(name: artist['name'] ?? 'Unknown'),
+                                      builder: (context) => ArtistDetailScreen(
+                                        artistId: id,
+                                        artistName: artist['name'] ?? 'Unknown',
                                       ),
                                     ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      artist['name'] ?? 'Unknown',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontWeight: FontWeight.w500),
-                                    ),
-                                  ],
-                                ),
+                                  );
+                                },
                               ),
                             );
                           },
@@ -221,6 +202,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
+                                      settings: RouteSettings(name: album['title'] ?? album['name'] ?? 'Unknown'),
                                       builder: (context) => AlbumDetailScreen(albumId: id),
                                     ),
                                   );

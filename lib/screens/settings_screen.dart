@@ -23,25 +23,6 @@ class SettingsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: colorScheme.background,
-      appBar: AppBar(
-        backgroundColor: colorScheme.background,
-        surfaceTintColor: Colors.transparent,
-        scrolledUnderElevation: 0,
-        elevation: 0,
-        titleSpacing: 0,
-        leading: IconButton(
-          icon: Icon(LucideIcons.arrowLeft, color: colorScheme.foreground),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          '設定',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: colorScheme.foreground,
-            fontSize: 20,
-          ),
-        ),
-      ),
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         children: [
@@ -100,7 +81,16 @@ class SettingsScreen extends ConsumerWidget {
             child: downloadsAsync.when(
               data: (tracks) {
                 final cacheTracks = tracks.where((t) => !t.isManualDownload && File(t.localPath).existsSync()).toList();
-                final totalSizeBytes = cacheTracks.fold<int>(0, (sum, t) => sum + t.sizeBytes);
+                final totalSizeBytes = cacheTracks.fold<int>(0, (sum, t) {
+                  int sz = t.sizeBytes;
+                  if (sz <= 0) {
+                    try {
+                      final f = File(t.localPath);
+                      if (f.existsSync()) sz = f.lengthSync();
+                    } catch (_) {}
+                  }
+                  return sum + sz;
+                });
                 final formattedSize = _formatSize(totalSizeBytes);
 
                 return ListTile(

@@ -36,44 +36,27 @@ class AlbumCard extends StatefulWidget {
 
 class _AlbumCardState extends State<AlbumCard> {
   bool _isHovered = false;
-  bool _isPressed = false;
   bool _isArtistHovered = false;
 
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
-    final isActive = _isHovered || _isPressed;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() {
-        _isHovered = false;
-        _isPressed = false;
-      }),
+      onExit: (_) => setState(() => _isHovered = false),
       child: GestureDetector(
         onTap: widget.onTap,
-        onTapDown: (_) => setState(() => _isPressed = true),
-        onTapUp: (_) => setState(() => _isPressed = false),
-        onTapCancel: () => setState(() => _isPressed = false),
         behavior: HitTestBehavior.opaque,
-        child: AnimatedScale(
-          scale: isActive ? 1.025 : 1.0,
-          duration: const Duration(milliseconds: 120),
-          curve: Curves.easeOut,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 120),
-            curve: Curves.easeOut,
-            width: widget.width + (widget.padding * 2),
-            padding: EdgeInsets.all(widget.padding),
-            decoration: BoxDecoration(
-              color: isActive
-                  ? colorScheme.foreground.withValues(alpha: 0.05)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
+        child: Container(
+          width: widget.width + (widget.padding * 2),
+          padding: EdgeInsets.all(widget.padding),
+          decoration: const BoxDecoration(
+            color: Colors.transparent,
+          ),
+          child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -133,7 +116,11 @@ class _AlbumCardState extends State<AlbumCard> {
                             duration: const Duration(milliseconds: 150),
                             child: Stack(
                               children: [
-                                 // Bottom Left Play Button
+                                // Translucent darkening mask on hover (50%)
+                                Container(
+                                  color: Colors.black.withValues(alpha: 0.50),
+                                ),
+                                // Bottom Left Play Button
                                 Positioned(
                                   left: 10,
                                   bottom: 10,
@@ -208,7 +195,7 @@ class _AlbumCardState extends State<AlbumCard> {
                             ? colorScheme.foreground
                             : colorScheme.mutedForeground,
                         fontSize: 11,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w400,
                         letterSpacing: 0.15,
                         height: 1.15,
                         decoration: _isArtistHovered && widget.onArtistTap != null
@@ -225,7 +212,6 @@ class _AlbumCardState extends State<AlbumCard> {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 }

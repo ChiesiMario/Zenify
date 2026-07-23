@@ -16,10 +16,6 @@ class FavoriteAlbumsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: colorScheme.background,
-      appBar: AppBar(
-        backgroundColor: colorScheme.background,
-        title: const Text('專輯'),
-      ),
       body: activeServer.when(
         data: (server) {
           if (server == null) {
@@ -37,42 +33,59 @@ class FavoriteAlbumsScreen extends ConsumerWidget {
                 return Center(child: Text('目前沒有任何喜愛的專輯', style: TextStyle(color: colorScheme.mutedForeground)));
               }
 
-              return GridView.builder(
-                padding: const EdgeInsets.all(16),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.68,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                ),
-                itemCount: albums.length,
-                itemBuilder: (context, index) {
-                  final album = albums[index];
-                  final api = ref.watch(subsonicApiProvider);
-                  final coverUrl = api != null && album['coverArt'] != null
-                      ? api.getCoverArtUrl(album['coverArt'])
-                      : null;
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  const double cardWidth = 140.0;
+                  const double cardPadding = 8.0;
+                  const double cardTotalWidth = cardWidth + (cardPadding * 2);
+                  const double spacing = 16.0;
+                  
+                  int crossAxisCount = (constraints.maxWidth - 32) ~/ (cardTotalWidth + spacing);
+                  if (crossAxisCount < 2) crossAxisCount = 2;
+                  
+                  final double totalHorizontalSpacing = spacing * (crossAxisCount - 1) + 32;
+                  final double cellWidth = (constraints.maxWidth - totalHorizontalSpacing) / crossAxisCount;
+                  
+                  const double fixedCellHeight = 194.0;
+                  final double childAspectRatio = cellWidth / fixedCellHeight;
 
-                  return Center(
-                    child: AlbumCard(
-                      title: album['title'] ?? album['name'] ?? 'Unknown Album',
-                      artist: album['artist'] ?? 'Unknown Artist',
-                      coverArtId: album['coverArt'],
-                      fallbackCoverUrl: coverUrl,
-                      serverId: server.id,
-                      width: 140,
-                      padding: 8,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => AlbumDetailScreen(
-                              albumId: album['id'].toString(),
-                            ),
-                          ),
-                        );
-                      },
+                  return GridView.builder(
+                    padding: const EdgeInsets.all(16),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      crossAxisSpacing: spacing,
+                      mainAxisSpacing: 12.0,
+                      childAspectRatio: childAspectRatio,
                     ),
+                    itemCount: albums.length,
+                    itemBuilder: (context, index) {
+                      final album = albums[index];
+                      final api = ref.watch(subsonicApiProvider);
+                      final coverUrl = api != null && album['coverArt'] != null
+                          ? api.getCoverArtUrl(album['coverArt'])
+                          : null;
+
+                      return AlbumCard(
+                        title: album['title'] ?? album['name'] ?? 'Unknown Album',
+                        artist: album['artist'] ?? 'Unknown Artist',
+                        coverArtId: album['coverArt'],
+                        fallbackCoverUrl: coverUrl,
+                        serverId: server.id,
+                        width: 140,
+                        padding: 8,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              settings: RouteSettings(name: album['title'] ?? album['name'] ?? '專輯詳情'),
+                              builder: (context) => AlbumDetailScreen(
+                                albumId: album['id'].toString(),
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
                   );
                 },
               );

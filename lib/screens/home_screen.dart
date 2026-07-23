@@ -60,14 +60,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     const FavoritesView(),
   ];
 
+  String _currentSubTitle = '';
+
   void _updateCanPop() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         final navigator = _navigatorKeys[_currentIndex].currentState;
         final canPop = navigator?.canPop() ?? false;
-        if (_canPop != canPop) {
+        String title = '';
+        if (canPop && navigator != null) {
+          navigator.popUntil((route) {
+            if (route.settings.name != null && route.settings.name!.isNotEmpty) {
+              title = route.settings.name!;
+            }
+            return true;
+          });
+        }
+        if (_canPop != canPop || _currentSubTitle != title) {
           setState(() {
             _canPop = canPop;
+            _currentSubTitle = title;
           });
         }
       }
@@ -148,10 +160,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       backgroundColor: colorScheme.background,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(kToolbarHeight),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 800),
-            child: AppBar(
+        child: AppBar(
               backgroundColor: colorScheme.background,
               surfaceTintColor: Colors.transparent,
               scrolledUnderElevation: 0,
@@ -191,19 +200,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   );
                 },
                 child: _canPop
-                    ? Container(
-                        key: const ValueKey('back_btn'),
-                        transform: Matrix4.translationValues(-8.0, 0.0, 0.0),
-                        child: IconButton(
-                          icon: Icon(LucideIcons.arrowLeft, color: colorScheme.foreground),
-                          onPressed: () {
-                            _navigatorKeys[_currentIndex].currentState?.maybePop();
-                          },
-                        ),
+                    ? Row(
+                        key: ValueKey('back_btn_$_currentSubTitle'),
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Transform.translate(
+                            offset: const Offset(-8.0, 0.0),
+                            child: IconButton(
+                              icon: Icon(LucideIcons.arrowLeft, color: colorScheme.foreground),
+                              onPressed: () {
+                                _navigatorKeys[_currentIndex].currentState?.maybePop();
+                              },
+                            ),
+                          ),
+                          if (_currentSubTitle.isNotEmpty)
+                            Text(
+                              _currentSubTitle,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: colorScheme.foreground,
+                              ),
+                            ),
+                        ],
                       )
                     : Container(
                         key: const ValueKey('title'),
-                        child: Text('Zenify.', style: TextStyle(fontWeight: FontWeight.bold, color: colorScheme.foreground)),
+                        child: Text('Zenify.', style: TextStyle(fontWeight: FontWeight.w900, color: colorScheme.foreground)),
                       ),
               ),
               actions: [
@@ -224,9 +248,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 IconButton(
                   icon: Icon(LucideIcons.search, color: colorScheme.foreground, size: 20),
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const SearchScreen()),
+                    _navigatorKeys[_currentIndex].currentState?.push(
+                      MaterialPageRoute(
+                        settings: const RouteSettings(name: '搜尋'),
+                        builder: (context) => const SearchScreen(),
+                      ),
                     );
                   },
                 ),
@@ -254,17 +280,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 IconButton(
                   icon: Icon(LucideIcons.settings, color: colorScheme.mutedForeground, size: 20),
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                    _navigatorKeys[_currentIndex].currentState?.push(
+                      MaterialPageRoute(
+                        settings: const RouteSettings(name: '設定'),
+                        builder: (context) => const SettingsScreen(),
+                      ),
                     );
                   },
                 ),
               ],
             ),
           ),
-        ),
-      ),
       body: PopScope(
         canPop: false,
         onPopInvoked: (didPop) async {
@@ -286,16 +312,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             }
           }
         },
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 800),
-            child: IndexedStack(
-              index: _currentIndex,
-              children: _views.asMap().entries.map((entry) {
-                return _buildTabNavigator(entry.key, entry.value);
-              }).toList(),
-            ),
-          ),
+        child: IndexedStack(
+          index: _currentIndex,
+          children: _views.asMap().entries.map((entry) {
+            return _buildTabNavigator(entry.key, entry.value);
+          }).toList(),
         ),
       ),
       bottomNavigationBar: SafeArea(
