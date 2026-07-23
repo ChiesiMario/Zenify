@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:zenify/providers/app_providers.dart';
-import 'package:zenify/providers/audio_provider.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:zenify/screens/album_detail_screen.dart';
-import 'package:zenify/screens/artist_detail_screen.dart';
-import 'package:zenify/components/album_card.dart';
+import 'package:zenify/components/albums_grid.dart';
+import 'package:zenify/providers/app_providers.dart';
 
 class AlbumView extends ConsumerWidget {
   const AlbumView({super.key});
@@ -31,96 +28,11 @@ class AlbumView extends ConsumerWidget {
               return Center(child: Text('沒有找到任何專輯', style: TextStyle(color: colorScheme.mutedForeground)));
             }
 
-            return LayoutBuilder(
-              builder: (context, constraints) {
-                const double cardWidth = 140.0;
-                const double cardPadding = 8.0;
-                const double cardTotalWidth = cardWidth + (cardPadding * 2);
-                const double spacing = 16.0;
-                
-                int crossAxisCount = (constraints.maxWidth - 48) ~/ (cardTotalWidth + spacing);
-                if (crossAxisCount < 2) crossAxisCount = 2;
-                
-                final double totalHorizontalSpacing = spacing * (crossAxisCount - 1) + 48;
-                final double cellWidth = (constraints.maxWidth - totalHorizontalSpacing) / crossAxisCount;
-                
-                // Strictly lock cell height to 194px so row spacing stays 12px on all window sizes
-                const double fixedCellHeight = 194.0;
-                final double childAspectRatio = cellWidth / fixedCellHeight;
-
-                return GridView.builder(
-                  padding: const EdgeInsets.all(24.0),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: crossAxisCount,
-                    crossAxisSpacing: spacing,
-                    mainAxisSpacing: 12.0,
-                    childAspectRatio: childAspectRatio,
-                  ),
-                  itemCount: albums.length,
-                  itemBuilder: (context, index) {
-                    final album = albums[index];
-                    
-                    final api = ref.watch(subsonicApiProvider);
-                    final coverUrl = api != null && album['coverArt'] != null
-                        ? api.getCoverArtUrl(album['coverArt'])
-                        : null;
-
-                    return AlbumCard(
-                      title: album['name'] ?? '未知專輯',
-                      artist: album['artist'] ?? '未知藝術家',
-                      coverArtId: album['coverArt'],
-                      fallbackCoverUrl: coverUrl,
-                      serverId: server.id,
-                      width: 140,
-                      padding: 8,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            settings: RouteSettings(name: album['name'] ?? '專輯詳情'),
-                            builder: (context) => AlbumDetailScreen(albumId: album['id']),
-                          ),
-                        );
-                      },
-                      onPlayTap: () async {
-                        final subsonicApi = ref.read(subsonicApiProvider);
-                        if (subsonicApi != null) {
-                          final detail = await subsonicApi.getAlbum(album['id']);
-                          if (detail != null && detail['song'] != null) {
-                            var songs = detail['song'];
-                            if (songs is! List) songs = [songs];
-                            ref.read(audioProvider.notifier).playQueue(List<dynamic>.from(songs), 0);
-                          }
-                        }
-                      },
-                      onArtistTap: () async {
-                        String? artistId = album['artistId'];
-                        if (artistId == null) {
-                          final api = ref.read(subsonicApiProvider);
-                          if (api != null) {
-                            final detail = await api.getAlbum(album['id']);
-                            if (detail != null && detail['artistId'] != null) {
-                              artistId = detail['artistId'];
-                            }
-                          }
-                        }
-                        if (artistId != null && context.mounted) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              settings: RouteSettings(name: album['artist'] ?? '未知藝術家'),
-                              builder: (context) => ArtistDetailScreen(
-                                artistId: artistId!,
-                                artistName: album['artist'] ?? '未知藝術家',
-                              ),
-                            ),
-                          );
-                        }
-                      },
-                    );
-                  },
-                );
-              },
+            return AlbumsGrid(
+              albums: albums.toList(),
+              shrinkWrap: false,
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(24.0),
             );
           },
           loading: () => Center(child: CircularProgressIndicator(color: colorScheme.foreground)),

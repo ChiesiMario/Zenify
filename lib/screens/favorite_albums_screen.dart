@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/providers/app_providers.dart';
-import 'package:zenify/screens/album_detail_screen.dart';
-import 'package:zenify/components/album_card.dart';
+import 'package:zenify/components/albums_grid.dart';
 import 'package:zenify/providers/audio_provider.dart';
 
 class FavoriteAlbumsScreen extends ConsumerWidget {
@@ -107,45 +106,7 @@ class FavoriteAlbumsScreen extends ConsumerWidget {
                             const SizedBox(height: 20),
 
                             // Album Cards Grid
-                            GridView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                                maxCrossAxisExtent: 160,
-                                crossAxisSpacing: 12,
-                                mainAxisSpacing: 16,
-                                mainAxisExtent: 185,
-                              ),
-                              itemCount: albums.length,
-                              itemBuilder: (context, index) {
-                                final album = albums[index];
-                                final api = ref.watch(subsonicApiProvider);
-                                final coverUrl = api != null && album['coverArt'] != null
-                                    ? api.getCoverArtUrl(album['coverArt'])
-                                    : null;
-
-                                return AlbumCard(
-                                  title: album['title'] ?? album['name'] ?? 'Unknown Album',
-                                  artist: album['artist'] ?? 'Unknown Artist',
-                                  coverArtId: album['coverArt'],
-                                  fallbackCoverUrl: coverUrl,
-                                  serverId: server.id,
-                                  width: 140,
-                                  padding: 0,
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        settings: RouteSettings(name: album['title'] ?? album['name'] ?? '專輯詳情'),
-                                        builder: (context) => AlbumDetailScreen(
-                                          albumId: album['id'].toString(),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                );
-                              },
-                            ),
+                            AlbumsGrid(albums: albums.toList()),
                           ],
                         ),
                       ),

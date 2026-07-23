@@ -4,10 +4,9 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/audio_provider.dart';
 import 'package:zenify/components/local_cover_image.dart';
-import 'package:zenify/components/album_card.dart';
 import 'package:zenify/components/artist_card.dart';
-import 'package:zenify/screens/album_detail_screen.dart';
 import 'package:zenify/screens/artist_detail_screen.dart';
+import 'package:zenify/components/albums_grid.dart';
 import 'dart:async';
 
 class SearchScreen extends ConsumerStatefulWidget {
@@ -176,42 +175,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     // Albums Section
                     if (_albums.isNotEmpty) ...[
                       Text('專輯', style: theme.textTheme.h4),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        height: 215,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: _albums.length,
-                          itemBuilder: (context, index) {
-                            final album = _albums[index];
-                            final id = album['id'];
-                            final coverId = album['coverArt'] ?? id;
-                            final fallbackUrl = api != null ? api.getCoverArtUrl(coverId, size: 250) : null;
-                            
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 8.0),
-                              child: AlbumCard(
-                                title: album['title'] ?? album['name'] ?? 'Unknown',
-                                artist: album['artist'] ?? '',
-                                coverArtId: coverId,
-                                fallbackCoverUrl: fallbackUrl,
-                                serverId: server?.id ?? 0,
-                                width: 120,
-                                padding: 8,
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      settings: RouteSettings(name: album['title'] ?? album['name'] ?? 'Unknown'),
-                                      builder: (context) => AlbumDetailScreen(albumId: id),
-                                    ),
-                                  );
-                                },
-                              ),
-                            );
-                          },
-                        ),
-                      ),
+                      AlbumsGrid(albums: _albums.toList()),
                       const SizedBox(height: 24),
                     ],
 
