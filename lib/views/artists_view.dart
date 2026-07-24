@@ -32,7 +32,7 @@ class ArtistsView extends ConsumerWidget {
               artists: artists.toList(),
               shrinkWrap: false,
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.only(left: 24, right: 24, top: 24, bottom: 128),
             );
           },
           loading: () => Center(child: CircularProgressIndicator(color: colorScheme.foreground)),

@@ -58,7 +58,7 @@ class SettingsScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: colorScheme.background,
       body: ListView(
-        padding: const EdgeInsets.symmetric(vertical: 24),
+        padding: const EdgeInsets.only(top: 24, bottom: 128),
         children: [
           Center(
             child: ConstrainedBox(

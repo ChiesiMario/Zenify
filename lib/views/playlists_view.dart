@@ -32,7 +32,7 @@ class PlaylistsView extends ConsumerWidget {
           return RefreshIndicator(
             onRefresh: () async => ref.refresh(playlistsProvider),
             child: ListView(
-              padding: const EdgeInsets.symmetric(vertical: 24),
+              padding: const EdgeInsets.only(top: 24, bottom: 128),
               children: [
                 Center(
                   child: ConstrainedBox(

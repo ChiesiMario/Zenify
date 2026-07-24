@@ -105,13 +105,13 @@ class FavoriteAlbumsScreen extends ConsumerWidget {
 
                             const SizedBox(height: 20),
 
-                            // Album Cards Grid
                             AlbumsGrid(albums: albums.toList()),
                           ],
                         ),
                       ),
                     ),
                   ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 128)),
                 ],
               );
             },

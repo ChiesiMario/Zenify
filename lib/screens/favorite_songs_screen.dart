@@ -189,7 +189,7 @@ class FavoriteSongsScreen extends ConsumerWidget {
                       ),
                       
                       // Bottom padding
-                      const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
+                      const SliverPadding(padding: EdgeInsets.only(bottom: 128)),
                     ],
                   ),
                 ),

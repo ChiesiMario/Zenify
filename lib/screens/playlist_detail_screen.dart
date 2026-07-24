@@ -128,6 +128,7 @@ class PlaylistDetailScreen extends ConsumerWidget {
                     childCount: songs.length,
                   ),
                 ),
+              const SliverToBoxAdapter(child: SizedBox(height: 128)),
             ],
           );
         },

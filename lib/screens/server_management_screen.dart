@@ -35,6 +35,7 @@ class _ServerManagementScreenState extends ConsumerState<ServerManagementScreen>
             );
           }
           return ListView.builder(
+            padding: const EdgeInsets.only(bottom: 128),
             itemCount: servers.length,
             itemBuilder: (context, index) {
               final server = servers[index];

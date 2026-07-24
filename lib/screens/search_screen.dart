@@ -219,6 +219,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                         },
                       ),
                     ],
+                    const SizedBox(height: 128),
                   ],
                 ),
     );

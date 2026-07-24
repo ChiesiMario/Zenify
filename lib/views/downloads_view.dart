@@ -380,7 +380,7 @@ class DownloadsView extends ConsumerWidget {
                 ),
               ),
             ),
-            const SliverPadding(padding: EdgeInsets.only(bottom: 8)),
+            const SliverPadding(padding: EdgeInsets.only(bottom: 128)),
           ],
         ),
       ),
