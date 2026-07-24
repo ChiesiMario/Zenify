@@ -10,6 +10,8 @@ import 'package:zenify/views/favorites_view.dart';
 import 'package:zenify/components/mini_player.dart';
 import 'package:zenify/screens/full_player_screen.dart';
 import 'package:zenify/components/local_cover_image.dart';
+import 'package:zenify/screens/album_detail_screen.dart';
+import 'package:zenify/screens/artist_detail_screen.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:zenify/services/sync_service.dart';
@@ -154,6 +156,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
     final syncState = ref.watch(syncProvider);
+
+    ref.listen<NavigationRequest?>(navigationRequestProvider, (previous, next) {
+      if (next != null) {
+        final navigator = _navigatorKeys[_currentIndex].currentState;
+        if (navigator != null) {
+          if (next.type == 'album') {
+            navigator.push(MaterialPageRoute(
+              settings: RouteSettings(name: next.name),
+              builder: (_) => AlbumDetailScreen(albumId: next.id),
+            ));
+          } else if (next.type == 'artist') {
+            navigator.push(MaterialPageRoute(
+              settings: RouteSettings(name: next.name),
+              builder: (_) => ArtistDetailScreen(artistId: next.id, artistName: next.name),
+            ));
+          }
+        }
+        Future.microtask(() => ref.read(navigationRequestProvider.notifier).state = null);
+      }
+    });
 
     return Scaffold(
       extendBody: true,

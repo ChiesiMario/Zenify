@@ -224,3 +224,13 @@ final serverStatsProvider = FutureProvider<Map<String, int>>((ref) async {
     'covers': coverCount,
   };
 });
+
+class NavigationRequest {
+  final String type; // 'artist' or 'album'
+  final String id;
+  final String name;
+  
+  NavigationRequest({required this.type, required this.id, required this.name});
+}
+
+final navigationRequestProvider = StateProvider<NavigationRequest?>((ref) => null);
