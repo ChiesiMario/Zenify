@@ -50,13 +50,17 @@ class FavoritesView extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: colorScheme.background,
-      body: ListView(
+      body: Padding(
+        padding: const EdgeInsets.only(right: 2.0),
+        child: ListView(
         padding: const EdgeInsets.symmetric(vertical: 24),
         children: [
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 600),
-              child: Padding(
+          Padding(
+            padding: const EdgeInsets.only(left: 2.0),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -287,7 +291,9 @@ class FavoritesView extends ConsumerWidget {
               ),
             ),
           ),
+          ),
         ],
+      ),
       ),
     );
   }

@@ -25,24 +25,57 @@ class ArtistsGrid extends ConsumerWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        const double maxExtent = 120.0;
-        const double spacing = 0.0;
-        
         final double availableWidth = constraints.maxWidth - padding.horizontal;
-        int crossAxisCount = (availableWidth / maxExtent).ceil();
-        if (crossAxisCount < 2) crossAxisCount = 2;
         
+        const double spacing = 16.0;
+        
+        // 階梯式斷點與對應的列數、單格基準寬度
+        int crossAxisCount;
+        double cellWidth;
+        
+        if (availableWidth < 490) {
+          // 手機螢幕自動填滿
+          crossAxisCount = 4;
+          cellWidth = (availableWidth - spacing * 3) / crossAxisCount; 
+        } else if (availableWidth < 620) {
+          // 提早鎖定寬度，避免封面無限制放大
+          crossAxisCount = 4;
+          cellWidth = 110.0; 
+        } else if (availableWidth < 800) {
+          crossAxisCount = 5;
+          cellWidth = 110.0;
+        } else {
+          // 800px 以上：寬度上限嚴格鎖定為 120px
+          // 利用整數除法，每增加 200px 寬度，系統自動無縫增加 1 列
+          crossAxisCount = 6 + ((availableWidth - 800) ~/ 200);
+          cellWidth = 120.0;
+        }
+
         final double totalHorizontalSpacing = spacing * (crossAxisCount - 1);
-        final double cellWidth = (availableWidth - totalHorizontalSpacing) / crossAxisCount;
+        final double gridWidth = (cellWidth * crossAxisCount) + totalHorizontalSpacing;
         
-        // cellHeight = square image (cellWidth) + text height (~40px)
-        final double cellHeight = cellWidth + 40.0; 
+        // cellHeight = 正方形圖片(cellWidth) + 文字預留高度(~30px)
+        final double cellHeight = cellWidth + 30.0; 
         final double childAspectRatio = cellWidth / cellHeight;
 
-        return GridView.builder(
+        final double sidePadding = (constraints.maxWidth - gridWidth) / 2;
+        final EdgeInsets resolvedBasePadding = padding.resolve(TextDirection.ltr);
+        
+        final EdgeInsets finalPadding = availableWidth >= 490
+            ? EdgeInsets.only(
+                left: sidePadding,
+                right: sidePadding - 2.0 > 0 ? sidePadding - 2.0 : 0.0,
+                top: resolvedBasePadding.top,
+                bottom: resolvedBasePadding.bottom,
+              )
+            : resolvedBasePadding;
+
+        return Padding(
+          padding: const EdgeInsets.only(right: 2.0),
+          child: GridView.builder(
           shrinkWrap: shrinkWrap,
           physics: physics,
-          padding: padding,
+          padding: finalPadding,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
             crossAxisSpacing: spacing,
@@ -80,7 +113,8 @@ class ArtistsGrid extends ConsumerWidget {
               },
             );
           },
-        );
+        ),
+      );
       },
     );
   }

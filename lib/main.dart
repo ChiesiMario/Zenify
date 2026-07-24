@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
@@ -16,7 +17,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   MediaKit.ensureInitialized();
-  JustAudioMediaKit.ensureInitialized(prefetch: false);
+  JustAudioMediaKit.ensureInitialized();
   
   await JustAudioBackground.init(
     androidNotificationChannelId: 'com.ryanheise.bg_demo.channel.audio',
@@ -114,6 +115,11 @@ class _ZenifyAppState extends ConsumerState<ZenifyApp> with WindowListener {
   @override
   void onWindowResized() {
     _saveWindowBounds();
+    if (kDebugMode) {
+      windowManager.getBounds().then((bounds) {
+        print('Window resized -> Width: ${bounds.width}, Height: ${bounds.height}');
+      });
+    }
   }
 
   @override

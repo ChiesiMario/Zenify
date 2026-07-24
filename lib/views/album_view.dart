@@ -33,6 +33,7 @@ class AlbumView extends ConsumerWidget {
               shrinkWrap: false,
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(24.0),
+              isHome: true,
             );
           },
           loading: () => Center(child: CircularProgressIndicator(color: colorScheme.foreground)),

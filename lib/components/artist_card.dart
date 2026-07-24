@@ -43,52 +43,49 @@ class _ArtistCardState extends State<ArtistCard> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14.0),
-              child: AspectRatio(
-                aspectRatio: 1,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 120),
-                  decoration: BoxDecoration(
-                    color: colorScheme.muted,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: _isHovered ? 0.15 : 0.05),
-                        blurRadius: _isHovered ? 16 : 8,
-                        offset: Offset(0, _isHovered ? 6 : 4),
+            AspectRatio(
+              aspectRatio: 1,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 120),
+                decoration: BoxDecoration(
+                  color: colorScheme.muted,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: _isHovered ? 0.15 : 0.05),
+                      blurRadius: _isHovered ? 16 : 8,
+                      offset: Offset(0, _isHovered ? 6 : 4),
+                    ),
+                  ],
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    if ((widget.coverArtId == null || widget.coverArtId!.isEmpty) && widget.fallbackCoverUrl == null)
+                      Center(child: Icon(LucideIcons.user, color: colorScheme.mutedForeground, size: 40))
+                    else
+                      LocalCoverImage(
+                        id: widget.coverArtId ?? widget.artistId,
+                        serverId: widget.serverId,
+                        fallbackUrl: widget.fallbackCoverUrl,
+                        isThumb: true,
                       ),
-                    ],
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      if ((widget.coverArtId == null || widget.coverArtId!.isEmpty) && widget.fallbackCoverUrl == null)
-                        Center(child: Icon(LucideIcons.user, color: colorScheme.mutedForeground, size: 40))
-                      else
-                        LocalCoverImage(
-                          id: widget.coverArtId ?? widget.artistId,
-                          serverId: widget.serverId,
-                          fallbackUrl: widget.fallbackCoverUrl,
-                          isThumb: true,
-                        ),
-                      // Translucent darkening mask on hover (50%)
-                      Positioned.fill(
-                        child: AnimatedOpacity(
-                          opacity: _isHovered ? 1.0 : 0.0,
-                          duration: const Duration(milliseconds: 150),
-                          child: Container(
-                            color: Colors.black.withValues(alpha: 0.50),
-                          ),
+                    // Translucent darkening mask on hover (50%)
+                    Positioned.fill(
+                      child: AnimatedOpacity(
+                        opacity: _isHovered ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 150),
+                        child: Container(
+                          color: Colors.black.withValues(alpha: 0.50),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 2),
             Text(
               widget.name,
               style: TextStyle(
@@ -96,7 +93,6 @@ class _ArtistCardState extends State<ArtistCard> {
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
                 letterSpacing: 0.1,
-                decoration: _isHovered ? TextDecoration.underline : TextDecoration.none,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
