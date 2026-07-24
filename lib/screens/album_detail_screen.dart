@@ -6,6 +6,7 @@ import 'package:zenify/providers/audio_provider.dart';
 import 'package:zenify/providers/download_provider.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/components/local_cover_image.dart';
+import 'package:zenify/screens/artist_detail_screen.dart';
 
 class AlbumDetailScreen extends ConsumerWidget {
   final String albumId;
@@ -119,7 +120,7 @@ class AlbumDetailScreen extends ConsumerWidget {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 16),
                           // Typography
                           Text(
                             album['name'] ?? '未知專輯',
@@ -128,39 +129,83 @@ class AlbumDetailScreen extends ConsumerWidget {
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
                               letterSpacing: -0.5,
+                              height: 1.1,
                             ),
                             textAlign: TextAlign.center,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            album['artist'] ?? '未知藝術家',
-                            style: TextStyle(
-                              color: colorScheme.primary,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              if (album['genre'] != null) ...[
-                                Text('${album['genre']}', style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13, fontWeight: FontWeight.w500)),
-                                const SizedBox(width: 8),
-                                Text('•', style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13)),
-                                const SizedBox(width: 8),
-                              ],
-                              if (album['year'] != null) ...[
-                                Text('${album['year']}', style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13, fontWeight: FontWeight.w500)),
-                                const SizedBox(width: 8),
-                                Text('•', style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13)),
-                                const SizedBox(width: 8),
-                              ],
-                              Text('${songList.length} 首歌', style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13, fontWeight: FontWeight.w500)),
-                            ],
+                          const SizedBox(height: 4),
+                          Builder(
+                            builder: (context) {
+                              bool isHovered = false;
+                              return StatefulBuilder(
+                                builder: (context, setState) {
+                                  return MouseRegion(
+                                cursor: SystemMouseCursors.click,
+                                onEnter: (_) => setState(() => isHovered = true),
+                                onExit: (_) => setState(() => isHovered = false),
+                                child: GestureDetector(
+                                  onTap: () {
+                                    final artistId = album['artistId'];
+                                    if (artistId != null) {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          settings: RouteSettings(name: album['artist']),
+                                          builder: (context) => ArtistDetailScreen(
+                                            artistId: artistId, 
+                                            artistName: album['artist'] ?? '未知藝術家',
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  child: Text(
+                                    album['artist'] ?? '未知藝術家',
+                                    style: TextStyle(
+                                      color: colorScheme.mutedForeground,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.normal,
+                                      height: 1.1,
+                                      decoration: isHovered ? TextDecoration.underline : TextDecoration.none,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                                );
+                              },
+                            );
+                          },
+                        ),
+                          const SizedBox(height: 4),
+                          Builder(
+                            builder: (context) {
+                              final parts = <String>[];
+                              if (album['genre'] != null) parts.add(album['genre'].toString());
+                              if (album['year'] != null) parts.add(album['year'].toString());
+                              parts.add('${songList.length} 首歌');
+                              
+                              final List<InlineSpan> spans = [];
+                              for (int i = 0; i < parts.length; i++) {
+                                spans.add(TextSpan(text: parts[i]));
+                                if (i != parts.length - 1) {
+                                  spans.add(const TextSpan(
+                                    text: ' • ',
+                                    style: TextStyle(fontFamily: 'NotoSansTC'),
+                                  ));
+                                }
+                              }
+                              
+                              return Text.rich(
+                                TextSpan(children: spans),
+                                style: TextStyle(
+                                  color: colorScheme.mutedForeground, 
+                                  fontSize: 13, 
+                                  fontWeight: FontWeight.normal, 
+                                  height: 1.1,
+                                ),
+                              );
+                            },
                           ),
                           const SizedBox(height: 24),
                           // Action Buttons

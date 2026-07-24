@@ -215,12 +215,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                           ),
                           if (_currentSubTitle.isNotEmpty)
-                            Text(
-                              _currentSubTitle,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                                color: colorScheme.foreground,
+                            Flexible(
+                              child: Text(
+                                _currentSubTitle,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                  color: colorScheme.foreground,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                         ],
