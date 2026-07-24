@@ -24,6 +24,7 @@ class ArtistDetailScreen extends ConsumerStatefulWidget {
 
 class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
   bool _isBioExpanded = false;
+  bool _showAllTopSongs = false;
 
   String _formatDuration(int seconds) {
     final minutes = seconds ~/ 60;
@@ -189,71 +190,103 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(color: colorScheme.border, width: 1.0),
                               ),
-                              child: ListView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                padding: EdgeInsets.zero,
-                                itemCount: topSongs.length,
-                                itemBuilder: (context, index) {
-                                  final song = topSongs[index];
-                                  final title = song['title'] ?? '未知歌曲';
-                                  final duration = _formatDuration(song['duration'] as int? ?? 0);
-                                  final coverArtId = song['coverArt'] ?? song['albumId'];
-                                  final fallbackUrl = api != null && coverArtId != null ? api.getCoverArtUrl(coverArtId, size: 250) : null;
-                                  
-                                  final isFirst = index == 0;
-                                  final isLast = index == topSongs.length - 1;
+                              child: Column(
+                                children: [
+                                  ListView.builder(
+                                    shrinkWrap: true,
+                                    physics: const NeverScrollableScrollPhysics(),
+                                    padding: EdgeInsets.zero,
+                                    itemCount: _showAllTopSongs ? topSongs.length : (topSongs.length > 5 ? 5 : topSongs.length),
+                                    itemBuilder: (context, index) {
+                                      final song = topSongs[index];
+                                      final title = song['title'] ?? '未知歌曲';
+                                      final duration = _formatDuration(song['duration'] as int? ?? 0);
+                                      final coverArtId = song['coverArt'] ?? song['albumId'];
+                                      final fallbackUrl = api != null && coverArtId != null ? api.getCoverArtUrl(coverArtId, size: 250) : null;
+                                      
+                                      final isFirst = index == 0;
+                                      final isLastIndex = _showAllTopSongs ? topSongs.length - 1 : (topSongs.length > 5 ? 4 : topSongs.length - 1);
+                                      final isLast = index == isLastIndex;
+                                      final showShowMoreButton = !_showAllTopSongs && topSongs.length > 5;
 
-                                  return Container(
-                                    decoration: BoxDecoration(
-                                      border: isLast ? null : Border(bottom: BorderSide(color: colorScheme.border.withValues(alpha: 0.5), width: 0.5)),
-                                    ),
-                                    child: Material(
-                                      color: Colors.transparent,
-                                      borderRadius: BorderRadius.vertical(
-                                        top: isFirst ? const Radius.circular(12) : Radius.zero,
-                                        bottom: isLast ? const Radius.circular(12) : Radius.zero,
-                                      ),
-                                      clipBehavior: Clip.antiAlias,
-                                      child: ListTile(
-                                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                                        leading: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            SizedBox(
-                                              width: 24,
-                                              child: Text(
-                                                '${index + 1}',
-                                                style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13, fontWeight: FontWeight.w600),
-                                                textAlign: TextAlign.center,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            ClipRRect(
-                                              borderRadius: BorderRadius.circular(6),
-                                              child: SizedBox(
-                                                width: 44,
-                                                height: 44,
-                                                child: LocalCoverImage(
-                                                  id: coverArtId ?? '',
-                                                  serverId: server?.id ?? 0,
-                                                  fallbackUrl: fallbackUrl,
-                                                  isThumb: true,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
+                                      return Container(
+                                        decoration: BoxDecoration(
+                                          border: (isLast && !showShowMoreButton) ? null : Border(bottom: BorderSide(color: colorScheme.border.withValues(alpha: 0.5), width: 0.5)),
                                         ),
-                                        title: Text(title, style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.w600, fontSize: 14)),
-                                        subtitle: Text(song['album'] ?? '', style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12)),
-                                        trailing: Text(duration, style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13, fontWeight: FontWeight.w500)),
+                                        child: Material(
+                                          color: Colors.transparent,
+                                          borderRadius: BorderRadius.vertical(
+                                            top: isFirst ? const Radius.circular(12) : Radius.zero,
+                                            bottom: (isLast && !showShowMoreButton) ? const Radius.circular(12) : Radius.zero,
+                                          ),
+                                          clipBehavior: Clip.antiAlias,
+                                          child: ListTile(
+                                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                                            leading: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                SizedBox(
+                                                  width: 24,
+                                                  child: Text(
+                                                    '${index + 1}',
+                                                    style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13, fontWeight: FontWeight.w600),
+                                                    textAlign: TextAlign.center,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 12),
+                                                ClipRRect(
+                                                  borderRadius: BorderRadius.circular(6),
+                                                  child: SizedBox(
+                                                    width: 44,
+                                                    height: 44,
+                                                    child: LocalCoverImage(
+                                                      id: coverArtId ?? '',
+                                                      serverId: server?.id ?? 0,
+                                                      fallbackUrl: fallbackUrl,
+                                                      isThumb: true,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            title: Text(title, style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.w600, fontSize: 14)),
+                                            subtitle: Text(song['album'] ?? '', style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12)),
+                                            trailing: Text(duration, style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13, fontWeight: FontWeight.w500)),
+                                            onTap: () {
+                                              ref.read(audioProvider.notifier).playQueue(List<dynamic>.from(topSongs), index);
+                                            },
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                  if (!_showAllTopSongs && topSongs.length > 5)
+                                    Material(
+                                      color: Colors.transparent,
+                                      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+                                      clipBehavior: Clip.antiAlias,
+                                      child: InkWell(
                                         onTap: () {
-                                          ref.read(audioProvider.notifier).playQueue(List<dynamic>.from(topSongs), index);
+                                          setState(() {
+                                            _showAllTopSongs = true;
+                                          });
                                         },
+                                        child: Container(
+                                          width: double.infinity,
+                                          padding: const EdgeInsets.symmetric(vertical: 14),
+                                          alignment: Alignment.center,
+                                          child: Text(
+                                            '顯示更多',
+                                            style: TextStyle(
+                                              color: colorScheme.foreground,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ),
                                       ),
                                     ),
-                                  );
-                                },
+                                ],
                               ),
                             ),
                             const SizedBox(height: 48),
@@ -261,9 +294,12 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
 
                           // 4. Albums
                           if (albums.isNotEmpty) ...[
-                            Text('發行專輯', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: colorScheme.foreground, letterSpacing: -0.5)),
+                            Text('專輯', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: colorScheme.foreground, letterSpacing: -0.5)),
                             const SizedBox(height: 16),
-                            AlbumsGrid(albums: albums.toList()),
+                            AlbumsGrid(
+                              albums: albums.toList(),
+                              showYearInsteadOfArtist: true,
+                            ),
                             const SizedBox(height: 64),
                           ],
                         ],

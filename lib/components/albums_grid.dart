@@ -10,8 +10,8 @@ class AlbumsGrid extends ConsumerWidget {
   final bool shrinkWrap;
   final ScrollPhysics? physics;
   final EdgeInsetsGeometry padding;
-
   final bool isHome;
+  final bool showYearInsteadOfArtist;
 
   const AlbumsGrid({
     super.key,
@@ -20,6 +20,7 @@ class AlbumsGrid extends ConsumerWidget {
     this.physics = const NeverScrollableScrollPhysics(),
     this.padding = EdgeInsets.zero,
     this.isHome = false,
+    this.showYearInsteadOfArtist = false,
   });
 
   @override
@@ -108,7 +109,9 @@ class AlbumsGrid extends ConsumerWidget {
           itemBuilder: (context, index) {
             final album = albums[index];
             final title = album['title'] ?? album['name'] ?? '未知專輯';
-            final artist = album['artist'] ?? album['year']?.toString() ?? '未知藝術家';
+            final artist = showYearInsteadOfArtist 
+                ? (album['year']?.toString() ?? '未知年份') 
+                : (album['artist'] ?? album['year']?.toString() ?? '未知藝術家');
             final artistId = album['artistId'];
             final albumCoverId = album['coverArt'] ?? album['id'];
             final fallbackUrl = api != null && albumCoverId != null 
@@ -131,7 +134,7 @@ class AlbumsGrid extends ConsumerWidget {
                   ),
                 );
               },
-              onArtistTap: artistId != null 
+              onArtistTap: (!showYearInsteadOfArtist && artistId != null)
                   ? () {
                       Navigator.push(
                         context,

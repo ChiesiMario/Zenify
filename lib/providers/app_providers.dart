@@ -126,12 +126,66 @@ final artistDetailProvider = FutureProvider.family<Map<String, dynamic>?, String
 
   // 取得熱門歌曲 (Top 10)
   final String artistName = artistData['name'] ?? '';
+  List<dynamic> topSongs = [];
   if (artistName.isNotEmpty) {
-    final topSongs = await api.getTopSongs(artistName, count: 10);
-    artistData['topSongs'] = topSongs;
-  } else {
-    artistData['topSongs'] = [];
+    final fetchedTop = await api.getTopSongs(artistName, count: 10);
+    topSongs = List<dynamic>.from(fetchedTop);
   }
+
+  // 排序 by playCount descending
+  topSongs.sort((a, b) {
+    final countA = a['playCount'] as int? ?? 0;
+    final countB = b['playCount'] as int? ?? 0;
+    return countB.compareTo(countA);
+  });
+
+  // 如果不足 10 首，從該歌手的專輯中隨機挑選補充
+  if (topSongs.length < 10) {
+    var albums = artistData['album'];
+    if (albums != null) {
+      if (albums is! List) albums = [albums];
+      final albumList = List<dynamic>.from(albums)..shuffle();
+      
+      List<dynamic> additionalSongs = [];
+      Set<String> existingSongIds = topSongs.map((s) => s['id'].toString()).toSet();
+
+      // 抽取最多 5 張專輯
+      final albumsToFetch = albumList.take(5);
+      final futures = albumsToFetch.map((album) => api.getAlbum(album['id'].toString()));
+      final fetchedAlbums = await Future.wait(futures);
+
+      List<dynamic> pool = [];
+      for (var albumData in fetchedAlbums) {
+        if (albumData != null) {
+          var songs = albumData['song'];
+          if (songs != null) {
+            if (songs is! List) songs = [songs];
+            pool.addAll(songs);
+          }
+        }
+      }
+
+      // 將所有抽取的專輯歌曲倒進大池子徹底打散
+      pool.shuffle();
+
+      for (var song in pool) {
+        final sId = song['id'].toString();
+        if (!existingSongIds.contains(sId)) {
+          additionalSongs.add(song);
+          existingSongIds.add(sId);
+          if (additionalSongs.length >= (10 - topSongs.length)) break;
+        }
+      }
+      topSongs.addAll(additionalSongs);
+    }
+  }
+
+  // 為了確保最多只有 10 首
+  if (topSongs.length > 10) {
+    topSongs = topSongs.sublist(0, 10);
+  }
+
+  artistData['topSongs'] = topSongs;
 
   // 將專輯依年份排序 (新 -> 舊)
   var albums = artistData['album'];
