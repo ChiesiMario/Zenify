@@ -16,7 +16,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   MediaKit.ensureInitialized();
-  JustAudioMediaKit.ensureInitialized();
+  JustAudioMediaKit.ensureInitialized(prefetch: false);
   
   await JustAudioBackground.init(
     androidNotificationChannelId: 'com.ryanheise.bg_demo.channel.audio',
@@ -46,20 +46,24 @@ void main() async {
     );
     
     windowManager.waitUntilReadyToShow(windowOptions, () async {
-      final double? x = prefs.getDouble('window_x');
-      final double? y = prefs.getDouble('window_y');
-      final double? width = prefs.getDouble('window_width');
-      final double? height = prefs.getDouble('window_height');
+      try {
+        final double? x = prefs.getDouble('window_x');
+        final double? y = prefs.getDouble('window_y');
+        final double? width = prefs.getDouble('window_width');
+        final double? height = prefs.getDouble('window_height');
 
-      if (x != null && y != null && width != null && height != null) {
-        await windowManager.setBounds(Rect.fromLTWH(x, y, width, height));
-      } else {
-        await windowManager.setSize(const Size(1024, 768));
-        await windowManager.center();
+        if (x != null && y != null && width != null && height != null) {
+          await windowManager.setBounds(Rect.fromLTWH(x, y, width, height));
+        } else {
+          await windowManager.setSize(const Size(1024, 768));
+          await windowManager.center();
+        }
+
+        await windowManager.show();
+        await windowManager.focus();
+      } catch (e) {
+        print('Window manager setup failed: $e');
       }
-
-      await windowManager.show();
-      await windowManager.focus();
     });
   }
 

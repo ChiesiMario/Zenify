@@ -126,11 +126,17 @@ class AudioNotifier extends Notifier<AudioState> {
   }
 
   Future<void> _restorePlaybackState() async {
-    final prefs = ref.read(sharedPreferencesProvider);
-    final position = prefs.getInt('audio_position') ?? 0;
-    if (state.currentIndex >= 0 && state.currentIndex < state.queue.length) {
-      // Load the track but do not auto-play
-      await _playIndex(state.currentIndex, autoPlay: false, startPosition: Duration(milliseconds: position));
+    // Delay loading to avoid resource contention on slow cold boot
+    await Future.delayed(const Duration(milliseconds: 1500));
+    try {
+      final prefs = ref.read(sharedPreferencesProvider);
+      final position = prefs.getInt('audio_position') ?? 0;
+      if (state.currentIndex >= 0 && state.currentIndex < state.queue.length) {
+        // Load the track but do not auto-play
+        await _playIndex(state.currentIndex, autoPlay: false, startPosition: Duration(milliseconds: position));
+      }
+    } catch (e) {
+      print('Failed to restore playback state: $e');
     }
   }
 
