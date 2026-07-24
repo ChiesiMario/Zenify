@@ -465,17 +465,6 @@ class _VercelBentoCardState extends State<_VercelBentoCard> {
                           : colorScheme.foreground,
                     ),
                   ),
-                  AnimatedSlide(
-                    duration: const Duration(milliseconds: 150),
-                    offset: _isHovered ? const Offset(0.1, -0.1) : Offset.zero,
-                    child: Icon(
-                      LucideIcons.arrowUpRight,
-                      size: 16,
-                      color: _isHovered
-                          ? colorScheme.foreground
-                          : colorScheme.mutedForeground.withValues(alpha: 0.6),
-                    ),
-                  ),
                 ],
               ),
               const SizedBox(height: 16),
