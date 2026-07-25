@@ -120,11 +120,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildNavItem(int index, IconData icon, String label, ShadColorScheme colorScheme) {
     final isSelected = _currentIndex == index;
-    final color = isSelected ? colorScheme.foreground : colorScheme.mutedForeground;
     
     return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
+      child: _NavItemButton(
+        isSelected: isSelected,
+        icon: icon,
+        label: label,
+        colorScheme: colorScheme,
         onTap: () {
           if (_currentIndex == index) {
             _navigatorKeys[index].currentState?.popUntil((route) => route.isFirst);
@@ -133,21 +135,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             _updateCanPop();
           }
         },
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                color: color,
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -744,6 +731,84 @@ class _NowPlayingTabIconState extends ConsumerState<NowPlayingTabIcon> with Sing
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _NavItemButton extends StatefulWidget {
+  final bool isSelected;
+  final IconData icon;
+  final String label;
+  final ShadColorScheme colorScheme;
+  final VoidCallback onTap;
+
+  const _NavItemButton({
+    required this.isSelected,
+    required this.icon,
+    required this.label,
+    required this.colorScheme,
+    required this.onTap,
+  });
+
+  @override
+  State<_NavItemButton> createState() => _NavItemButtonState();
+}
+
+class _NavItemButtonState extends State<_NavItemButton> {
+  bool _isHovered = false;
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final isHighlit = widget.isSelected || _isHovered;
+    final color = isHighlit ? widget.colorScheme.foreground : widget.colorScheme.mutedForeground;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: (_) => setState(() => _isPressed = true),
+        onTapUp: (_) {
+          setState(() => _isPressed = false);
+          widget.onTap();
+        },
+        onTapCancel: () => setState(() => _isPressed = false),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          transform: Matrix4.translationValues(
+            0,
+            _isPressed ? 0.5 : (_isHovered ? -1.5 : 0.0),
+            0,
+          ),
+          child: AnimatedScale(
+            scale: _isPressed ? 0.95 : (_isHovered ? 1.04 : 1.0),
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            child: AnimatedOpacity(
+              opacity: _isPressed ? 0.7 : (isHighlit ? 1.0 : 0.65),
+              duration: const Duration(milliseconds: 180),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(widget.icon, color: color, size: 22),
+                  const SizedBox(height: 4),
+                  Text(
+                    widget.label,
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 12,
+                      fontWeight: widget.isSelected ? FontWeight.bold : (_isHovered ? FontWeight.w600 : FontWeight.normal),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

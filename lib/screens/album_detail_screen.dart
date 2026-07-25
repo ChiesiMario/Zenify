@@ -81,7 +81,7 @@ class AlbumDetailScreen extends ConsumerWidget {
                             height: 250,
                             decoration: BoxDecoration(
                               color: colorScheme.muted,
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(8),
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.black.withValues(alpha: 0.2),
@@ -91,7 +91,7 @@ class AlbumDetailScreen extends ConsumerWidget {
                               ],
                             ),
                             child: ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(8),
                               clipBehavior: Clip.antiAliasWithSaveLayer,
                               child: Stack(
                                 fit: StackFit.expand,
@@ -108,7 +108,7 @@ class AlbumDetailScreen extends ConsumerWidget {
                                   IgnorePointer(
                                     child: Container(
                                       decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(16),
+                                        borderRadius: BorderRadius.circular(8),
                                         border: Border.all(
                                           color: colorScheme.foreground.withValues(alpha: 0.08),
                                           width: 1.0,
