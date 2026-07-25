@@ -398,4 +398,46 @@ class SubsonicApi {
       print('Exception in scrobble: $e');
     }
   }
+
+  /// Star (favorite) a song, album, or artist
+  Future<bool> star({String? id, String? albumId, String? artistId}) async {
+    try {
+      final params = <String, String>{};
+      if (id != null) params['id'] = id;
+      if (albumId != null) params['albumId'] = albumId;
+      if (artistId != null) params['artistId'] = artistId;
+
+      final uri = _buildUri('star', params);
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        return json['subsonic-response']?['status'] == 'ok';
+      }
+      return false;
+    } catch (e) {
+      print('Exception in star: $e');
+      return false;
+    }
+  }
+
+  /// Unstar (unfavorite) a song, album, or artist
+  Future<bool> unstar({String? id, String? albumId, String? artistId}) async {
+    try {
+      final params = <String, String>{};
+      if (id != null) params['id'] = id;
+      if (albumId != null) params['albumId'] = albumId;
+      if (artistId != null) params['artistId'] = artistId;
+
+      final uri = _buildUri('unstar', params);
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        return json['subsonic-response']?['status'] == 'ok';
+      }
+      return false;
+    } catch (e) {
+      print('Exception in unstar: $e');
+      return false;
+    }
+  }
 }

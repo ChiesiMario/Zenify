@@ -72,36 +72,61 @@ class FullPlayerScreen extends ConsumerWidget {
             child: SafeArea(
               child: Column(
                 children: [
-              // 頂部列：左側為縮小淡化收起按鈕，右側為播放佇列按鈕
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 4),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _TopUtilityButton(
-                      icon: LucideIcons.chevronDown,
-                      tooltip: '收起',
-                      onPressed: () => Navigator.pop(context),
+              // 頂部列：左側為縮小淡化收起按鈕，中間為喜歡按鈕，右側為播放佇列按鈕
+              Builder(
+                builder: (context) {
+                  final favoritesAsync = ref.watch(favoritesProvider);
+                  final isFavorite = favoritesAsync.value?['songs']?.any(
+                    (s) => s['id']?.toString() == currentSong['id']?.toString(),
+                  ) ?? (currentSong['starred'] != null);
+
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 4),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _TopUtilityButton(
+                          icon: LucideIcons.info,
+                          tooltip: '歌曲資訊',
+                          onPressed: () => _showSongInfoDialog(context, currentSong, colorScheme),
+                        ),
+                        _TopUtilityButton(
+                          icon: isFavorite ? Icons.favorite : LucideIcons.heart,
+                          tooltip: isFavorite ? '取消最愛' : '加入最愛',
+                          iconColor: isFavorite ? const Color(0xFFEF4444) : null,
+                          onPressed: () async {
+                            final songId = currentSong['id']?.toString();
+                            if (songId == null || api == null) return;
+                            if (isFavorite) {
+                              await api.unstar(id: songId);
+                            } else {
+                              await api.star(id: songId);
+                            }
+                            ref.invalidate(favoritesProvider);
+                          },
+                        ),
+                        _TopUtilityButton(
+                          icon: LucideIcons.listMusic,
+                          tooltip: '播放佇列',
+                          onPressed: () {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              constraints: const BoxConstraints(maxWidth: 500),
+                              builder: (context) => FractionallySizedBox(
+                                heightFactor: 0.8,
+                                child: const PlayQueueSheet(),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
-                    _TopUtilityButton(
-                      icon: LucideIcons.listMusic,
-                      tooltip: '播放佇列',
-                      onPressed: () {
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          backgroundColor: Colors.transparent,
-                          constraints: const BoxConstraints(maxWidth: 500),
-                          builder: (context) => FractionallySizedBox(
-                            heightFactor: 0.8,
-                            child: const PlayQueueSheet(),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
+                  );
+                },
               ),
+              const SizedBox(height: 12),
               
               Expanded(
                 child: Padding(
@@ -163,7 +188,7 @@ class FullPlayerScreen extends ConsumerWidget {
                                     ),
                                   ),
                                 ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 8),
                           
                           // 歌曲資訊 (置中、極簡字體排版)
                           Column(
@@ -513,12 +538,14 @@ class _TopUtilityButton extends StatefulWidget {
   final IconData icon;
   final VoidCallback onPressed;
   final String tooltip;
+  final Color? iconColor;
 
   const _TopUtilityButton({
     Key? key,
     required this.icon,
     required this.onPressed,
     required this.tooltip,
+    this.iconColor,
   }) : super(key: key);
 
   @override
@@ -548,18 +575,18 @@ class _TopUtilityButtonState extends State<_TopUtilityButton> {
           },
           onTapCancel: () => setState(() => _isPressed = false),
           child: AnimatedScale(
-            scale: _isPressed ? 0.85 : 1.0,
-            duration: const Duration(milliseconds: 120),
+            scale: _isPressed ? 0.85 : (_isHovered ? 1.15 : 1.0),
+            duration: const Duration(milliseconds: 150),
             curve: Curves.easeOutCubic,
             child: AnimatedOpacity(
-              opacity: _isPressed ? 0.5 : (_isHovered ? 1.0 : 0.7),
+              opacity: _isPressed ? 0.5 : (_isHovered ? 1.0 : (widget.iconColor != null ? 0.85 : 0.7)),
               duration: const Duration(milliseconds: 150),
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Icon(
                   widget.icon,
                   size: 20, // 稍微加大一點點，增加精緻感與點擊識別度
-                  color: colorScheme.mutedForeground,
+                  color: widget.iconColor ?? colorScheme.mutedForeground,
                 ),
               ),
             ),
@@ -568,4 +595,108 @@ class _TopUtilityButtonState extends State<_TopUtilityButton> {
       ),
     );
   }
+}
+
+void _showSongInfoDialog(BuildContext context, Map<String, dynamic> song, ShadColorScheme colorScheme) {
+  final title = song['title'] ?? '未知歌曲';
+  final artist = song['artist'] ?? '未知藝術家';
+  final album = song['album'] ?? '未知專輯';
+  final year = song['year']?.toString() ?? '未知';
+  final genre = song['genre']?.toString() ?? '未知';
+  final bitRate = song['bitRate'] != null ? '${song['bitRate']} kbps' : null;
+  final suffix = song['suffix']?.toString().toUpperCase() ?? song['contentType']?.toString().split('/').last.toUpperCase();
+  final durationSec = song['duration'] as int?;
+  final durationStr = durationSec != null ? '${durationSec ~/ 60}:${(durationSec % 60).toString().padLeft(2, '0')}' : null;
+  final fileSizeMb = song['size'] != null ? '${((song['size'] as int) / (1024 * 1024)).toStringAsFixed(2)} MB' : null;
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      return Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          width: 340,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: colorScheme.background,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '歌曲詳細資訊',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.foreground,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(LucideIcons.x, size: 18, color: colorScheme.mutedForeground),
+                    onPressed: () => Navigator.pop(context),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _buildInfoRow('標題', title, colorScheme),
+              _buildInfoRow('藝術家', artist, colorScheme),
+              _buildInfoRow('專輯', album, colorScheme),
+              _buildInfoRow('年份', year, colorScheme),
+              _buildInfoRow('曲風', genre, colorScheme),
+              if (durationStr != null) _buildInfoRow('時長', durationStr, colorScheme),
+              if (suffix != null) _buildInfoRow('格式', suffix, colorScheme),
+              if (bitRate != null) _buildInfoRow('位元率', bitRate, colorScheme),
+              if (fileSizeMb != null) _buildInfoRow('檔案大小', fileSizeMb, colorScheme),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+Widget _buildInfoRow(String label, String value, ShadColorScheme colorScheme) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 5.0),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 75,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              color: colorScheme.mutedForeground,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: TextStyle(
+              fontSize: 13,
+              color: colorScheme.foreground,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }
