@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zenify/providers/app_providers.dart';
@@ -402,13 +403,233 @@ class AlbumDetailScreen extends ConsumerWidget {
                     const SliverToBoxAdapter(child: SizedBox(height: 24)),
                     ];
                   }),
-                  const SliverToBoxAdapter(child: SizedBox(height: 128)),
+                  const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                  SliverToBoxAdapter(
+                    child: Container(
+                      color: const Color(0xFFF4F4F5),
+                      padding: const EdgeInsets.only(top: 24, bottom: 148),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 600),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: _AlbumOfflineBentoCard(
+                                    songList: songList,
+                                    serverId: server?.id ?? 0,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                const Expanded(
+                                  child: SizedBox(),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             );
         },
         loading: () => Center(child: CircularProgressIndicator(color: colorScheme.foreground)),
         error: (err, stack) => Center(child: Text('加載失敗: $err', style: TextStyle(color: colorScheme.destructive))),
+      ),
+    );
+  }
+}
+
+class _AlbumOfflineBentoCard extends ConsumerStatefulWidget {
+  final List<dynamic> songList;
+  final int serverId;
+
+  const _AlbumOfflineBentoCard({
+    required this.songList,
+    required this.serverId,
+  });
+
+  @override
+  ConsumerState<_AlbumOfflineBentoCard> createState() => _AlbumOfflineBentoCardState();
+}
+
+class _AlbumOfflineBentoCardState extends ConsumerState<_AlbumOfflineBentoCard> {
+  bool _isHovered = false;
+  bool? _optimisticState;
+
+  Future<void> _handleToggle(bool turnOn) async {
+    setState(() => _optimisticState = turnOn);
+    final downloadService = ref.read(downloadServiceProvider);
+    if (turnOn) {
+      for (final song in widget.songList) {
+        await downloadService.downloadSong(song, widget.serverId);
+      }
+    } else {
+      for (final song in widget.songList) {
+        await downloadService.deleteDownload(song['id'].toString());
+      }
+    }
+    ref.invalidate(downloadedTracksProvider);
+    await ref.read(downloadedTracksProvider.future);
+    if (mounted) {
+      setState(() => _optimisticState = null);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ShadTheme.of(context);
+    final colorScheme = theme.colorScheme;
+    final downloadedTracksAsync = ref.watch(downloadedTracksProvider);
+    final downloadedTracks = downloadedTracksAsync.valueOrNull ?? [];
+    final downloadProgress = ref.watch(downloadProgressProvider);
+
+    final manualDownloadedIds = downloadedTracks
+        .where((t) => t.isManualDownload && t.isComplete && File(t.localPath).existsSync())
+        .map((t) => t.songId)
+        .toSet();
+
+    final isAllOfflined = widget.songList.isNotEmpty &&
+        widget.songList.every((s) => manualDownloadedIds.contains(s['id'].toString()));
+
+    final isDownloading = _optimisticState != null || widget.songList.any((s) {
+      final p = downloadProgress[s['id'].toString()];
+      return p != null && p > 0.0 && p < 1.0;
+    });
+
+    final effectiveOfflined = _optimisticState ?? isAllOfflined;
+
+    final String titleStr = _optimisticState == true
+        ? '離線中...'
+        : (effectiveOfflined ? '已離線' : '離線');
+
+    final String subtitleStr = _optimisticState == true
+        ? '正在離線全專輯歌曲...'
+        : (effectiveOfflined ? '已儲存至離線音樂' : '離線本專輯所有歌曲');
+
+    int totalBytes = 0;
+    for (final song in widget.songList) {
+      if (song['size'] != null && song['size'] is int) {
+        totalBytes += song['size'] as int;
+      } else if (song['duration'] != null && song['duration'] is int) {
+        final dur = song['duration'] as int;
+        final br = (song['bitRate'] as int?) ?? 320;
+        totalBytes += (dur * br * 1000 ~/ 8);
+      }
+    }
+
+    String sizeFormatted = '';
+    if (totalBytes > 0) {
+      if (totalBytes >= 1024 * 1024 * 1024) {
+        sizeFormatted = '${(totalBytes / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB';
+      } else {
+        sizeFormatted = '${(totalBytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+      }
+    }
+
+    return MouseRegion(
+      cursor: isDownloading ? SystemMouseCursors.basic : SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: isDownloading ? null : () => _handleToggle(!effectiveOfflined),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeOut,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: colorScheme.card,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: (_isHovered && !isDownloading)
+                  ? colorScheme.foreground.withValues(alpha: 0.4)
+                  : colorScheme.border,
+              width: 1.0,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  SizedBox(
+                    height: 38,
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Opacity(
+                        opacity: isDownloading ? 0.4 : 1.0,
+                        child: ShadSwitch(
+                          value: effectiveOfflined,
+                          onChanged: isDownloading ? null : (value) => _handleToggle(value),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Text(
+                    titleStr,
+                    style: TextStyle(
+                      color: colorScheme.foreground,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: colorScheme.muted.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: colorScheme.border.withValues(alpha: 0.5),
+                        width: 0.5,
+                      ),
+                    ),
+                    child: Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(text: '${widget.songList.length} 首'),
+                          if (sizeFormatted.isNotEmpty) ...[
+                            const TextSpan(
+                              text: ' • ',
+                              style: TextStyle(fontFamily: 'NotoSansTC'),
+                            ),
+                            TextSpan(text: sizeFormatted),
+                          ],
+                        ],
+                      ),
+                      style: TextStyle(
+                        color: colorScheme.mutedForeground,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitleStr,
+                style: TextStyle(
+                  color: colorScheme.mutedForeground,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w400,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

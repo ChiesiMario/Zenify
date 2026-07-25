@@ -132,14 +132,14 @@ class FavoritesView extends ConsumerWidget {
                             const SizedBox(width: 12),
                             Expanded(
                               child: _VercelBentoCard(
-                                title: '已下載',
+                                title: '已離線',
                                 subtitle: '離線音樂與快取',
                                 icon: LucideIcons.downloadCloud,
                                 countBadge: '${validDownloads.length} 首',
                                 onTap: () => Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    settings: const RouteSettings(name: '已下載'),
+                                    settings: const RouteSettings(name: '已離線'),
                                     builder: (context) => const DownloadsView(),
                                   ),
                                 ),

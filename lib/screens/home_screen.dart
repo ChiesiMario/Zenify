@@ -75,7 +75,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         _currentSubTitle == '歌曲' ||
         _currentSubTitle == '專輯' ||
         _currentSubTitle == '播放清單' ||
-        _currentSubTitle == '已下載'
+        _currentSubTitle == '已離線'
       );
     }
     return false;

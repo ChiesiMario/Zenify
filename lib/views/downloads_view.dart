@@ -101,7 +101,7 @@ class DownloadsView extends ConsumerWidget {
                       unselectedLabelColor: colorScheme.mutedForeground,
                       unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
                       tabs: const [
-                        Tab(text: '手動下載'),
+                        Tab(text: '手動離線'),
                         Tab(text: '播放快取'),
                       ],
                     ),
@@ -123,7 +123,7 @@ class DownloadsView extends ConsumerWidget {
                   context: context,
                   ref: ref,
                   tracks: manualTracks,
-                  emptyText: '尚無手動下載的音樂',
+                  emptyText: '尚無手動離線的音樂',
                   colorScheme: colorScheme,
                   api: api,
                 ),
