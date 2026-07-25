@@ -723,20 +723,23 @@ class _NowPlayingTabIconState extends ConsumerState<NowPlayingTabIcon> with Sing
               ),
             ),
           ),
-          // 狀態指示燈 (固定在右上角，不隨專輯旋轉)
+          // 狀態指示燈 (固定在右上角，不隨專輯旋轉，具備霓虹光暈)
           Positioned(
-            top: -2,
-            right: -2,
+            top: -8,
+            right: -8,
             child: Container(
-              width: 12,
-              height: 12,
+              width: 10,
+              height: 10,
               decoration: BoxDecoration(
                 color: audioState.isPlaying ? const Color(0xFF10B981) : const Color(0xFFEF4444),
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: colorScheme.background.withOpacity(0.8), // 鏤空邊緣對應毛玻璃卡片背景色
-                  width: 2.0,
-                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: (audioState.isPlaying ? const Color(0xFF10B981) : const Color(0xFFEF4444)).withOpacity(0.5),
+                    blurRadius: 3,
+                    spreadRadius: 0,
+                  ),
+                ],
               ),
             ),
           ),
