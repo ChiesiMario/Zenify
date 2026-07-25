@@ -343,46 +343,45 @@ class AlbumDetailScreen extends ConsumerWidget {
                                       trailing: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Consumer(
-                                            builder: (context, ref, child) {
-                                              final songId = song['id'].toString();
-                                              final progressMap = ref.watch(downloadProgressProvider);
-                                              final tracksAsync = ref.watch(downloadedTracksProvider);
-                                              
-                                              final isDownloaded = tracksAsync.when(
-                                                data: (tracks) => tracks.any((t) => t.songId == songId && t.isManualDownload && t.isComplete),
-                                                loading: () => false,
-                                                error: (_, __) => false,
-                                              );
-
-                                              if (isDownloaded) {
-                                                return Icon(LucideIcons.checkCircle2, color: colorScheme.primary, size: 20);
-                                              }
-
-                                              final progress = progressMap[songId];
-                                              if (progress != null && progress < 1.0) {
-                                                return SizedBox(
-                                                  width: 20,
-                                                  height: 20,
-                                                  child: CircularProgressIndicator(value: progress, strokeWidth: 2, color: colorScheme.primary),
-                                                );
-                                              }
-
-                                              return IconButton(
-                                                icon: Icon(LucideIcons.downloadCloud, color: colorScheme.mutedForeground, size: 20),
-                                                onPressed: () {
-                                                  if (server != null) {
-                                                    ref.read(downloadServiceProvider).downloadSong(song, server.id);
-                                                  }
-                                                },
-                                                tooltip: '下載歌曲',
-                                              );
-                                            },
-                                          ),
-                                          const SizedBox(width: 8),
                                           Text(
                                             duration,
                                             style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13, fontWeight: FontWeight.w500),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Consumer(
+                                            builder: (context, ref, child) {
+                                              final favoritesAsync = ref.watch(favoritesProvider);
+                                              final songId = song['id']?.toString();
+                                              final isFavorite = favoritesAsync.value?['songs']?.any(
+                                                (s) => s['id']?.toString() == songId,
+                                              ) ?? (song['starred'] != null);
+
+                                              final mutedIconColor = colorScheme.mutedForeground.withValues(alpha: 0.3);
+
+                                              return SizedBox(
+                                                width: 28,
+                                                height: 28,
+                                                child: IconButton(
+                                                  padding: EdgeInsets.zero,
+                                                  constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                                                  icon: Icon(
+                                                    isFavorite ? Icons.favorite : LucideIcons.heart,
+                                                    color: isFavorite ? const Color(0xFFEF4444) : mutedIconColor,
+                                                    size: 16,
+                                                  ),
+                                                  onPressed: () async {
+                                                    if (songId == null || api == null) return;
+                                                    if (isFavorite) {
+                                                      await api.unstar(id: songId);
+                                                    } else {
+                                                      await api.star(id: songId);
+                                                    }
+                                                    ref.invalidate(favoritesProvider);
+                                                  },
+                                                  tooltip: isFavorite ? '取消最愛' : '加入最愛',
+                                                ),
+                                              );
+                                            },
                                           ),
                                         ],
                                       ),
@@ -413,17 +412,27 @@ class AlbumDetailScreen extends ConsumerWidget {
                           constraints: const BoxConstraints(maxWidth: 600),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 24),
-                            child: Row(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Expanded(
-                                  child: _AlbumOfflineBentoCard(
-                                    songList: songList,
-                                    serverId: server?.id ?? 0,
-                                  ),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _AlbumOfflineBentoCard(
+                                        songList: songList,
+                                        serverId: server?.id ?? 0,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    const Expanded(
+                                      child: SizedBox(),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 12),
-                                const Expanded(
-                                  child: SizedBox(),
+                                const SizedBox(height: 20),
+                                _StreamingPlatformsRow(
+                                  albumName: album['name'] ?? '',
+                                  artistName: album['artist'] ?? '',
                                 ),
                               ],
                             ),
@@ -626,6 +635,199 @@ class _AlbumOfflineBentoCardState extends ConsumerState<_AlbumOfflineBentoCard> 
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StreamingPlatformsRow extends StatelessWidget {
+  final String albumName;
+  final String artistName;
+
+  const _StreamingPlatformsRow({
+    required this.albumName,
+    required this.artistName,
+  });
+
+  Future<void> _openPlatformUrl(String platform) async {
+    final query = '$albumName $artistName'.trim();
+    final encodedQuery = Uri.encodeComponent(query);
+
+    String url;
+    switch (platform) {
+      case 'spotify':
+        url = 'https://open.spotify.com/search/$encodedQuery';
+        break;
+      case 'apple':
+        url = 'https://music.apple.com/us/search?term=$encodedQuery';
+        break;
+      case 'ytmusic':
+        url = 'https://music.youtube.com/search?q=$encodedQuery';
+        break;
+      case 'youtube':
+        url = 'https://www.youtube.com/results?search_query=$encodedQuery';
+        break;
+      case 'tidal':
+        url = 'https://listen.tidal.com/search?q=$encodedQuery';
+        break;
+      case 'amazon':
+        url = 'https://music.amazon.com/search/$encodedQuery';
+        break;
+      case 'deezer':
+        url = 'https://www.deezer.com/search/$encodedQuery';
+        break;
+      case 'qq':
+        url = 'https://y.qq.com/n/ryqq/search?w=$encodedQuery';
+        break;
+      case 'netease':
+        url = 'https://music.163.com/#/search/m/?s=$encodedQuery';
+        break;
+      case 'kkbox':
+        url = 'https://www.kkbox.com/tw/tc/search/$encodedQuery';
+        break;
+      case 'bandcamp':
+        url = 'https://bandcamp.com/search?q=$encodedQuery';
+        break;
+      case 'soundcloud':
+        url = 'https://soundcloud.com/search?q=$encodedQuery';
+        break;
+      case 'qobuz':
+        url = 'https://www.qobuz.com/us-en/search?q=$encodedQuery';
+        break;
+      case 'lastfm':
+        url = 'https://www.last.fm/search?q=$encodedQuery';
+        break;
+      default:
+        url = 'https://www.google.com/search?q=$encodedQuery';
+    }
+
+    try {
+      if (Platform.isWindows) {
+        await Process.run('cmd', ['/c', 'start', '', url]);
+      } else if (Platform.isMacOS) {
+        await Process.run('open', [url]);
+      } else if (Platform.isLinux) {
+        await Process.run('xdg-open', [url]);
+      }
+    } catch (e) {
+      print('Failed to open URL: $e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ShadTheme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    final platforms = [
+      {'id': 'spotify', 'name': 'Spotify', 'icon': LucideIcons.music},
+      {'id': 'apple', 'name': 'Apple Music', 'icon': LucideIcons.headphones},
+      {'id': 'ytmusic', 'name': 'YouTube Music', 'icon': LucideIcons.playCircle},
+      {'id': 'youtube', 'name': 'YouTube', 'icon': LucideIcons.tv},
+      {'id': 'tidal', 'name': 'Tidal', 'icon': LucideIcons.radio},
+      {'id': 'amazon', 'name': 'Amazon Music', 'icon': LucideIcons.shoppingBag},
+      {'id': 'deezer', 'name': 'Deezer', 'icon': LucideIcons.sliders},
+      {'id': 'qq', 'name': 'QQ 音樂', 'icon': LucideIcons.disc},
+      {'id': 'netease', 'name': '網易雲音樂', 'icon': LucideIcons.flame},
+      {'id': 'kkbox', 'name': 'KKBOX', 'icon': LucideIcons.box},
+      {'id': 'bandcamp', 'name': 'Bandcamp', 'icon': LucideIcons.tag},
+      {'id': 'soundcloud', 'name': 'SoundCloud', 'icon': LucideIcons.cloud},
+      {'id': 'qobuz', 'name': 'Qobuz', 'icon': LucideIcons.award},
+      {'id': 'lastfm', 'name': 'Last.fm', 'icon': LucideIcons.activity},
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '在其他串流平台搜尋',
+          style: TextStyle(
+            color: colorScheme.mutedForeground,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: platforms.map((p) {
+            return _PlatformPillButton(
+              label: p['name'] as String,
+              icon: p['icon'] as IconData,
+              onTap: () => _openPlatformUrl(p['id'] as String),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+}
+
+class _PlatformPillButton extends StatefulWidget {
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _PlatformPillButton({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  State<_PlatformPillButton> createState() => _PlatformPillButtonState();
+}
+
+class _PlatformPillButtonState extends State<_PlatformPillButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ShadTheme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    final bgColor = _isHovered ? colorScheme.foreground : colorScheme.card;
+    final fgColor = _isHovered ? colorScheme.background : colorScheme.foreground;
+    final borderColor = _isHovered ? colorScheme.foreground : colorScheme.border;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: borderColor,
+              width: 1.0,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                widget.icon,
+                size: 14,
+                color: fgColor,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                widget.label,
+                style: TextStyle(
+                  color: fgColor,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ],
           ),

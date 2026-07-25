@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
@@ -122,45 +123,8 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 24),
-
-                          // 2. Play Actions & Bio
-                          Row(
-                            children: [
-                              if (topSongs.isNotEmpty)
-                                ShadButton(
-                                  onPressed: () {
-                                    ref.read(audioProvider.notifier).playQueue(List<dynamic>.from(topSongs), 0);
-                                  },
-                                  child: const Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(LucideIcons.play, size: 16),
-                                      SizedBox(width: 8),
-                                      Text('播放熱門歌曲', style: TextStyle(fontWeight: FontWeight.bold)),
-                                    ],
-                                  ),
-                                ),
-                              const SizedBox(width: 12),
-                              if (topSongs.isNotEmpty)
-                                ShadButton.secondary(
-                                  onPressed: () {
-                                    final shuffled = List<dynamic>.from(topSongs)..shuffle();
-                                    ref.read(audioProvider.notifier).playQueue(shuffled, 0);
-                                  },
-                                  child: const Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(LucideIcons.shuffle, size: 16),
-                                      SizedBox(width: 8),
-                                      Text('隨機播放'),
-                                    ],
-                                  ),
-                                ),
-                            ],
-                          ),
                           if (bio != null && bio.isNotEmpty) ...[
-                            const SizedBox(height: 32),
+                            const SizedBox(height: 24),
                             Text('關於', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colorScheme.foreground, letterSpacing: -0.5)),
                             const SizedBox(height: 12),
                             GestureDetector(
@@ -176,13 +140,63 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
                                 secondChild: _buildBioText(bio, colorScheme, null),
                               ),
                             ),
+                            const SizedBox(height: 32),
+                          ] else ...[
+                            const SizedBox(height: 24),
                           ],
-
-                          const SizedBox(height: 48),
 
                           // 3. Top Songs
                           if (topSongs.isNotEmpty) ...[
-                            Text('熱門歌曲', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: colorScheme.foreground, letterSpacing: -0.5)),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  '熱門歌曲',
+                                  style: TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                    color: colorScheme.foreground,
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    ShadButton.secondary(
+                                      size: ShadButtonSize.sm,
+                                      onPressed: () {
+                                        final shuffled = List<dynamic>.from(topSongs)..shuffle();
+                                        ref.read(audioProvider.notifier).playQueue(shuffled, 0);
+                                      },
+                                      child: const Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(LucideIcons.shuffle, size: 14),
+                                          SizedBox(width: 6),
+                                          Text('隨機播放'),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    ShadButton(
+                                      size: ShadButtonSize.sm,
+                                      onPressed: () {
+                                        ref.read(audioProvider.notifier).playQueue(List<dynamic>.from(topSongs), 0);
+                                      },
+                                      child: const Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(LucideIcons.play, size: 14),
+                                          SizedBox(width: 6),
+                                          Text('播放', style: TextStyle(fontWeight: FontWeight.bold)),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                             const SizedBox(height: 16),
                             Container(
                               decoration: BoxDecoration(
@@ -301,8 +315,26 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
                               showYearInsteadOfArtist: true,
                             ),
                           ],
-                          const SizedBox(height: 128),
+                          const SizedBox(height: 24),
                         ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // 5. Streaming Platforms Bottom Section
+              SliverToBoxAdapter(
+                child: Container(
+                  color: const Color(0xFFF4F4F5),
+                  padding: const EdgeInsets.only(top: 24, bottom: 148),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 600),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: _StreamingPlatformsRow(
+                          artistName: name,
+                        ),
                       ),
                     ),
                   ),
@@ -343,6 +375,201 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _StreamingPlatformsRow extends StatelessWidget {
+  final String? albumName;
+  final String artistName;
+
+  const _StreamingPlatformsRow({
+    this.albumName,
+    required this.artistName,
+  });
+
+  Future<void> _openPlatformUrl(String platform) async {
+    final query = (albumName != null && albumName!.isNotEmpty)
+        ? '$albumName $artistName'.trim()
+        : artistName.trim();
+    final encodedQuery = Uri.encodeComponent(query);
+
+    String url;
+    switch (platform) {
+      case 'spotify':
+        url = 'https://open.spotify.com/search/$encodedQuery';
+        break;
+      case 'apple':
+        url = 'https://music.apple.com/us/search?term=$encodedQuery';
+        break;
+      case 'ytmusic':
+        url = 'https://music.youtube.com/search?q=$encodedQuery';
+        break;
+      case 'youtube':
+        url = 'https://www.youtube.com/results?search_query=$encodedQuery';
+        break;
+      case 'tidal':
+        url = 'https://listen.tidal.com/search?q=$encodedQuery';
+        break;
+      case 'amazon':
+        url = 'https://music.amazon.com/search/$encodedQuery';
+        break;
+      case 'deezer':
+        url = 'https://www.deezer.com/search/$encodedQuery';
+        break;
+      case 'qq':
+        url = 'https://y.qq.com/n/ryqq/search?w=$encodedQuery';
+        break;
+      case 'netease':
+        url = 'https://music.163.com/#/search/m/?s=$encodedQuery';
+        break;
+      case 'kkbox':
+        url = 'https://www.kkbox.com/tw/tc/search/$encodedQuery';
+        break;
+      case 'bandcamp':
+        url = 'https://bandcamp.com/search?q=$encodedQuery';
+        break;
+      case 'soundcloud':
+        url = 'https://soundcloud.com/search?q=$encodedQuery';
+        break;
+      case 'qobuz':
+        url = 'https://www.qobuz.com/us-en/search?q=$encodedQuery';
+        break;
+      case 'lastfm':
+        url = 'https://www.last.fm/search?q=$encodedQuery';
+        break;
+      default:
+        url = 'https://www.google.com/search?q=$encodedQuery';
+    }
+
+    try {
+      if (Platform.isWindows) {
+        await Process.run('cmd', ['/c', 'start', '', url]);
+      } else if (Platform.isMacOS) {
+        await Process.run('open', [url]);
+      } else if (Platform.isLinux) {
+        await Process.run('xdg-open', [url]);
+      }
+    } catch (e) {
+      print('Failed to open URL: $e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ShadTheme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    final platforms = [
+      {'id': 'spotify', 'name': 'Spotify', 'icon': LucideIcons.music},
+      {'id': 'apple', 'name': 'Apple Music', 'icon': LucideIcons.headphones},
+      {'id': 'ytmusic', 'name': 'YouTube Music', 'icon': LucideIcons.playCircle},
+      {'id': 'youtube', 'name': 'YouTube', 'icon': LucideIcons.tv},
+      {'id': 'tidal', 'name': 'Tidal', 'icon': LucideIcons.radio},
+      {'id': 'amazon', 'name': 'Amazon Music', 'icon': LucideIcons.shoppingBag},
+      {'id': 'deezer', 'name': 'Deezer', 'icon': LucideIcons.sliders},
+      {'id': 'qq', 'name': 'QQ 音樂', 'icon': LucideIcons.disc},
+      {'id': 'netease', 'name': '網易雲音樂', 'icon': LucideIcons.flame},
+      {'id': 'kkbox', 'name': 'KKBOX', 'icon': LucideIcons.box},
+      {'id': 'bandcamp', 'name': 'Bandcamp', 'icon': LucideIcons.tag},
+      {'id': 'soundcloud', 'name': 'SoundCloud', 'icon': LucideIcons.cloud},
+      {'id': 'qobuz', 'name': 'Qobuz', 'icon': LucideIcons.award},
+      {'id': 'lastfm', 'name': 'Last.fm', 'icon': LucideIcons.activity},
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '在其他串流平台搜尋',
+          style: TextStyle(
+            color: colorScheme.mutedForeground,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: platforms.map((p) {
+            return _PlatformPillButton(
+              label: p['name'] as String,
+              icon: p['icon'] as IconData,
+              onTap: () => _openPlatformUrl(p['id'] as String),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+}
+
+class _PlatformPillButton extends StatefulWidget {
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _PlatformPillButton({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  State<_PlatformPillButton> createState() => _PlatformPillButtonState();
+}
+
+class _PlatformPillButtonState extends State<_PlatformPillButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ShadTheme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    final bgColor = _isHovered ? colorScheme.foreground : colorScheme.card;
+    final fgColor = _isHovered ? colorScheme.background : colorScheme.foreground;
+    final borderColor = _isHovered ? colorScheme.foreground : colorScheme.border;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: borderColor,
+              width: 1.0,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                widget.icon,
+                size: 14,
+                color: fgColor,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                widget.label,
+                style: TextStyle(
+                  color: fgColor,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
