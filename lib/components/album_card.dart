@@ -125,37 +125,14 @@ class _AlbumCardState extends State<AlbumCard> {
                                 Positioned(
                                   left: 10,
                                   bottom: 10,
-                                  child: MouseRegion(
-                                    cursor: SystemMouseCursors.click,
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        if (widget.onPlayTap != null) {
-                                          widget.onPlayTap!();
-                                        } else {
-                                          widget.onTap();
-                                        }
-                                      },
-                                      child: Container(
-                                        width: 36,
-                                        height: 36,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: Colors.white.withValues(alpha: 0.9),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withValues(alpha: 0.2),
-                                              blurRadius: 6,
-                                              offset: const Offset(0, 2),
-                                            ),
-                                          ],
-                                        ),
-                                        child: const Icon(
-                                          LucideIcons.play,
-                                          color: Colors.black,
-                                          size: 16,
-                                        ),
-                                      ),
-                                    ),
+                                  child: _AlbumPlayButton(
+                                    onTap: () {
+                                      if (widget.onPlayTap != null) {
+                                        widget.onPlayTap!();
+                                      } else {
+                                        widget.onTap();
+                                      }
+                                    },
                                   ),
                                 ),
                               ],
@@ -211,6 +188,53 @@ class _AlbumCardState extends State<AlbumCard> {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AlbumPlayButton extends StatefulWidget {
+  final VoidCallback onTap;
+
+  const _AlbumPlayButton({required this.onTap});
+
+  @override
+  State<_AlbumPlayButton> createState() => _AlbumPlayButtonState();
+}
+
+class _AlbumPlayButtonState extends State<_AlbumPlayButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: _isHovered ? Colors.black : Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Icon(
+            LucideIcons.play,
+            color: _isHovered ? Colors.white : Colors.black,
+            size: 16,
           ),
         ),
       ),
