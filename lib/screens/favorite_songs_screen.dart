@@ -5,14 +5,41 @@ import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/audio_provider.dart';
 import 'package:zenify/components/local_cover_image.dart';
 
+import 'package:zenify/providers/sort_providers.dart';
+
 class FavoriteSongsScreen extends ConsumerWidget {
   const FavoriteSongsScreen({super.key});
+
+  List<dynamic> _sortSongs(List<dynamic> songs, AlbumSortOption option) {
+    final list = List<dynamic>.from(songs);
+    switch (option) {
+      case AlbumSortOption.nameAsc:
+        list.sort((a, b) => (a['title'] ?? '').toString().toLowerCase().compareTo((b['title'] ?? '').toString().toLowerCase()));
+        break;
+      case AlbumSortOption.nameDesc:
+        list.sort((a, b) => (b['title'] ?? '').toString().toLowerCase().compareTo((a['title'] ?? '').toString().toLowerCase()));
+        break;
+      case AlbumSortOption.yearDesc:
+        list.sort((a, b) => (b['year'] ?? 0).compareTo(a['year'] ?? 0));
+        break;
+      case AlbumSortOption.yearAsc:
+        list.sort((a, b) => (a['year'] ?? 0).compareTo(b['year'] ?? 0));
+        break;
+      case AlbumSortOption.random:
+        list.shuffle();
+        break;
+      case AlbumSortOption.defaultOrder:
+        break;
+    }
+    return list;
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final activeServer = ref.watch(activeServerProvider);
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
+    final sortOption = ref.watch(albumSortProvider);
 
     return Scaffold(
       backgroundColor: colorScheme.background,
@@ -27,7 +54,8 @@ class FavoriteSongsScreen extends ConsumerWidget {
           final favoritesAsync = ref.watch(favoritesProvider);
           return favoritesAsync.when(
             data: (favorites) {
-              final songs = favorites['songs'] ?? [];
+              final rawSongs = favorites['songs'] ?? [];
+              final songs = _sortSongs(rawSongs, sortOption);
 
               if (songs.isEmpty) {
                 return Center(child: Text('目前沒有任何喜愛的歌曲', style: TextStyle(color: colorScheme.mutedForeground)));

@@ -5,14 +5,41 @@ import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/components/albums_grid.dart';
 import 'package:zenify/providers/audio_provider.dart';
 
+import 'package:zenify/providers/sort_providers.dart';
+
 class FavoriteAlbumsScreen extends ConsumerWidget {
   const FavoriteAlbumsScreen({super.key});
+
+  List<dynamic> _sortAlbums(List<dynamic> albums, AlbumSortOption option) {
+    final list = List<dynamic>.from(albums);
+    switch (option) {
+      case AlbumSortOption.nameAsc:
+        list.sort((a, b) => (a['title'] ?? a['name'] ?? '').toString().toLowerCase().compareTo((b['title'] ?? b['name'] ?? '').toString().toLowerCase()));
+        break;
+      case AlbumSortOption.nameDesc:
+        list.sort((a, b) => (b['title'] ?? b['name'] ?? '').toString().toLowerCase().compareTo((a['title'] ?? a['name'] ?? '').toString().toLowerCase()));
+        break;
+      case AlbumSortOption.yearDesc:
+        list.sort((a, b) => (b['year'] ?? 0).compareTo(a['year'] ?? 0));
+        break;
+      case AlbumSortOption.yearAsc:
+        list.sort((a, b) => (a['year'] ?? 0).compareTo(b['year'] ?? 0));
+        break;
+      case AlbumSortOption.random:
+        list.shuffle();
+        break;
+      case AlbumSortOption.defaultOrder:
+        break;
+    }
+    return list;
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final activeServer = ref.watch(activeServerProvider);
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
+    final sortOption = ref.watch(albumSortProvider);
 
     return Scaffold(
       backgroundColor: colorScheme.background,
@@ -27,7 +54,8 @@ class FavoriteAlbumsScreen extends ConsumerWidget {
           final favoritesAsync = ref.watch(favoritesProvider);
           return favoritesAsync.when(
             data: (favorites) {
-              final albums = favorites['albums'] ?? [];
+              final rawAlbums = favorites['albums'] ?? [];
+              final albums = _sortAlbums(rawAlbums, sortOption);
 
               if (albums.isEmpty) {
                 return Center(child: Text('目前沒有任何喜愛的專輯', style: TextStyle(color: colorScheme.mutedForeground)));
@@ -111,7 +139,7 @@ class FavoriteAlbumsScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 128)),
+                  const SizedBox(height: 128),
                 ],
               );
             },

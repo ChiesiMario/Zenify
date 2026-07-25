@@ -65,6 +65,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   String _currentSubTitle = '';
 
+  bool _shouldShowSortButton() {
+    if (_currentIndex == 0) {
+      return !_canPop;
+    } else if (_currentIndex == 1) {
+      return !_canPop;
+    } else if (_currentIndex == 2) {
+      return _canPop && (
+        _currentSubTitle == '歌曲' ||
+        _currentSubTitle == '專輯' ||
+        _currentSubTitle == '播放清單' ||
+        _currentSubTitle == '已下載'
+      );
+    }
+    return false;
+  }
+
   void _updateCanPop() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -245,11 +261,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
               ),
               actions: [
-                if (_currentIndex == 0 || _currentIndex == 1)
+                if (_shouldShowSortButton())
                   ShadPopover(
                     controller: _sortPopoverController,
                     popover: (context) => SortPopoverContent(
                       currentIndex: _currentIndex,
+                      subTitle: _currentSubTitle,
                       onClose: () => _sortPopoverController.hide(),
                     ),
                     child: IconButton(
@@ -446,18 +463,6 @@ class SyncPopoverContent extends ConsumerWidget {
     return Container(
       width: 300,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colorScheme.popover,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: colorScheme.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -523,16 +528,22 @@ class SyncPopoverContent extends ConsumerWidget {
 
 class SortPopoverContent extends ConsumerWidget {
   final int currentIndex;
+  final String subTitle;
   final VoidCallback onClose;
 
-  const SortPopoverContent({super.key, required this.currentIndex, required this.onClose});
+  const SortPopoverContent({
+    super.key, 
+    required this.currentIndex, 
+    required this.subTitle, 
+    required this.onClose,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
 
-    if (currentIndex == 0) {
+    if (currentIndex == 0 || (currentIndex == 2 && subTitle == '專輯')) {
       final currentSort = ref.watch(albumSortProvider);
       return _buildMenu<AlbumSortOption>(
         context, ref, colorScheme, currentSort,
@@ -557,6 +568,17 @@ class SortPopoverContent extends ConsumerWidget {
           (ArtistSortOption.random, '隨機排列'),
         ]
       );
+    } else if (currentIndex == 2) {
+      final currentSort = ref.watch(albumSortProvider);
+      return _buildMenu<AlbumSortOption>(
+        context, ref, colorScheme, currentSort,
+        [
+          (AlbumSortOption.defaultOrder, '預設排序'),
+          (AlbumSortOption.nameAsc, '名稱 (A-Z)'),
+          (AlbumSortOption.nameDesc, '名稱 (Z-A)'),
+          (AlbumSortOption.random, '隨機排列'),
+        ]
+      );
     }
 
     return const SizedBox.shrink();
@@ -569,67 +591,97 @@ class SortPopoverContent extends ConsumerWidget {
     T currentValue,
     List<(T, String)> options,
   ) {
-    return Container(
-      width: 200,
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(
-        color: colorScheme.popover,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: colorScheme.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: options.map((option) => _buildOption<T>(
-          context, ref, option.$2, option.$1, currentValue, colorScheme
-        )).toList(),
+    return IntrinsicWidth(
+      child: Padding(
+        padding: const EdgeInsets.all(6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: options.map((option) => _SortOptionItem<T>(
+            label: option.$2,
+            value: option.$1,
+            currentValue: currentValue,
+            colorScheme: colorScheme,
+            onTap: () {
+              if (option.$1 is AlbumSortOption) {
+                ref.read(albumSortProvider.notifier).setSort(option.$1 as AlbumSortOption);
+              } else if (option.$1 is ArtistSortOption) {
+                ref.read(artistSortProvider.notifier).setSort(option.$1 as ArtistSortOption);
+              }
+              onClose();
+            },
+          )).toList(),
+        ),
       ),
     );
   }
+}
 
-  Widget _buildOption<T>(
-    BuildContext context, 
-    WidgetRef ref, 
-    String label, 
-    T value, 
-    T currentValue,
-    ShadColorScheme colorScheme,
-  ) {
-    final isSelected = value == currentValue;
-    return InkWell(
-      onTap: () {
-        if (value is AlbumSortOption) {
-          ref.read(albumSortProvider.notifier).setSort(value);
-        } else if (value is ArtistSortOption) {
-          ref.read(artistSortProvider.notifier).setSort(value);
-        }
-        onClose();
-      },
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        color: isSelected ? colorScheme.accent : Colors.transparent,
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                label,
+class _SortOptionItem<T> extends StatefulWidget {
+  final String label;
+  final T value;
+  final T currentValue;
+  final ShadColorScheme colorScheme;
+  final VoidCallback onTap;
+
+  const _SortOptionItem({
+    required this.label,
+    required this.value,
+    required this.currentValue,
+    required this.colorScheme,
+    required this.onTap,
+  });
+
+  @override
+  State<_SortOptionItem<T>> createState() => _SortOptionItemState<T>();
+}
+
+class _SortOptionItemState<T> extends State<_SortOptionItem<T>> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final isSelected = widget.value == widget.currentValue;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+          decoration: BoxDecoration(
+            color: _isHovered
+                ? widget.colorScheme.foreground.withOpacity(0.06)
+                : (isSelected ? widget.colorScheme.muted.withOpacity(0.3) : Colors.transparent),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 16,
+                child: isSelected
+                    ? Icon(
+                        LucideIcons.check,
+                        size: 14,
+                        color: widget.colorScheme.foreground,
+                      )
+                    : null,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                widget.label,
                 style: TextStyle(
-                  color: isSelected ? colorScheme.accentForeground : colorScheme.popoverForeground,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected ? widget.colorScheme.foreground : widget.colorScheme.mutedForeground,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  fontSize: 13,
                 ),
               ),
-            ),
-            if (isSelected)
-              Icon(LucideIcons.check, size: 16, color: colorScheme.accentForeground),
-          ],
+            ],
+          ),
         ),
       ),
     );

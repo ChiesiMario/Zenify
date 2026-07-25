@@ -4,6 +4,8 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/screens/playlist_detail_screen.dart';
 
+import 'package:zenify/providers/sort_providers.dart';
+
 final playlistsProvider = FutureProvider<List<dynamic>>((ref) async {
   final api = ref.watch(subsonicApiProvider);
   if (api == null) return [];
@@ -13,16 +15,37 @@ final playlistsProvider = FutureProvider<List<dynamic>>((ref) async {
 class PlaylistsView extends ConsumerWidget {
   const PlaylistsView({super.key});
 
+  List<dynamic> _sortPlaylists(List<dynamic> playlists, AlbumSortOption option) {
+    final list = List<dynamic>.from(playlists);
+    switch (option) {
+      case AlbumSortOption.nameAsc:
+        list.sort((a, b) => (a['name'] ?? '').toString().toLowerCase().compareTo((b['name'] ?? '').toString().toLowerCase()));
+        break;
+      case AlbumSortOption.nameDesc:
+        list.sort((a, b) => (b['name'] ?? '').toString().toLowerCase().compareTo((a['name'] ?? '').toString().toLowerCase()));
+        break;
+      case AlbumSortOption.random:
+        list.shuffle();
+        break;
+      case AlbumSortOption.defaultOrder:
+      default:
+        break;
+    }
+    return list;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
     final playlistsAsync = ref.watch(playlistsProvider);
+    final sortOption = ref.watch(albumSortProvider);
 
     return Scaffold(
       backgroundColor: colorScheme.background,
       body: playlistsAsync.when(
-        data: (playlists) {
+        data: (rawPlaylists) {
+          final playlists = _sortPlaylists(rawPlaylists, sortOption);
           if (playlists.isEmpty) {
             return Center(
               child: Text('目前沒有播放清單', style: TextStyle(color: colorScheme.mutedForeground)),

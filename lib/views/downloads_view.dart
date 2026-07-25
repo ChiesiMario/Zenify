@@ -9,8 +9,29 @@ import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/components/local_cover_image.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import 'package:zenify/providers/sort_providers.dart';
+
 class DownloadsView extends ConsumerWidget {
   const DownloadsView({super.key});
+
+  List<DownloadedTrack> _sortTracks(List<DownloadedTrack> tracks, AlbumSortOption option) {
+    final list = List<DownloadedTrack>.from(tracks);
+    switch (option) {
+      case AlbumSortOption.nameAsc:
+        list.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+        break;
+      case AlbumSortOption.nameDesc:
+        list.sort((a, b) => b.title.toLowerCase().compareTo(a.title.toLowerCase()));
+        break;
+      case AlbumSortOption.random:
+        list.shuffle();
+        break;
+      case AlbumSortOption.defaultOrder:
+      default:
+        break;
+    }
+    return list;
+  }
 
   String _formatDuration(int seconds) {
     final minutes = seconds ~/ 60;
@@ -251,7 +272,10 @@ class DownloadsView extends ConsumerWidget {
     required ShadColorScheme colorScheme,
     required dynamic api,
   }) {
-    if (tracks.isEmpty) {
+    final sortOption = ref.watch(albumSortProvider);
+    final sortedTracks = _sortTracks(tracks, sortOption);
+
+    if (sortedTracks.isEmpty) {
       return Center(
         child: Text(
           emptyText,
@@ -275,9 +299,9 @@ class DownloadsView extends ConsumerWidget {
                   border: Border.all(color: colorScheme.border, width: 1.0),
                 ),
                 sliver: SliverList.builder(
-                  itemCount: tracks.length,
+                  itemCount: sortedTracks.length,
                   itemBuilder: (context, index) {
-                    final track = tracks[index];
+                    final track = sortedTracks[index];
                     int sizeBytes = track.sizeBytes;
                     if (sizeBytes <= 0) {
                       try {
