@@ -46,22 +46,27 @@ class FullPlayerScreen extends ConsumerWidget {
         : 0.0;
     sliderValue = sliderValue.clamp(0.0, 1.0);
 
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth <= 400;
+    final screenSize = MediaQuery.of(context).size;
+    final isCompact = screenSize.width <= 400 && screenSize.height <= 600;
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Align(
-        alignment: Alignment.bottomCenter,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 400, maxHeight: 600),
-          child: Container(
-            margin: isSmallScreen ? EdgeInsets.zero : const EdgeInsets.only(top: 10),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => Navigator.pop(context),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Align(
+          alignment: Alignment.bottomCenter,
+          child: GestureDetector(
+            onTap: () {}, // 攔截卡片本身的點擊，避免關閉
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 350, maxWidth: 400, maxHeight: 600),
+              child: Container(
+            margin: isCompact ? EdgeInsets.zero : const EdgeInsets.only(top: 10),
             decoration: ShapeDecoration(
               color: colorScheme.background,
               shape: RoundedRectangleBorder(
-                borderRadius: isSmallScreen ? BorderRadius.zero : const BorderRadius.vertical(top: Radius.circular(20)),
-                side: isSmallScreen ? BorderSide.none : BorderSide(color: colorScheme.border, width: 1.0),
+                borderRadius: isCompact ? BorderRadius.zero : const BorderRadius.vertical(top: Radius.circular(20)),
+                side: BorderSide.none,
               ),
             ),
             child: SafeArea(
@@ -73,43 +78,26 @@ class FullPlayerScreen extends ConsumerWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    IconButton(
-                      padding: const EdgeInsets.all(4),
-                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                      icon: Icon(
-                        LucideIcons.chevronDown,
-                        size: 18,
-                        color: colorScheme.mutedForeground.withValues(alpha: 0.7),
-                      ),
-                      onPressed: () => Navigator.pop(context),
+                    _TopUtilityButton(
+                      icon: LucideIcons.chevronDown,
                       tooltip: '收起',
-                      splashColor: Colors.transparent,
-                      highlightColor: Colors.transparent,
-                      hoverColor: Colors.transparent,
+                      onPressed: () => Navigator.pop(context),
                     ),
-                    IconButton(
-                      padding: const EdgeInsets.all(4),
-                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                      icon: Icon(
-                        LucideIcons.listMusic,
-                        size: 18,
-                        color: colorScheme.mutedForeground.withValues(alpha: 0.7),
-                      ),
+                    _TopUtilityButton(
+                      icon: LucideIcons.listMusic,
+                      tooltip: '播放佇列',
                       onPressed: () {
                         showModalBottomSheet(
                           context: context,
                           isScrollControlled: true,
                           backgroundColor: Colors.transparent,
+                          constraints: const BoxConstraints(maxWidth: 500),
                           builder: (context) => FractionallySizedBox(
                             heightFactor: 0.8,
                             child: const PlayQueueSheet(),
                           ),
                         );
                       },
-                      tooltip: '播放佇列',
-                      splashColor: Colors.transparent,
-                      highlightColor: Colors.transparent,
-                      hoverColor: Colors.transparent,
                     ),
                   ],
                 ),
@@ -135,13 +123,6 @@ class FullPlayerScreen extends ConsumerWidget {
                                       child: AnimatedContainer(
                                         duration: const Duration(milliseconds: 300),
                                         curve: Curves.easeOutCubic,
-                                        foregroundDecoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(8),
-                                          border: Border.all(
-                                            color: colorScheme.foreground.withValues(alpha: 0.08),
-                                            width: 1.0,
-                                          ),
-                                        ),
                                         decoration: BoxDecoration(
                                           color: colorScheme.muted,
                                           borderRadius: BorderRadius.circular(8),
@@ -303,71 +284,39 @@ class FullPlayerScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 40),
 
-                          // 播放控制區塊
+                          // 播放控制區塊 (全新極簡與層次設計)
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
-                              IconButton(
-                                icon: Icon(
-                                  LucideIcons.shuffle, 
-                                  color: audioState.isShuffled ? colorScheme.foreground : colorScheme.mutedForeground.withValues(alpha: 0.5)
-                                ),
-                                iconSize: 22,
+                              _SecondaryPlayerButton(
+                                icon: LucideIcons.shuffle,
+                                size: 20,
+                                isActive: audioState.isShuffled,
                                 onPressed: () => audioNotifier.toggleShuffle(),
-                                splashColor: Colors.transparent,
-                                highlightColor: Colors.transparent,
                               ),
-                              IconButton(
-                                icon: Icon(LucideIcons.skipBack, color: colorScheme.foreground),
-                                iconSize: 36,
+                              _SecondaryPlayerButton(
+                                icon: LucideIcons.skipBack,
+                                size: 32,
+                                isActive: true,
                                 onPressed: () => audioNotifier.skipToPrevious(),
-                                splashColor: Colors.transparent,
-                                highlightColor: Colors.transparent,
                               ),
-                              // 播放暫停按鈕
-                              Container(
-                                width: 72,
-                                height: 72,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: colorScheme.foreground,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: colorScheme.foreground.withValues(alpha: 0.2),
-                                      blurRadius: 20,
-                                      offset: const Offset(0, 8),
-                                    ),
-                                  ],
-                                ),
-                                child: IconButton(
-                                  icon: Icon(
-                                    audioState.isPlaying ? LucideIcons.pause : LucideIcons.play, 
-                                    color: colorScheme.background
-                                  ),
-                                  iconSize: 32,
-                                  onPressed: () => audioNotifier.togglePlayPause(),
-                                ),
+                              _PrimaryPlayButton(
+                                isPlaying: audioState.isPlaying,
+                                onPressed: () => audioNotifier.togglePlayPause(),
                               ),
-                              IconButton(
-                                icon: Icon(LucideIcons.skipForward, color: colorScheme.foreground),
-                                iconSize: 36,
+                              _SecondaryPlayerButton(
+                                icon: LucideIcons.skipForward,
+                                size: 32,
+                                isActive: true,
                                 onPressed: () => audioNotifier.skipToNext(),
-                                splashColor: Colors.transparent,
-                                highlightColor: Colors.transparent,
                               ),
-                              IconButton(
-                                icon: Icon(
-                                  audioState.repeatMode == AudioRepeatMode.one 
-                                      ? LucideIcons.repeat1 
-                                      : LucideIcons.repeat,
-                                  color: audioState.repeatMode != AudioRepeatMode.off 
-                                      ? colorScheme.foreground 
-                                      : colorScheme.mutedForeground.withValues(alpha: 0.5),
-                                ),
-                                iconSize: 22,
+                              _SecondaryPlayerButton(
+                                icon: audioState.repeatMode == AudioRepeatMode.one 
+                                    ? LucideIcons.repeat1 
+                                    : LucideIcons.repeat,
+                                size: 20,
+                                isActive: audioState.repeatMode != AudioRepeatMode.off,
                                 onPressed: () => audioNotifier.toggleRepeat(),
-                                splashColor: Colors.transparent,
-                                highlightColor: Colors.transparent,
                               ),
                             ],
                           ),
@@ -382,7 +331,9 @@ class FullPlayerScreen extends ConsumerWidget {
       ),
     ),
   ),
-);
+),
+      ),
+    );
   }
 }
 
@@ -425,3 +376,196 @@ class _HoverableLinkState extends State<_HoverableLink> {
     );
   }
 }
+
+class _PrimaryPlayButton extends StatefulWidget {
+  final bool isPlaying;
+  final VoidCallback onPressed;
+
+  const _PrimaryPlayButton({
+    Key? key,
+    required this.isPlaying,
+    required this.onPressed,
+  }) : super(key: key);
+
+  @override
+  State<_PrimaryPlayButton> createState() => _PrimaryPlayButtonState();
+}
+
+class _PrimaryPlayButtonState extends State<_PrimaryPlayButton> {
+  bool _isHovered = false;
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ShadTheme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: (_) => setState(() => _isPressed = true),
+        onTapUp: (_) {
+          setState(() => _isPressed = false);
+          widget.onPressed();
+        },
+        onTapCancel: () => setState(() => _isPressed = false),
+        child: AnimatedScale(
+          scale: _isPressed ? 0.90 : 1.0,
+          duration: const Duration(milliseconds: 120),
+          curve: Curves.easeOutCubic,
+          child: AnimatedOpacity(
+            opacity: _isPressed ? 0.5 : (_isHovered ? 0.7 : 1.0),
+            duration: const Duration(milliseconds: 150),
+            child: Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: colorScheme.foreground, // 實心反白高對比
+              ),
+              child: Center(
+                child: Icon(
+                  widget.isPlaying ? LucideIcons.pause : LucideIcons.play,
+                  size: 28, // 刻意縮小的圖示，利用留白增加精緻感
+                  color: colorScheme.background,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SecondaryPlayerButton extends StatefulWidget {
+  final IconData icon;
+  final double size;
+  final VoidCallback onPressed;
+  final bool isActive;
+
+  const _SecondaryPlayerButton({
+    Key? key,
+    required this.icon,
+    required this.size,
+    required this.onPressed,
+    this.isActive = false,
+  }) : super(key: key);
+
+  @override
+  State<_SecondaryPlayerButton> createState() => _SecondaryPlayerButtonState();
+}
+
+class _SecondaryPlayerButtonState extends State<_SecondaryPlayerButton> {
+  bool _isHovered = false;
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ShadTheme.of(context);
+    final colorScheme = theme.colorScheme;
+    
+    // 統一基礎色，完全由 AnimatedOpacity 控制層次
+    final color = colorScheme.foreground;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: (_) => setState(() => _isPressed = true),
+        onTapUp: (_) {
+          setState(() => _isPressed = false);
+          widget.onPressed();
+        },
+        onTapCancel: () => setState(() => _isPressed = false),
+        child: AnimatedScale(
+          scale: _isPressed ? 0.85 : 1.0,
+          duration: const Duration(milliseconds: 120),
+          curve: Curves.easeOutCubic,
+          child: AnimatedOpacity(
+            opacity: _isPressed 
+                ? (widget.isActive ? 0.5 : 0.2) 
+                : (_isHovered 
+                    ? (widget.isActive ? 0.7 : 0.5) 
+                    : (widget.isActive ? 1.0 : 0.3)),
+            duration: const Duration(milliseconds: 150),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Icon(
+                widget.icon,
+                size: widget.size,
+                color: color,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TopUtilityButton extends StatefulWidget {
+  final IconData icon;
+  final VoidCallback onPressed;
+  final String tooltip;
+
+  const _TopUtilityButton({
+    Key? key,
+    required this.icon,
+    required this.onPressed,
+    required this.tooltip,
+  }) : super(key: key);
+
+  @override
+  State<_TopUtilityButton> createState() => _TopUtilityButtonState();
+}
+
+class _TopUtilityButtonState extends State<_TopUtilityButton> {
+  bool _isHovered = false;
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = ShadTheme.of(context).colorScheme;
+    
+    return Tooltip(
+      message: widget.tooltip,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapDown: (_) => setState(() => _isPressed = true),
+          onTapUp: (_) {
+            setState(() => _isPressed = false);
+            widget.onPressed();
+          },
+          onTapCancel: () => setState(() => _isPressed = false),
+          child: AnimatedScale(
+            scale: _isPressed ? 0.85 : 1.0,
+            duration: const Duration(milliseconds: 120),
+            curve: Curves.easeOutCubic,
+            child: AnimatedOpacity(
+              opacity: _isPressed ? 0.5 : (_isHovered ? 1.0 : 0.7),
+              duration: const Duration(milliseconds: 150),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Icon(
+                  widget.icon,
+                  size: 20, // 稍微加大一點點，增加精緻感與點擊識別度
+                  color: colorScheme.mutedForeground,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

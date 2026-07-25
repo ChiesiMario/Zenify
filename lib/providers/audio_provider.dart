@@ -456,6 +456,57 @@ class AudioNotifier extends Notifier<AudioState> {
     }
   }
 
+  void reorderQueue(int oldIndex, int newIndex) {
+    if (oldIndex < newIndex) {
+      newIndex -= 1;
+    }
+    final currentList = List<dynamic>.from(state.queue);
+    final item = currentList.removeAt(oldIndex);
+    currentList.insert(newIndex, item);
+
+    int newCurrentIndex = state.currentIndex;
+    if (state.currentIndex == oldIndex) {
+      newCurrentIndex = newIndex;
+    } else if (oldIndex < state.currentIndex && newIndex >= state.currentIndex) {
+      newCurrentIndex -= 1;
+    } else if (oldIndex > state.currentIndex && newIndex <= state.currentIndex) {
+      newCurrentIndex += 1;
+    }
+
+    this.state = this.state.copyWith(
+      queue: currentList,
+      currentIndex: newCurrentIndex,
+    );
+    _saveQueueState();
+  }
+
+  void removeFromQueue(int index) {
+    if (index < 0 || index >= state.queue.length) return;
+    final currentList = List<dynamic>.from(state.queue);
+    currentList.removeAt(index);
+    
+    int newCurrentIndex = state.currentIndex;
+    if (index < state.currentIndex) {
+      newCurrentIndex -= 1;
+    } else if (index == state.currentIndex) {
+      if (currentList.isEmpty) {
+        newCurrentIndex = -1;
+        _player.stop();
+      } else {
+        if (newCurrentIndex >= currentList.length) {
+          newCurrentIndex = 0;
+        }
+        _playIndex(newCurrentIndex);
+      }
+    }
+
+    this.state = this.state.copyWith(
+      queue: currentList,
+      currentIndex: newCurrentIndex,
+    );
+    _saveQueueState();
+  }
+
   Future<void> togglePlayPause() async {
     if (_player.playing) {
       await pause();

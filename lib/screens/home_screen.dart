@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -352,33 +353,47 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Left navigation card
+              // Left navigation card (Glassmorphism)
               Container(
                 width: 250,
                 height: 72,
                 decoration: BoxDecoration(
-                  color: colorScheme.background,
-                  border: Border.all(color: colorScheme.border, width: 0.8),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
+                      color: Colors.black.withOpacity(0.18),
+                      blurRadius: 24,
+                      offset: const Offset(0, 8),
                     ),
                   ],
                 ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildNavItem(0, LucideIcons.disc, '專輯', colorScheme),
-                    _buildNavItem(1, LucideIcons.users, '藝術家', colorScheme),
-                    _buildNavItem(2, LucideIcons.heart, '最愛', colorScheme),
-                  ],
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: colorScheme.background.withOpacity(0.75),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: colorScheme.foreground.withOpacity(0.12),
+                          width: 1.0,
+                        ),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _buildNavItem(0, LucideIcons.disc, '專輯', colorScheme),
+                          _buildNavItem(1, LucideIcons.users, '藝術家', colorScheme),
+                          _buildNavItem(2, LucideIcons.heart, '最愛', colorScheme),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
-              // Right player status card
+              // Right player status card (Glassmorphism)
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: () {
@@ -393,19 +408,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   width: 72,
                   height: 72,
                   decoration: BoxDecoration(
-                    color: colorScheme.background,
-                    border: Border.all(color: colorScheme.border, width: 0.8),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
+                        color: Colors.black.withOpacity(0.18),
+                        blurRadius: 24,
+                        offset: const Offset(0, 8),
                       ),
                     ],
                   ),
-                  child: const Center(
-                    child: NowPlayingTabIcon(),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: colorScheme.background.withOpacity(0.75),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: colorScheme.foreground.withOpacity(0.12),
+                            width: 1.0,
+                          ),
+                        ),
+                        child: const Center(
+                          child: NowPlayingTabIcon(),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -676,18 +705,42 @@ class _NowPlayingTabIconState extends ConsumerState<NowPlayingTabIcon> with Sing
     return SizedBox(
       width: 40,
       height: 40,
-      child: RotationTransition(
-        turns: _rotationController,
-        child: ClipOval(
-          child: coverUrl == null
-              ? Container(color: colorScheme.muted, child: Icon(LucideIcons.music, size: 24, color: colorScheme.mutedForeground))
-              : LocalCoverImage(
-                  id: currentSong['coverArt'],
-                  serverId: server?.id ?? 0,
-                  fallbackUrl: coverUrl,
-                  isThumb: true,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned.fill(
+            child: RotationTransition(
+              turns: _rotationController,
+              child: ClipOval(
+                child: coverUrl == null
+                    ? Container(color: colorScheme.muted, child: Icon(LucideIcons.music, size: 24, color: colorScheme.mutedForeground))
+                    : LocalCoverImage(
+                        id: currentSong['coverArt'],
+                        serverId: server?.id ?? 0,
+                        fallbackUrl: coverUrl,
+                        isThumb: true,
+                      ),
+              ),
+            ),
+          ),
+          // 狀態指示燈 (固定在右上角，不隨專輯旋轉)
+          Positioned(
+            top: -2,
+            right: -2,
+            child: Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(
+                color: audioState.isPlaying ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: colorScheme.background.withOpacity(0.8), // 鏤空邊緣對應毛玻璃卡片背景色
+                  width: 2.0,
                 ),
-        ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

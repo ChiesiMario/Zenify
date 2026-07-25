@@ -48,21 +48,42 @@ class MiniPlayer extends ConsumerWidget {
         ),
         child: Row(
           children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: colorScheme.muted,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: coverUrl == null
-                  ? Icon(LucideIcons.music, color: colorScheme.mutedForeground)
-                  : LocalCoverImage(
-                      id: currentSong['coverArt'],
-                      serverId: server?.id ?? 0,
-                      fallbackUrl: coverUrl,
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: colorScheme.muted,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: coverUrl == null
+                      ? Icon(LucideIcons.music, color: colorScheme.mutedForeground)
+                      : LocalCoverImage(
+                          id: currentSong['coverArt'],
+                          serverId: server?.id ?? 0,
+                          fallbackUrl: coverUrl,
+                        ),
+                ),
+                Positioned(
+                  top: -4,
+                  right: -4,
+                  child: Container(
+                    width: 14,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: audioState.isPlaying ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: colorScheme.card,
+                        width: 2.0,
+                      ),
                     ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(width: 12),
             // Song Info
