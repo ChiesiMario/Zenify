@@ -60,54 +60,114 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
             slivers: [
               // 1. Hero Header
               SliverToBoxAdapter(
-                child: SizedBox(
-                  height: 380.0,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      LocalCoverImage(
-                        id: widget.artistId,
-                        serverId: server?.id ?? 0,
-                        fallbackUrl: widget.coverUrl,
-                        fit: BoxFit.cover,
-                        isThumb: false,
-                      ),
-                      // Smooth gradient overlay for text readability
-                      DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.transparent,
-                              Colors.black.withValues(alpha: 0.1),
-                              Colors.black.withValues(alpha: 0.8),
-                            ],
-                            stops: const [0.0, 0.5, 1.0],
-                          ),
-                        ),
-                      ),
-                      Align(
-                        alignment: Alignment.bottomCenter,
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 600),
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.only(left: 24, bottom: 24),
-                            child: Text(
-                              name,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 36,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.5,
-                                shadows: [Shadow(color: Colors.black54, blurRadius: 10)],
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 600),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const SizedBox(height: 32),
+                          // Circular Artist Cover
+                          Container(
+                            width: 200,
+                            height: 200,
+                            decoration: BoxDecoration(
+                              color: colorScheme.muted,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.2),
+                                  blurRadius: 30,
+                                  offset: const Offset(0, 15),
+                                ),
+                              ],
+                            ),
+                            child: ClipOval(
+                              child: Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  LocalCoverImage(
+                                    id: widget.artistId,
+                                    serverId: server?.id ?? 0,
+                                    fallbackUrl: widget.coverUrl,
+                                    fit: BoxFit.cover,
+                                    isThumb: false,
+                                  ),
+                                  IgnorePointer(
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: colorScheme.foreground.withValues(alpha: 0.08),
+                                          width: 1.0,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
-                        ),
+                          const SizedBox(height: 24),
+                          // Typography
+                          Text(
+                            name,
+                            style: TextStyle(
+                              color: colorScheme.foreground,
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: -0.5,
+                              height: 1.1,
+                            ),
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 8),
+                          Builder(
+                            builder: (context) {
+                              int albumCount = artistData['albumCount'] as int? ?? albums.length;
+                              int songCount = 0;
+                              if (artistData['songCount'] != null) {
+                                songCount = artistData['songCount'] as int;
+                              } else {
+                                for (var a in albums) {
+                                  songCount += (a['songCount'] as int? ?? 0);
+                                }
+                              }
+                              
+                              final parts = <String>[];
+                              parts.add('$albumCount 張專輯');
+                              if (songCount > 0) parts.add('$songCount 首歌');
+                              
+                              final List<InlineSpan> spans = [];
+                              for (int i = 0; i < parts.length; i++) {
+                                spans.add(TextSpan(text: parts[i]));
+                                if (i != parts.length - 1) {
+                                  spans.add(const TextSpan(
+                                    text: ' • ',
+                                    style: TextStyle(fontFamily: 'NotoSansTC'),
+                                  ));
+                                }
+                              }
+                              
+                              return Text.rich(
+                                TextSpan(children: spans),
+                                style: TextStyle(
+                                  color: colorScheme.mutedForeground,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.normal,
+                                  height: 1.1,
+                                ),
+                                textAlign: TextAlign.center,
+                              );
+                            },
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -265,7 +325,51 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
                                             ),
                                             title: Text(title, style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.w600, fontSize: 14)),
                                             subtitle: Text(song['album'] ?? '', style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12)),
-                                            trailing: Text(duration, style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13, fontWeight: FontWeight.w500)),
+                                            trailing: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  duration,
+                                                  style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13, fontWeight: FontWeight.w500),
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Consumer(
+                                                  builder: (context, ref, child) {
+                                                    final favoritesAsync = ref.watch(favoritesProvider);
+                                                    final songId = song['id']?.toString();
+                                                    final isFavorite = favoritesAsync.value?['songs']?.any(
+                                                      (s) => s['id']?.toString() == songId,
+                                                    ) ?? (song['starred'] != null);
+
+                                                    final mutedIconColor = colorScheme.mutedForeground.withValues(alpha: 0.3);
+
+                                                    return SizedBox(
+                                                      width: 28,
+                                                      height: 28,
+                                                      child: IconButton(
+                                                        padding: EdgeInsets.zero,
+                                                        constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                                                        icon: Icon(
+                                                          isFavorite ? Icons.favorite : LucideIcons.heart,
+                                                          color: isFavorite ? const Color(0xFFEF4444) : mutedIconColor,
+                                                          size: 16,
+                                                        ),
+                                                        onPressed: () async {
+                                                          if (songId == null || api == null) return;
+                                                          if (isFavorite) {
+                                                            await api.unstar(id: songId);
+                                                          } else {
+                                                            await api.star(id: songId);
+                                                          }
+                                                          ref.invalidate(favoritesProvider);
+                                                        },
+                                                        tooltip: isFavorite ? '取消最愛' : '加入最愛',
+                                                      ),
+                                                    );
+                                                  },
+                                                ),
+                                              ],
+                                            ),
                                             onTap: () {
                                               ref.read(audioProvider.notifier).playQueue(List<dynamic>.from(topSongs), index);
                                             },

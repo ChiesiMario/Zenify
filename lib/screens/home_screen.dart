@@ -160,6 +160,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
     final syncState = ref.watch(syncProvider);
+    final networkState = ref.watch(networkProvider);
 
     ref.listen<NavigationRequest?>(navigationRequestProvider, (previous, next) {
       if (next != null) {
@@ -257,7 +258,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       )
                     : Container(
                         key: const ValueKey('title'),
-                        child: Text('Zenify.', style: TextStyle(fontWeight: FontWeight.w900, color: colorScheme.foreground)),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text('Zenify.', style: TextStyle(fontWeight: FontWeight.w900, color: colorScheme.foreground)),
+                            if (networkState.isOffline) ...[
+                              const SizedBox(width: 8),
+                              Text('已離線。', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: colorScheme.destructive)),
+                            ],
+                          ],
+                        ),
                       ),
               ),
               actions: [
@@ -277,8 +287,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                 IconButton(
-                  icon: Icon(LucideIcons.search, color: colorScheme.foreground, size: 20),
-                  onPressed: () {
+                  icon: Icon(LucideIcons.search, color: networkState.isOffline ? colorScheme.mutedForeground.withOpacity(0.5) : colorScheme.foreground, size: 20),
+                  onPressed: networkState.isOffline ? null : () {
                     _navigatorKeys[_currentIndex].currentState?.push(
                       MaterialPageRoute(
                         settings: const RouteSettings(name: '搜尋'),
@@ -291,8 +301,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   controller: _popoverController,
                   popover: (context) => const SyncPopoverContent(),
                   child: IconButton(
-                    icon: Icon(LucideIcons.refreshCw, color: syncState.isSyncing ? colorScheme.primary : colorScheme.mutedForeground, size: 20),
-                    onPressed: () {
+                    icon: Icon(LucideIcons.refreshCw, color: networkState.isOffline ? colorScheme.mutedForeground.withOpacity(0.5) : (syncState.isSyncing ? colorScheme.primary : colorScheme.mutedForeground), size: 20),
+                    onPressed: networkState.isOffline ? null : () {
                       _popoverController.toggle();
                     },
                   ),

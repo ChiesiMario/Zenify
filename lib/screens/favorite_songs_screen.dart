@@ -10,6 +10,12 @@ import 'package:zenify/providers/sort_providers.dart';
 class FavoriteSongsScreen extends ConsumerWidget {
   const FavoriteSongsScreen({super.key});
 
+  String _formatDuration(int seconds) {
+    final minutes = seconds ~/ 60;
+    final remainingSeconds = seconds % 60;
+    return '$minutes:${remainingSeconds.toString().padLeft(2, '0')}';
+  }
+
   List<dynamic> _sortSongs(List<dynamic> songs, AlbumSortOption option) {
     final list = List<dynamic>.from(songs);
     switch (option) {
@@ -204,7 +210,17 @@ class FavoriteSongsScreen extends ConsumerWidget {
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
-                                    trailing: Icon(LucideIcons.heart, size: 16, color: colorScheme.primary),
+                                    trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          song['duration'] != null ? _formatDuration(song['duration'] as int) : '--:--',
+                                          style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13, fontWeight: FontWeight.w500),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        _FavoriteSongButton(songId: song['id'].toString()),
+                                      ],
+                                    ),
                                     onTap: () {
                                       ref.read(audioProvider.notifier).playQueue(songs, songIndex);
                                     },
@@ -229,6 +245,54 @@ class FavoriteSongsScreen extends ConsumerWidget {
         },
         loading: () => Center(child: CircularProgressIndicator(color: colorScheme.foreground)),
         error: (err, stack) => Center(child: Text('加載伺服器狀態失敗', style: TextStyle(color: colorScheme.destructive))),
+      ),
+    );
+  }
+}
+
+class _FavoriteSongButton extends ConsumerStatefulWidget {
+  final String songId;
+  const _FavoriteSongButton({required this.songId});
+
+  @override
+  ConsumerState<_FavoriteSongButton> createState() => _FavoriteSongButtonState();
+}
+
+class _FavoriteSongButtonState extends ConsumerState<_FavoriteSongButton> {
+  bool _isFavorite = true;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ShadTheme.of(context);
+    final colorScheme = theme.colorScheme;
+    final api = ref.watch(subsonicApiProvider);
+
+    final mutedIconColor = colorScheme.mutedForeground.withValues(alpha: 0.3);
+
+    return SizedBox(
+      width: 28,
+      height: 28,
+      child: IconButton(
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+        icon: Icon(
+          _isFavorite ? Icons.favorite : LucideIcons.heart,
+          color: _isFavorite ? const Color(0xFFEF4444) : mutedIconColor,
+          size: 16,
+        ),
+        onPressed: () async {
+          if (api == null) return;
+          setState(() {
+            _isFavorite = !_isFavorite;
+          });
+          if (_isFavorite) {
+            await api.star(id: widget.songId);
+          } else {
+            await api.unstar(id: widget.songId);
+          }
+          // 特意不 invalidate favoritesProvider，讓歌曲保留在畫面上
+        },
+        tooltip: _isFavorite ? '取消最愛' : '加入最愛',
       ),
     );
   }

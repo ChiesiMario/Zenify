@@ -5,6 +5,7 @@ import 'package:zenify/models/server.dart';
 import 'package:zenify/services/database_service.dart';
 import 'package:zenify/services/image_service.dart';
 import 'package:zenify/providers/sort_providers.dart';
+export 'package:zenify/providers/network_provider.dart';
 
 final databaseProvider = Provider<DatabaseService>((ref) {
   return DatabaseService();
