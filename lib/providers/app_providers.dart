@@ -29,6 +29,8 @@ final cacheLimitProvider = NotifierProvider<CacheLimitNotifier, double>(() {
   return CacheLimitNotifier();
 });
 
+final downloadsTabProvider = StateProvider<int>((ref) => 0);
+
 final activeServerProvider = FutureProvider<Server?>((ref) async {
   final db = ref.watch(databaseProvider);
   return await db.getActiveServer();

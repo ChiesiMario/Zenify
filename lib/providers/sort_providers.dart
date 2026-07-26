@@ -59,3 +59,31 @@ class ArtistSortNotifier extends Notifier<ArtistSortOption> {
 
 final albumSortProvider = NotifierProvider<AlbumSortNotifier, AlbumSortOption>(() => AlbumSortNotifier());
 final artistSortProvider = NotifierProvider<ArtistSortNotifier, ArtistSortOption>(() => ArtistSortNotifier());
+
+enum SongSortOption {
+  defaultOrder,
+  nameAsc,
+  nameDesc,
+  random,
+}
+
+class SongSortNotifier extends Notifier<SongSortOption> {
+  static const _key = 'song_sort_option';
+
+  @override
+  SongSortOption build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    final savedIndex = prefs.getInt(_key) ?? 0;
+    if (savedIndex >= 0 && savedIndex < SongSortOption.values.length) {
+      return SongSortOption.values[savedIndex];
+    }
+    return SongSortOption.defaultOrder;
+  }
+
+  void setSort(SongSortOption option) {
+    state = option;
+    ref.read(sharedPreferencesProvider).setInt(_key, option.index);
+  }
+}
+
+final songSortProvider = NotifierProvider<SongSortNotifier, SongSortOption>(() => SongSortNotifier());

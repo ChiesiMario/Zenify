@@ -573,16 +573,44 @@ class SortPopoverContent extends ConsumerWidget {
         ]
       );
     } else if (currentIndex == 2) {
-      final currentSort = ref.watch(albumSortProvider);
-      return _buildMenu<AlbumSortOption>(
-        context, ref, colorScheme, currentSort,
-        [
-          (AlbumSortOption.defaultOrder, '預設排序'),
-          (AlbumSortOption.nameAsc, '名稱 (A-Z)'),
-          (AlbumSortOption.nameDesc, '名稱 (Z-A)'),
-          (AlbumSortOption.random, '隨機排列'),
-        ]
-      );
+      if (subTitle == '已離線') {
+        final tabIndex = ref.watch(downloadsTabProvider);
+        if (tabIndex == 0) {
+          final currentSort = ref.watch(albumSortProvider);
+          return _buildMenu<AlbumSortOption>(
+            context, ref, colorScheme, currentSort,
+            [
+              (AlbumSortOption.defaultOrder, '預設排序'),
+              (AlbumSortOption.nameAsc, '名稱 (A-Z)'),
+              (AlbumSortOption.nameDesc, '名稱 (Z-A)'),
+              (AlbumSortOption.random, '隨機排列'),
+            ]
+          );
+        } else {
+          final currentSort = ref.watch(songSortProvider);
+          return _buildMenu<SongSortOption>(
+            context, ref, colorScheme, currentSort,
+            [
+              (SongSortOption.defaultOrder, '最近下載'),
+              (SongSortOption.nameAsc, '名稱 (A-Z)'),
+              (SongSortOption.nameDesc, '名稱 (Z-A)'),
+              (SongSortOption.random, '隨機排列'),
+            ]
+          );
+        }
+      } else {
+        // Other favorites subpages, assuming albums by default
+        final currentSort = ref.watch(albumSortProvider);
+        return _buildMenu<AlbumSortOption>(
+          context, ref, colorScheme, currentSort,
+          [
+            (AlbumSortOption.defaultOrder, '預設排序'),
+            (AlbumSortOption.nameAsc, '名稱 (A-Z)'),
+            (AlbumSortOption.nameDesc, '名稱 (Z-A)'),
+            (AlbumSortOption.random, '隨機排列'),
+          ]
+        );
+      }
     }
 
     return const SizedBox.shrink();
@@ -611,6 +639,8 @@ class SortPopoverContent extends ConsumerWidget {
                 ref.read(albumSortProvider.notifier).setSort(option.$1 as AlbumSortOption);
               } else if (option.$1 is ArtistSortOption) {
                 ref.read(artistSortProvider.notifier).setSort(option.$1 as ArtistSortOption);
+              } else if (option.$1 is SongSortOption) {
+                ref.read(songSortProvider.notifier).setSort(option.$1 as SongSortOption);
               }
               onClose();
             },
