@@ -10,6 +10,7 @@ import 'package:zenify/screens/favorite_songs_screen.dart';
 import 'package:zenify/screens/favorite_albums_screen.dart';
 import 'package:zenify/views/playlists_view.dart';
 import 'package:zenify/views/downloads_view.dart';
+import 'package:zenify/screens/settings_screen.dart';
 
 class FavoritesView extends ConsumerWidget {
   const FavoritesView({super.key});
@@ -46,7 +47,6 @@ class FavoritesView extends ConsumerWidget {
       return sum + sz;
     });
 
-    final recentSongs = songs.take(4).toList();
 
     return Scaffold(
       backgroundColor: colorScheme.background,
@@ -150,142 +150,31 @@ class FavoritesView extends ConsumerWidget {
                       ],
                     ),
 
-                    const SizedBox(height: 32),
-
-                    // 3. Recently Liked Snippet Section
-                    if (recentSongs.isNotEmpty) ...[
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _buildSectionHeader('最近收藏', colorScheme),
-                          GestureDetector(
-                            onTap: () => Navigator.push(
+                  const SizedBox(height: 32),
+                  Opacity(
+                    opacity: 0.4,
+                    child: Column(
+                      children: [
+                        Divider(color: colorScheme.border),
+                        const SizedBox(height: 16),
+                        ListTile(
+                          leading: Icon(LucideIcons.settings, color: colorScheme.foreground, size: 20),
+                          title: Text('應用程式設定', style: TextStyle(color: colorScheme.foreground, fontSize: 14, fontWeight: FontWeight.w500)),
+                          trailing: Icon(LucideIcons.chevronRight, color: colorScheme.mutedForeground, size: 16),
+                          onTap: () {
+                            Navigator.push(
                               context,
                               MaterialPageRoute(
-                                settings: const RouteSettings(name: '歌曲'),
-                                builder: (context) => const FavoriteSongsScreen(),
-                              ),
-                            ),
-                            child: MouseRegion(
-                              cursor: SystemMouseCursors.click,
-                              child: Row(
-                                children: [
-                                  Text(
-                                    '查看全部 ${songs.length}',
-                                    style: TextStyle(
-                                      color: colorScheme.mutedForeground,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Icon(
-                                    LucideIcons.arrowRight,
-                                    size: 14,
-                                    color: colorScheme.mutedForeground,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Container(
-                        clipBehavior: Clip.antiAlias,
-                        decoration: BoxDecoration(
-                          color: colorScheme.card,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: colorScheme.border,
-                            width: 1.0,
-                          ),
-                        ),
-                        child: Column(
-                          children: recentSongs.asMap().entries.map((entry) {
-                            final index = entry.key;
-                            final song = entry.value;
-                            final api = ref.watch(subsonicApiProvider);
-                            final coverUrl = api != null && song['coverArt'] != null
-                                ? api.getCoverArtUrl(song['coverArt'])
-                                : null;
-                            final isLast = index == recentSongs.length - 1;
-
-                            return Container(
-                              decoration: BoxDecoration(
-                                border: isLast
-                                    ? null
-                                    : Border(
-                                        bottom: BorderSide(
-                                          color: colorScheme.border.withValues(alpha: 0.5),
-                                          width: 0.5,
-                                        ),
-                                      ),
-                              ),
-                              child: Material(
-                                color: Colors.transparent,
-                                borderRadius: BorderRadius.vertical(
-                                  top: index == 0 ? const Radius.circular(12) : Radius.zero,
-                                  bottom: isLast ? const Radius.circular(12) : Radius.zero,
-                                ),
-                                clipBehavior: Clip.antiAlias,
-                                child: ListTile(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.vertical(
-                                      top: index == 0 ? const Radius.circular(12) : Radius.zero,
-                                      bottom: isLast ? const Radius.circular(12) : Radius.zero,
-                                    ),
-                                  ),
-                                  leading: Container(
-                                    width: 44,
-                                    height: 44,
-                                    decoration: BoxDecoration(
-                                      color: colorScheme.muted,
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    clipBehavior: Clip.antiAlias,
-                                    child: coverUrl == null
-                                        ? Icon(LucideIcons.music, size: 20, color: colorScheme.mutedForeground)
-                                        : LocalCoverImage(
-                                            id: song['coverArt'],
-                                            serverId: server?.id ?? 0,
-                                            fallbackUrl: coverUrl,
-                                          ),
-                                  ),
-                                  title: Text(
-                                    song['title'] ?? '未知歌曲',
-                                    style: TextStyle(
-                                      color: colorScheme.foreground,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 14,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  subtitle: Text(
-                                    song['artist'] ?? '未知藝術家',
-                                    style: TextStyle(
-                                      color: colorScheme.mutedForeground,
-                                      fontSize: 12,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  trailing: Icon(
-                                    LucideIcons.heart,
-                                    size: 16,
-                                    color: colorScheme.primary,
-                                  ),
-                                  onTap: () {
-                                    ref.read(audioProvider.notifier).playQueue(songs, index);
-                                  },
-                                ),
+                                settings: const RouteSettings(name: '設定'),
+                                builder: (context) => const SettingsScreen(),
                               ),
                             );
-                          }).toList(),
+                          },
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                      ),
-                  ],
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 128),
                 ],
                 ),

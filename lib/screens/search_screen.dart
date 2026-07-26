@@ -18,15 +18,30 @@ class SearchScreen extends ConsumerStatefulWidget {
 
 class _SearchScreenState extends ConsumerState<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
   Timer? _debounce;
   
   bool _isLoading = false;
   List<dynamic> _artists = [];
   List<dynamic> _albums = [];
   List<dynamic> _songs = [];
+  bool _isFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(() {
+      if (mounted) {
+        setState(() {
+          _isFocused = _focusNode.hasFocus;
+        });
+      }
+    });
+  }
 
   @override
   void dispose() {
+    _focusNode.dispose();
     _searchController.dispose();
     _debounce?.cancel();
     super.dispose();
@@ -94,18 +109,40 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         backgroundColor: colorScheme.background,
         elevation: 0,
         automaticallyImplyLeading: false,
-        title: ShadInput(
-          controller: _searchController,
-          placeholder: const Text('搜尋歌手、專輯、歌曲...'),
-          onChanged: _onSearchChanged,
-          autofocus: true,
-          decoration: const ShadDecoration(
-            border: ShadBorder.none,
-            focusedBorder: ShadBorder.none,
+        title: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 650),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              decoration: BoxDecoration(
+                color: _isFocused ? colorScheme.background : colorScheme.card,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: _isFocused ? colorScheme.primary : colorScheme.border,
+                  width: 1.0,
+                ),
+              ),
+              child: ShadInput(
+                focusNode: _focusNode,
+                controller: _searchController,
+                placeholder: const Text('搜尋歌手、專輯、歌曲...'),
+                onChanged: _onSearchChanged,
+                autofocus: true,
+                decoration: const ShadDecoration(
+                  border: ShadBorder.none,
+                  focusedBorder: ShadBorder.none,
+                  secondaryBorder: ShadBorder.none,
+                  secondaryFocusedBorder: ShadBorder.none,
+                ),
+              ),
+            ),
           ),
         ),
       ),
-      body: _isLoading
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 650),
+          child: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _searchController.text.trim().isEmpty
               ? Center(
@@ -222,6 +259,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     const SizedBox(height: 128),
                   ],
                 ),
+        ),
+      ),
     );
   }
 }

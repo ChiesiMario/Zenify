@@ -299,6 +299,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 ShadPopover(
                   controller: _popoverController,
+                  anchor: const ShadAnchor(
+                    childAlignment: Alignment.topRight,
+                    overlayAlignment: Alignment.bottomRight,
+                    offset: Offset(0, 8),
+                  ),
                   popover: (context) => const SyncPopoverContent(),
                   child: IconButton(
                     icon: Icon(LucideIcons.refreshCw, color: networkState.isOffline ? colorScheme.mutedForeground.withOpacity(0.5) : (syncState.isSyncing ? colorScheme.primary : colorScheme.mutedForeground), size: 20),
@@ -318,17 +323,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       );
                     },
                   ),
-                IconButton(
-                  icon: Icon(LucideIcons.settings, color: colorScheme.mutedForeground, size: 20),
-                  onPressed: () {
-                    _navigatorKeys[_currentIndex].currentState?.push(
-                      MaterialPageRoute(
-                        settings: const RouteSettings(name: '設定'),
-                        builder: (context) => const SettingsScreen(),
-                      ),
-                    );
-                  },
-                ),
               ],
             ),
           ),
