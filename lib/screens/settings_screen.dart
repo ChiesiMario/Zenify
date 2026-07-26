@@ -6,10 +6,34 @@ import 'package:zenify/models/downloaded_track.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/download_provider.dart';
 import 'package:zenify/providers/theme_provider.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:zenify/services/path_service.dart';
 import 'package:zenify/screens/server_management_screen.dart';
 
-class SettingsScreen extends ConsumerWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  String _currentDownloadRoot = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDownloadRoot();
+  }
+
+  Future<void> _loadDownloadRoot() async {
+    final path = await PathService.getRootDownloadPath();
+    if (mounted) {
+      setState(() {
+        _currentDownloadRoot = path;
+      });
+    }
+  }
 
   String _formatSize(int bytes) {
     final mb = bytes / (1024 * 1024);
@@ -28,7 +52,7 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
     final themeMode = ref.watch(themeModeProvider);
@@ -139,6 +163,43 @@ class SettingsScreen extends ConsumerWidget {
                               ),
                             ),
                           ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _VercelSettingTile(
+                      title: '離線音樂與快取儲存位置',
+                      subtitle: _currentDownloadRoot.isEmpty ? '載入中...' : _currentDownloadRoot,
+                      icon: LucideIcons.folderClosed,
+                      trailing: ShadButton.outline(
+                        size: ShadButtonSize.sm,
+                        onPressed: () async {
+                          String? result = await FilePicker.platform.getDirectoryPath();
+                          if (result != null && context.mounted) {
+                            showDialog(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (context) => const Center(child: CircularProgressIndicator()),
+                            );
+                            try {
+                              final db = ref.read(databaseProvider);
+                              await PathService.setRootDownloadPath(result);
+                              await db.updateAllDownloadPaths(_currentDownloadRoot, result);
+                              await _loadDownloadRoot();
+                            } finally {
+                              if (context.mounted) {
+                                Navigator.pop(context); // close dialog
+                              }
+                            }
+                          }
+                        },
+                        child: Text(
+                          '變更目錄',
+                          style: TextStyle(
+                            color: colorScheme.foreground,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ),

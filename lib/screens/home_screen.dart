@@ -777,15 +777,15 @@ class _NowPlayingTabIconState extends ConsumerState<NowPlayingTabIcon> with Sing
             top: -8,
             right: -8,
             child: Container(
-              width: 10,
-              height: 10,
+              width: 8,
+              height: 8,
               decoration: BoxDecoration(
                 color: audioState.isPlaying ? const Color(0xFF10B981) : const Color(0xFFEF4444),
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: (audioState.isPlaying ? const Color(0xFF10B981) : const Color(0xFFEF4444)).withOpacity(0.5),
-                    blurRadius: 3,
+                    color: (audioState.isPlaying ? const Color(0xFF10B981) : const Color(0xFFEF4444)).withOpacity(0.4),
+                    blurRadius: 2,
                     spreadRadius: 0,
                   ),
                 ],

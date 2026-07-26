@@ -8,6 +8,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:zenify/services/path_service.dart';
 
 class _HttpRangeRequest {
   final int start;
@@ -96,8 +97,7 @@ class _StreamingByteRangeRequest {
   }
 }
 
-Future<Directory> _getCacheDir() async =>
-    Directory(p.join((await getTemporaryDirectory()).path, 'just_audio_cache'));
+Future<Directory> _getOfflineDir() async => await PathService.getOfflineDir();
 
 class ZenifyCachingAudioSource extends StreamAudioSource {
   Future<HttpClientResponse>? _response;
@@ -153,7 +153,7 @@ class ZenifyCachingAudioSource extends StreamAudioSource {
   }
 
   static Future<File> _getCacheFile(final Uri uri) async => File(p.joinAll([
-        (await _getCacheDir()).path,
+        (await _getOfflineDir()).path,
         'remote',
         sha256.convert(utf8.encode(uri.toString())).toString() +
             p.extension(uri.path),

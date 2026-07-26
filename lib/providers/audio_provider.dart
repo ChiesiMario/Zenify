@@ -8,8 +8,10 @@ import 'package:zenify/models/downloaded_track.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/download_provider.dart';
 import 'package:zenify/providers/theme_provider.dart';
+import 'package:zenify/services/path_service.dart';
 import 'package:zenify/utils/zenify_caching_audio_source.dart';
 import 'package:zenify/api/subsonic_api.dart';
+import 'package:path/path.dart' as p;
 
 enum AudioRepeatMode { off, all, one }
 
@@ -292,12 +294,8 @@ class AudioNotifier extends Notifier<AudioState> {
           tag: mediaItem,
         );
       } else {
-        final dir = await getApplicationDocumentsDirectory();
-        final downloadDir = Directory('${dir.path}/zenify_downloads');
-        if (!downloadDir.existsSync()) {
-          downloadDir.createSync(recursive: true);
-        }
-        final localPath = '${downloadDir.path}/${song['id']}.mp3';
+        final cacheDir = await PathService.getOfflineDir();
+        final localPath = p.join(cacheDir.path, '${song['id']}.mp3');
 
         final zenifySource = ZenifyCachingAudioSource(
           Uri.parse(url),

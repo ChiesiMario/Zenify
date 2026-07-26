@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:path_provider/path_provider.dart';
+import 'package:zenify/services/path_service.dart';
+import 'package:path/path.dart' as p;
 import 'package:zenify/api/subsonic_api.dart';
 import 'package:zenify/models/downloaded_track.dart';
 import 'package:zenify/services/database_service.dart';
@@ -37,13 +38,8 @@ class DownloadService {
       }
     }
 
-    final dir = await getApplicationDocumentsDirectory();
-    final downloadDir = Directory('${dir.path}/zenify_downloads');
-    if (!downloadDir.existsSync()) {
-      downloadDir.createSync(recursive: true);
-    }
-
-    final localPath = '${downloadDir.path}/${songId}.mp3';
+    final downloadDir = await PathService.getOfflineDir();
+    final localPath = p.join(downloadDir.path, '$songId.mp3');
     final streamUrl = _api.getStreamUrl(songId);
 
     try {

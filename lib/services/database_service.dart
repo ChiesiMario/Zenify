@@ -1,5 +1,5 @@
 import 'package:isar/isar.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:zenify/services/path_service.dart';
 import 'package:zenify/models/server.dart';
 import 'package:zenify/models/album.dart';
 import 'package:zenify/models/artist.dart';
@@ -14,7 +14,8 @@ class DatabaseService {
 
   Future<Isar> openDB() async {
     if (Isar.instanceNames.isEmpty) {
-      final dir = await getApplicationDocumentsDirectory();
+      await PathService.ensureInitialized();
+      final dir = await PathService.getSupportDir();
       return await Isar.open(
         [ServerSchema, AlbumSchema, ArtistSchema, DownloadedTrackSchema],
         directory: dir.path,
@@ -140,12 +141,29 @@ class DatabaseService {
   /// Delete all auto-cache tracks from database
   Future<List<DownloadedTrack>> deleteCacheTracks() async {
     final isar = await db;
-    final cacheTracks = await isar.downloadedTracks.filter().isManualDownloadEqualTo(false).findAll();
+    final deleted = <DownloadedTrack>[];
     await isar.writeTxn(() async {
-      for (var t in cacheTracks) {
+      final cacheTracks = await isar.downloadedTracks.filter().isManualDownloadEqualTo(false).findAll();
+      deleted.addAll(cacheTracks);
+      for (final t in cacheTracks) {
         await isar.downloadedTracks.delete(t.id);
       }
     });
-    return cacheTracks;
+    return deleted;
   }
+
+  /// Update all downloaded track local paths when root directory changes
+  Future<void> updateAllDownloadPaths(String oldRoot, String newRoot) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      final tracks = await isar.downloadedTracks.where().findAll();
+      for (final track in tracks) {
+        if (track.localPath.startsWith(oldRoot)) {
+          track.localPath = track.localPath.replaceFirst(oldRoot, newRoot);
+          await isar.downloadedTracks.put(track);
+        }
+      }
+    });
+  }
+
 }
