@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:isar/isar.dart';
 import 'package:zenify/services/path_service.dart';
 import 'package:zenify/models/server.dart';
@@ -166,4 +167,38 @@ class DatabaseService {
     });
   }
 
+
+  Future<void> enforceCacheLimit(double limitGb) async {
+    if (limitGb > 10.0) return; // Unlimited
+    final isar = await db;
+    final maxBytes = (limitGb * 1024 * 1024 * 1024).toInt();
+
+    final allCaches = await isar.downloadedTracks
+        .where()
+        .filter()
+        .isManualDownloadEqualTo(false)
+        .sortByDownloadedAt()
+        .findAll();
+
+    int currentBytes = 0;
+    for (final track in allCaches) {
+      currentBytes += track.sizeBytes;
+    }
+
+    if (currentBytes <= maxBytes) return;
+
+    await isar.writeTxn(() async {
+      for (final track in allCaches) {
+        if (currentBytes <= maxBytes) break;
+        final file = File(track.localPath);
+        if (file.existsSync()) {
+          try {
+            file.deleteSync();
+          } catch (_) {}
+        }
+        currentBytes -= track.sizeBytes;
+        await isar.downloadedTracks.delete(track.id);
+      }
+    });
+  }
 }

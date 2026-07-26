@@ -5,10 +5,28 @@ import 'package:zenify/models/server.dart';
 import 'package:zenify/services/database_service.dart';
 import 'package:zenify/services/image_service.dart';
 import 'package:zenify/providers/sort_providers.dart';
+import 'package:zenify/providers/theme_provider.dart';
 export 'package:zenify/providers/network_provider.dart';
 
 final databaseProvider = Provider<DatabaseService>((ref) {
   return DatabaseService();
+});
+
+class CacheLimitNotifier extends Notifier<double> {
+  @override
+  double build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    return prefs.getDouble('cache_limit_gb') ?? 10.0;
+  }
+  
+  void setLimit(double val) {
+    state = val;
+    ref.read(sharedPreferencesProvider).setDouble('cache_limit_gb', val);
+  }
+}
+
+final cacheLimitProvider = NotifierProvider<CacheLimitNotifier, double>(() {
+  return CacheLimitNotifier();
 });
 
 final activeServerProvider = FutureProvider<Server?>((ref) async {

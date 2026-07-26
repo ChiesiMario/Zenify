@@ -10,47 +10,51 @@ import 'package:zenify/services/database_service.dart';
 class DownloadService {
   final DatabaseService _db;
   final SubsonicApi? _api;
+  final double _cacheLimitGb;
   final Function(String, double)? onProgress;
 
-  DownloadService(this._db, this._api, {this.onProgress});
+  DownloadService(this._db, this._api, this._cacheLimitGb, {this.onProgress});
 
   Future<void> downloadSong(dynamic song, int serverId) async {
     if (_api == null) return;
     final songId = song['id'].toString();
 
-    // Check if existing record exists
-    final existing = await _db.getDownloadedTrack(songId);
-    if (existing != null) {
-      if (existing.isManualDownload && existing.isComplete) return;
-
-      if (existing.isComplete && File(existing.localPath).existsSync()) {
-        // Upgrade auto-cache track to manual download
-        existing.isManualDownload = true;
-        await _db.saveDownloadedTrack(existing);
-        if (onProgress != null) {
-          onProgress!(songId, 1.0);
-        }
-        return;
-      } else if (!existing.isComplete) {
-        // Mark as manual download so when stream finishes it stays as manual download
-        existing.isManualDownload = true;
-        await _db.saveDownloadedTrack(existing);
+    // Check if existing record exists and file is on disk
+    var track = await _db.getDownloadedTrack(songId);
+    if (track != null && track.isComplete && File(track.localPath).existsSync()) {
+      if (!track.isManualDownload) {
+        track.isManualDownload = true;
+        await _db.saveDownloadedTrack(track);
       }
+      if (onProgress != null) {
+        onProgress!(songId, 1.0);
+      }
+      return;
     }
 
-    final downloadDir = await PathService.getOfflineDir();
-    final localPath = p.join(downloadDir.path, '$songId.mp3');
-    final streamUrl = _api.getStreamUrl(songId);
-
     try {
+      final downloadDir = await PathService.getOfflineDir();
+      final localPath = p.join(downloadDir.path, '$songId.mp3');
+      final streamUrl = await _api!.getStreamUrl(songId);
+
       final request = http.Request('GET', Uri.parse(streamUrl));
       final response = await http.Client().send(request);
 
-      if (response.statusCode != 200) return;
+      if (response.statusCode != 200) {
+        throw Exception('Server returned status code: ${response.statusCode}');
+      }
+
+      if (onProgress != null) {
+        onProgress!(songId, 0.0);
+      }
 
       final contentLength = response.contentLength ?? 0;
       int downloaded = 0;
+      
       final file = File(localPath);
+      if (file.existsSync()) {
+        file.deleteSync(); // restart download
+      }
       final sink = file.openWrite();
 
       await for (final chunk in response.stream) {
@@ -62,9 +66,7 @@ class DownloadService {
       }
       await sink.close();
 
-      // Save to database
-      final track = existing ?? DownloadedTrack();
-      track
+      track = DownloadedTrack()
         ..songId = songId
         ..serverId = serverId
         ..title = song['title'] ?? 'Unknown'
@@ -87,17 +89,19 @@ class DownloadService {
       }
     } catch (e) {
       print('Download error: $e');
+      rethrow;
     }
   }
 
   Future<void> deleteDownload(String songId) async {
     final track = await _db.getDownloadedTrack(songId);
     if (track != null) {
-      final file = File(track.localPath);
-      if (file.existsSync()) {
-        file.deleteSync();
-      }
-      await _db.deleteDownloadedTrack(track.id);
+      // User deleted an offline download, convert to cache
+      track.isManualDownload = false;
+      await _db.saveDownloadedTrack(track);
+      
+      // Immediately enforce cache limit in case converting this pushes it over
+      await _db.enforceCacheLimit(_cacheLimitGb);
     }
   }
 

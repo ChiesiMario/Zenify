@@ -39,7 +39,7 @@ class PathService {
   }
 
   /// Sets a new root download path and migrates existing files to the new location.
-  static Future<void> setRootDownloadPath(String newRoot) async {
+  static Future<void> setRootDownloadPath(String newRoot, {void Function(int current, int total)? onProgress}) async {
     final currentRoot = await getRootDownloadPath();
     if (currentRoot == newRoot) return;
 
@@ -49,7 +49,18 @@ class PathService {
     if (!await newOfflineDir.exists()) await newOfflineDir.create(recursive: true);
 
     if (await oldOfflineDir.exists()) {
-      await _moveDirectory(oldOfflineDir, newOfflineDir);
+      int totalFiles = 0;
+      final allEntities = oldOfflineDir.listSync(recursive: true);
+      for (var e in allEntities) {
+        if (e is File) totalFiles++;
+      }
+      
+      final progressRef = [0, totalFiles];
+      if (onProgress != null && totalFiles > 0) {
+        onProgress(0, totalFiles);
+      }
+
+      await _moveDirectory(oldOfflineDir, newOfflineDir, progressRef: progressRef, onProgress: onProgress);
     }
 
     // Attempt to remove old Zenify folder if empty
@@ -75,7 +86,10 @@ class PathService {
   }
 
   /// Move contents from one directory to another
-  static Future<void> _moveDirectory(Directory source, Directory destination) async {
+  static Future<void> _moveDirectory(Directory source, Directory destination, {
+    List<int>? progressRef, 
+    void Function(int, int)? onProgress
+  }) async {
     final entities = source.listSync(recursive: false);
     for (var entity in entities) {
       final newPath = p.join(destination.path, p.basename(entity.path));
@@ -87,10 +101,14 @@ class PathService {
           await entity.copy(newPath);
           await entity.delete();
         }
+        if (progressRef != null && progressRef.length == 2) {
+          progressRef[0]++;
+          if (onProgress != null) onProgress(progressRef[0], progressRef[1]);
+        }
       } else if (entity is Directory) {
         final newDir = Directory(newPath);
         if (!await newDir.exists()) await newDir.create(recursive: true);
-        await _moveDirectory(entity, newDir);
+        await _moveDirectory(entity, newDir, progressRef: progressRef, onProgress: onProgress);
       }
     }
     try {

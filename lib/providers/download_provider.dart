@@ -16,10 +16,12 @@ final downloadedTracksProvider = FutureProvider<List<DownloadedTrack>>((ref) asy
 final downloadServiceProvider = Provider<DownloadService>((ref) {
   final db = ref.watch(databaseProvider);
   final api = ref.watch(subsonicApiProvider);
+  final cacheLimit = ref.watch(cacheLimitProvider);
   
   return DownloadService(
     db, 
     api,
+    cacheLimit,
     onProgress: (songId, progress) {
       final currentMap = ref.read(downloadProgressProvider);
       ref.read(downloadProgressProvider.notifier).state = {

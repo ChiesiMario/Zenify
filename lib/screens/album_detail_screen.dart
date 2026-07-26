@@ -472,19 +472,32 @@ class _AlbumOfflineBentoCardState extends ConsumerState<_AlbumOfflineBentoCard> 
   Future<void> _handleToggle(bool turnOn) async {
     setState(() => _optimisticState = turnOn);
     final downloadService = ref.read(downloadServiceProvider);
-    if (turnOn) {
-      for (final song in widget.songList) {
-        await downloadService.downloadSong(song, widget.serverId);
+    
+    try {
+      if (turnOn) {
+        for (final song in widget.songList) {
+          await downloadService.downloadSong(song, widget.serverId);
+        }
+      } else {
+        for (final song in widget.songList) {
+          await downloadService.deleteDownload(song['id'].toString());
+        }
       }
-    } else {
-      for (final song in widget.songList) {
-        await downloadService.deleteDownload(song['id'].toString());
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('離線操作失敗，可能歌曲無法下載或伺服器錯誤'),
+            backgroundColor: ShadTheme.of(context).colorScheme.destructive,
+          ),
+        );
       }
-    }
-    ref.invalidate(downloadedTracksProvider);
-    await ref.read(downloadedTracksProvider.future);
-    if (mounted) {
-      setState(() => _optimisticState = null);
+    } finally {
+      ref.invalidate(downloadedTracksProvider);
+      await ref.read(downloadedTracksProvider.future);
+      if (mounted) {
+        setState(() => _optimisticState = null);
+      }
     }
   }
 

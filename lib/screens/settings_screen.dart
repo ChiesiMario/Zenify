@@ -6,9 +6,10 @@ import 'package:zenify/models/downloaded_track.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/download_provider.dart';
 import 'package:zenify/providers/theme_provider.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:zenify/services/path_service.dart';
 import 'package:zenify/screens/server_management_screen.dart';
+import 'package:zenify/providers/audio_provider.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -19,6 +20,7 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   String _currentDownloadRoot = '';
+  double? _draggingCacheLimit;
 
   @override
   void initState() {
@@ -174,21 +176,84 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       trailing: ShadButton.outline(
                         size: ShadButtonSize.sm,
                         onPressed: () async {
-                          String? result = await FilePicker.platform.getDirectoryPath();
+                          String? result;
+                          try {
+                            result = await getDirectoryPath(confirmButtonText: '選擇此目錄');
+                          } catch (e) {
+                            print('FileSelector error: $e');
+                          }
                           if (result != null && context.mounted) {
+                            final progressNotifier = ValueNotifier<double>(0);
+                            final textNotifier = ValueNotifier<String>('準備搬移檔案...');
+                            
                             showDialog(
                               context: context,
                               barrierDismissible: false,
-                              builder: (context) => const Center(child: CircularProgressIndicator()),
+                              builder: (context) {
+                                return AlertDialog(
+                                  backgroundColor: theme.colorScheme.card,
+                                  title: Text(
+                                    '搬移檔案中', 
+                                    style: TextStyle(color: theme.colorScheme.foreground, fontSize: 16, fontWeight: FontWeight.bold)
+                                  ),
+                                  content: SizedBox(
+                                    width: 300,
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        ValueListenableBuilder<String>(
+                                          valueListenable: textNotifier,
+                                          builder: (context, text, child) => Text(
+                                            text, 
+                                            style: TextStyle(color: theme.colorScheme.mutedForeground, fontSize: 13)
+                                          ),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        ValueListenableBuilder<double>(
+                                          valueListenable: progressNotifier,
+                                          builder: (context, value, child) => LinearProgressIndicator(
+                                            value: value > 0 ? value : null,
+                                            backgroundColor: theme.colorScheme.border,
+                                            valueColor: AlwaysStoppedAnimation(theme.colorScheme.primary),
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
                             );
+
                             try {
+                              // 停止播放以釋放檔案鎖定
+                              await ref.read(audioProvider.notifier).stop();
+
                               final db = ref.read(databaseProvider);
-                              await PathService.setRootDownloadPath(result);
+                              await PathService.setRootDownloadPath(
+                                result,
+                                onProgress: (current, total) {
+                                  progressNotifier.value = current / total;
+                                  textNotifier.value = '已搬移 $current / $total 個檔案';
+                                },
+                              );
+                              textNotifier.value = '更新資料庫中...';
                               await db.updateAllDownloadPaths(_currentDownloadRoot, result);
                               await _loadDownloadRoot();
+                              
+                              // 重新載入當前歌曲（使用新路徑）並保持暫停狀態
+                              await ref.read(audioProvider.notifier).reloadCurrentTrack();
+                            } catch (e, stack) {
+                              print('Change directory error: $e\n$stack');
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('發生錯誤: $e')),
+                                );
+                              }
                             } finally {
                               if (context.mounted) {
-                                Navigator.pop(context); // close dialog
+                                Navigator.of(context, rootNavigator: true).pop(); // properly close dialog
                               }
                             }
                           }
@@ -203,6 +268,165 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 12),
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final cacheLimitFromProvider = ref.watch(cacheLimitProvider);
+                        final cacheLimit = _draggingCacheLimit ?? cacheLimitFromProvider;
+                        final isUnlimited = cacheLimit > 10.0;
+                        final displayValue = isUnlimited ? '無上限' : '${cacheLimit.toInt()} GB';
+
+                        return _VercelSettingTile(
+                          title: '快取容量上限',
+                          subtitle: displayValue,
+                          icon: LucideIcons.hardDrive,
+                          bottom: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
+                            child: Row(
+                              children: [
+                                Text('1 GB', style: TextStyle(color: theme.colorScheme.mutedForeground, fontSize: 12)),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: SliderTheme(
+                                    data: SliderThemeData(
+                                      activeTrackColor: theme.colorScheme.primary,
+                                      inactiveTrackColor: theme.colorScheme.border,
+                                      thumbColor: theme.colorScheme.primary,
+                                      trackHeight: 4,
+                                      overlayShape: SliderComponentShape.noOverlay,
+                                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                                    ),
+                                    child: Slider(
+                                      value: cacheLimit.clamp(1.0, 11.0),
+                                      min: 1,
+                                      max: 11,
+                                      divisions: 10,
+                                      onChanged: (val) {
+                                        setState(() {
+                                          _draggingCacheLimit = val;
+                                        });
+                                      },
+                                      onChangeEnd: (val) async {
+                                        if (val <= 10.0) {
+                                          final newMaxBytes = (val * 1024 * 1024 * 1024).toInt();
+                                          if (totalCacheSizeBytes > newMaxBytes) {
+                                            final excessBytes = totalCacheSizeBytes - newMaxBytes;
+                                            final currentStr = _formatSize(totalCacheSizeBytes);
+                                            final excessStr = _formatSize(excessBytes);
+                                            
+                                            final confirm = await showDialog<bool>(
+                                              context: context,
+                                              builder: (context) => Dialog(
+                                                backgroundColor: Colors.transparent,
+                                                elevation: 0,
+                                                child: Container(
+                                                  width: 360,
+                                                  padding: const EdgeInsets.all(28),
+                                                  decoration: BoxDecoration(
+                                                    color: theme.colorScheme.card,
+                                                    borderRadius: BorderRadius.circular(16),
+                                                    border: Border.all(color: theme.colorScheme.border),
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: Colors.black.withValues(alpha: 0.1),
+                                                        blurRadius: 24,
+                                                        offset: const Offset(0, 12),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  child: Column(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      Container(
+                                                        padding: const EdgeInsets.all(16),
+                                                        decoration: BoxDecoration(
+                                                          color: theme.colorScheme.destructive.withValues(alpha: 0.1),
+                                                          shape: BoxShape.circle,
+                                                        ),
+                                                        child: Icon(
+                                                          LucideIcons.alertTriangle,
+                                                          size: 32,
+                                                          color: theme.colorScheme.destructive,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 24),
+                                                      Text(
+                                                        '縮減快取容量',
+                                                        style: TextStyle(
+                                                          color: theme.colorScheme.foreground,
+                                                          fontSize: 18,
+                                                          fontWeight: FontWeight.w600,
+                                                          letterSpacing: -0.5,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 12),
+                                                      Text(
+                                                        '目前的快取總共使用了 $currentStr。\n'
+                                                        '如果將上限設定為 ${val.toInt()} GB，系統將會自動清除約 $excessStr 最久未聽過的音樂來釋放空間。',
+                                                        textAlign: TextAlign.center,
+                                                        style: TextStyle(
+                                                          color: theme.colorScheme.mutedForeground,
+                                                          fontSize: 14,
+                                                          height: 1.6,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 32),
+                                                      Row(
+                                                        children: [
+                                                          Expanded(
+                                                            child: ShadButton.outline(
+                                                              onPressed: () => Navigator.pop(context, false),
+                                                              child: const Text('取消'),
+                                                            ),
+                                                          ),
+                                                          const SizedBox(width: 12),
+                                                          Expanded(
+                                                            child: ShadButton(
+                                                              backgroundColor: theme.colorScheme.destructive,
+                                                              hoverBackgroundColor: theme.colorScheme.destructive.withValues(alpha: 0.9),
+                                                              onPressed: () => Navigator.pop(context, true),
+                                                              child: const Text('確定清除', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+
+                                            if (confirm == true) {
+                                              ref.read(cacheLimitProvider.notifier).setLimit(val);
+                                              final db = ref.read(databaseProvider);
+                                              await db.enforceCacheLimit(val);
+                                              ref.invalidate(downloadedTracksProvider);
+                                            }
+                                            
+                                            setState(() {
+                                              _draggingCacheLimit = null;
+                                            });
+                                            return;
+                                          }
+                                        }
+
+                                        ref.read(cacheLimitProvider.notifier).setLimit(val);
+                                        setState(() {
+                                          _draggingCacheLimit = null;
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Text('無上限', style: TextStyle(color: theme.colorScheme.mutedForeground, fontSize: 12)),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+                    ),
+
 
                     const SizedBox(height: 32),
 
@@ -403,6 +627,7 @@ class _VercelSettingTile extends StatefulWidget {
   final String subtitle;
   final IconData icon;
   final Widget? trailing;
+  final Widget? bottom;
   final VoidCallback? onTap;
   final bool showArrow;
 
@@ -411,6 +636,7 @@ class _VercelSettingTile extends StatefulWidget {
     required this.subtitle,
     required this.icon,
     this.trailing,
+    this.bottom,
     this.onTap,
     this.showArrow = false,
   });
@@ -447,74 +673,82 @@ class _VercelSettingTileState extends State<_VercelSettingTile> {
               width: 1.0,
             ),
           ),
-          child: Row(
+          child: Column(
             children: [
-              // Monochromatic Icon Container
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: (widget.onTap != null && _isHovered)
-                      ? colorScheme.foreground
-                      : colorScheme.muted.withValues(alpha: 0.4),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: (widget.onTap != null && _isHovered)
-                        ? colorScheme.foreground
-                        : colorScheme.border.withValues(alpha: 0.5),
-                    width: 1,
-                  ),
-                ),
-                child: Icon(
-                  widget.icon,
-                  size: 19,
-                  color: (widget.onTap != null && _isHovered)
-                      ? colorScheme.background
-                      : colorScheme.foreground,
-                ),
-              ),
-              const SizedBox(width: 16),
-              // Text Content
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.title,
-                      style: TextStyle(
-                        color: colorScheme.foreground,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: -0.3,
+              Row(
+                children: [
+                  // Monochromatic Icon Container
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: (widget.onTap != null && _isHovered)
+                          ? colorScheme.foreground
+                          : colorScheme.muted.withValues(alpha: 0.4),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: (widget.onTap != null && _isHovered)
+                            ? colorScheme.foreground
+                            : colorScheme.border.withValues(alpha: 0.5),
+                        width: 1,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      widget.subtitle,
-                      style: TextStyle(
-                        color: colorScheme.mutedForeground,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w400,
+                    child: Icon(
+                      widget.icon,
+                      size: 19,
+                      color: (widget.onTap != null && _isHovered)
+                          ? colorScheme.background
+                          : colorScheme.foreground,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  // Text Content
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.title,
+                          style: TextStyle(
+                            color: colorScheme.foreground,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.subtitle,
+                          style: TextStyle(
+                            color: colorScheme.mutedForeground,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (widget.trailing != null) widget.trailing!,
+                  if (widget.showArrow) ...[
+                    const SizedBox(width: 8),
+                    AnimatedSlide(
+                      duration: const Duration(milliseconds: 150),
+                      offset: _isHovered ? const Offset(0.1, -0.1) : Offset.zero,
+                      child: Icon(
+                        LucideIcons.arrowUpRight,
+                        size: 18,
+                        color: _isHovered
+                            ? colorScheme.foreground
+                            : colorScheme.mutedForeground.withValues(alpha: 0.6),
                       ),
                     ),
                   ],
-                ),
+                ],
               ),
-              if (widget.trailing != null) widget.trailing!,
-              if (widget.showArrow) ...[
-                const SizedBox(width: 8),
-                AnimatedSlide(
-                  duration: const Duration(milliseconds: 150),
-                  offset: _isHovered ? const Offset(0.1, -0.1) : Offset.zero,
-                  child: Icon(
-                    LucideIcons.arrowUpRight,
-                    size: 18,
-                    color: _isHovered
-                        ? colorScheme.foreground
-                        : colorScheme.mutedForeground.withValues(alpha: 0.6),
-                  ),
-                ),
+              if (widget.bottom != null) ...[
+                const SizedBox(height: 16),
+                widget.bottom!,
               ],
             ],
           ),

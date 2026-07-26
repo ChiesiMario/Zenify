@@ -317,6 +317,10 @@ class AudioNotifier extends Notifier<AudioState> {
                 }
                 await db.saveDownloadedTrack(dt);
                 ref.invalidate(downloadedTracksProvider);
+                
+                // Enforce cache limit
+                final cacheLimit = ref.read(cacheLimitProvider);
+                await db.enforceCacheLimit(cacheLimit);
              }
           }
         });
@@ -370,7 +374,15 @@ class AudioNotifier extends Notifier<AudioState> {
 
   Future<void> play() async => await _player.play();
   Future<void> pause() async => await _player.pause();
+  Future<void> stop() async => await _player.stop();
   Future<void> seek(Duration position) async => await _player.seek(position);
+  
+  Future<void> reloadCurrentTrack() async {
+    if (state.currentIndex >= 0 && state.currentIndex < state.queue.length) {
+      final currentPos = state.position;
+      await _playIndex(state.currentIndex, autoPlay: false, startPosition: currentPos);
+    }
+  }
   
   Future<void> disposePlayer() async {
     await _player.dispose();
