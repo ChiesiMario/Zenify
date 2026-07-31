@@ -22,8 +22,16 @@ class DownloadService {
     // Check if existing record exists and file is on disk
     var track = await _db.getDownloadedTrack(songId);
     if (track != null && track.isComplete && File(track.localPath).existsSync()) {
+      bool changed = false;
       if (!track.isManualDownload) {
         track.isManualDownload = true;
+        changed = true;
+      }
+      if (track.serverId != serverId) {
+        track.serverId = serverId;
+        changed = true;
+      }
+      if (changed) {
         await _db.saveDownloadedTrack(track);
       }
       if (onProgress != null) {
@@ -103,6 +111,17 @@ class DownloadService {
       // Immediately enforce cache limit in case converting this pushes it over
       await _db.enforceCacheLimit(_cacheLimitGb);
     }
+  }
+
+  Future<void> deleteAllManualDownloads(int serverId) async {
+    final tracks = await _db.getDownloadedTracks(serverId);
+    for (final track in tracks) {
+      if (track.isManualDownload) {
+        track.isManualDownload = false;
+        await _db.saveDownloadedTrack(track);
+      }
+    }
+    await _db.enforceCacheLimit(_cacheLimitGb);
   }
 
   Future<void> clearAllCaches() async {

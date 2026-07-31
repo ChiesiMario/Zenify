@@ -334,95 +334,314 @@ class _FavoriteHeroBannerState extends ConsumerState<_FavoriteHeroBanner> {
         ? '正在離線歌曲...'
         : (effectiveOfflined ? '已全數離線' : '共 ${widget.songs.length} 首歌曲');
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: colorScheme.card,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: colorScheme.border, width: 1.0),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        '離線最愛歌曲',
-                        style: TextStyle(
-                          color: colorScheme.foreground,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: -0.5,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Opacity(
-                      opacity: isDownloading ? 0.4 : 1.0,
-                      child: SizedBox(
-                        height: 24, // Control height so it doesn't push row too high
-                        child: FittedBox(
-                          fit: BoxFit.contain,
-                          child: ShadSwitch(
-                            value: effectiveOfflined,
-                            onChanged: isDownloading ? null : (value) => _handleToggle(value),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  statusStr,
-                  style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13),
-                ),
-              ],
+    return Row(
+      children: [
+        // Play Bento Card
+        Expanded(
+          child: _PlayBentoCard(
+            onPlay: () {
+              ref.read(audioProvider.notifier).playQueue(widget.songs, 0);
+            },
+            onShuffle: () {
+              final shuffled = List<dynamic>.from(widget.songs)..shuffle();
+              ref.read(audioProvider.notifier).playQueue(shuffled, 0);
+            },
+          ),
+        ),
+        const SizedBox(width: 12),
+        // Offline Bento Card
+        Expanded(
+          child: _OfflineBentoCard(
+            effectiveOfflined: effectiveOfflined,
+            isDownloading: isDownloading,
+            statusStr: statusStr,
+            songCount: widget.songs.length,
+            onToggle: _handleToggle,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _OfflineBentoCard extends StatefulWidget {
+  final bool effectiveOfflined;
+  final bool isDownloading;
+  final String statusStr;
+  final int songCount;
+  final Function(bool) onToggle;
+
+  const _OfflineBentoCard({
+    required this.effectiveOfflined,
+    required this.isDownloading,
+    required this.statusStr,
+    required this.songCount,
+    required this.onToggle,
+  });
+
+  @override
+  State<_OfflineBentoCard> createState() => _OfflineBentoCardState();
+}
+
+class _OfflineBentoCardState extends State<_OfflineBentoCard> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ShadTheme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return MouseRegion(
+      cursor: widget.isDownloading ? SystemMouseCursors.basic : SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: widget.isDownloading ? null : () => widget.onToggle(!widget.effectiveOfflined),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeOut,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: colorScheme.card,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: (_isHovered && !widget.isDownloading)
+                  ? colorScheme.foreground.withValues(alpha: 0.4)
+                  : colorScheme.border,
+              width: 1.0,
             ),
           ),
-          const SizedBox(width: 16),
-          Row(
-            mainAxisSize: MainAxisSize.min,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ShadButton.secondary(
-                onPressed: () {
-                  final shuffled = List<dynamic>.from(widget.songs)..shuffle();
-                  ref.read(audioProvider.notifier).playQueue(shuffled, 0);
-                },
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(LucideIcons.shuffle, size: 15, color: colorScheme.foreground),
-                    const SizedBox(width: 6),
-                    Text('隨機播放', style: TextStyle(fontWeight: FontWeight.w600, color: colorScheme.foreground)),
-                  ],
+              SizedBox(
+                height: 38,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Opacity(
+                    opacity: widget.isDownloading ? 0.4 : 1.0,
+                    child: ShadSwitch(
+                      value: widget.effectiveOfflined,
+                      onChanged: widget.isDownloading ? null : widget.onToggle,
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(width: 8),
-              ShadButton(
-                onPressed: () {
-                  ref.read(audioProvider.notifier).playQueue(widget.songs, 0);
-                },
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(LucideIcons.play, size: 15),
-                    SizedBox(width: 6),
-                    Text('播放', style: TextStyle(fontWeight: FontWeight.w600)),
-                  ],
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Text(
+                    '離線最愛歌曲',
+                    style: TextStyle(
+                      color: colorScheme.foreground,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: colorScheme.muted.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: colorScheme.border.withValues(alpha: 0.5),
+                        width: 0.5,
+                      ),
+                    ),
+                    child: Text(
+                      '${widget.songCount} 首',
+                      style: TextStyle(
+                        color: colorScheme.mutedForeground,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                widget.statusStr,
+                style: TextStyle(
+                  color: colorScheme.mutedForeground,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w400,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
-        ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PlayBentoCard extends StatefulWidget {
+  final VoidCallback onPlay;
+  final VoidCallback onShuffle;
+
+  const _PlayBentoCard({
+    required this.onPlay,
+    required this.onShuffle,
+  });
+
+  @override
+  State<_PlayBentoCard> createState() => _PlayBentoCardState();
+}
+
+class _PlayBentoCardState extends State<_PlayBentoCard> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ShadTheme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: colorScheme.card,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: _isHovered
+                ? colorScheme.foreground.withValues(alpha: 0.4)
+                : colorScheme.border,
+            width: 1.0,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              height: 38,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _HoverablePlayIconButton(
+                    icon: LucideIcons.play,
+                    isPrimary: true,
+                    onPressed: widget.onPlay,
+                  ),
+                  _HoverablePlayIconButton(
+                    icon: LucideIcons.shuffle,
+                    onPressed: widget.onShuffle,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '播放全部',
+              style: TextStyle(
+                color: colorScheme.foreground,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.3,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '開始播放最愛歌曲',
+              style: TextStyle(
+                color: colorScheme.mutedForeground,
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HoverablePlayIconButton extends StatefulWidget {
+  final IconData icon;
+  final bool isPrimary;
+  final VoidCallback onPressed;
+
+  const _HoverablePlayIconButton({
+    required this.icon,
+    this.isPrimary = false,
+    required this.onPressed,
+  });
+
+  @override
+  State<_HoverablePlayIconButton> createState() => _HoverablePlayIconButtonState();
+}
+
+class _HoverablePlayIconButtonState extends State<_HoverablePlayIconButton> {
+  bool _isHovered = false;
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ShadTheme.of(context);
+    final colorScheme = theme.colorScheme;
+    
+    final Color bgColor = widget.isPrimary 
+        ? colorScheme.foreground 
+        : colorScheme.secondary;
+    
+    final Color iconColor = widget.isPrimary 
+        ? colorScheme.background 
+        : colorScheme.foreground;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: (_) => setState(() => _isPressed = true),
+        onTapUp: (_) {
+          setState(() => _isPressed = false);
+          widget.onPressed();
+        },
+        onTapCancel: () => setState(() => _isPressed = false),
+        child: AnimatedScale(
+          scale: _isPressed ? 0.90 : 1.0,
+          duration: const Duration(milliseconds: 120),
+          curve: Curves.easeOutCubic,
+          child: AnimatedOpacity(
+            opacity: _isPressed ? 0.6 : (_isHovered ? 0.8 : 1.0),
+            duration: const Duration(milliseconds: 150),
+            child: Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: bgColor,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  if (widget.isPrimary && _isHovered)
+                    BoxShadow(
+                      color: bgColor.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                ],
+              ),
+              child: Center(
+                child: Icon(
+                  widget.icon,
+                  size: 18,
+                  color: iconColor,
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -117,47 +118,69 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
         elevation: 0,
         automaticallyImplyLeading: false,
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(88),
+          preferredSize: const Size.fromHeight(64),
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 650),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 240),
-                  child: Padding(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                child: Container(
-                  height: 76,
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: colorScheme.card,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: colorScheme.border,
-                      width: 1.0,
-                    ),
-                  ),
-                  child: TabBar(
-                        controller: _tabController,
-                        overlayColor: WidgetStateProperty.all(Colors.transparent),
-                        dividerColor: Colors.transparent,
-                        indicatorSize: TabBarIndicatorSize.tab,
-                        indicator: BoxDecoration(
-                          color: colorScheme.primary,
-                          borderRadius: BorderRadius.circular(10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 240),
+                      child: Container(
+                        height: 52,
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: colorScheme.card,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: colorScheme.border,
+                            width: 1.0,
+                          ),
                         ),
-                        labelColor: colorScheme.primaryForeground,
-                        labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, letterSpacing: 0.2),
-                        unselectedLabelColor: colorScheme.foreground.withValues(alpha: 0.5),
-                        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
-                        tabs: const [
-                          Tab(text: '專輯', icon: Icon(LucideIcons.disc, size: 18), iconMargin: EdgeInsets.only(bottom: 4)),
-                          Tab(text: '歌曲', icon: Icon(LucideIcons.music, size: 18), iconMargin: EdgeInsets.only(bottom: 4)),
-                        ],
+                        child: TabBar(
+                          controller: _tabController,
+                          overlayColor: WidgetStateProperty.all(Colors.transparent),
+                          dividerColor: Colors.transparent,
+                          indicatorSize: TabBarIndicatorSize.tab,
+                          indicator: BoxDecoration(
+                            color: colorScheme.primary,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          labelColor: colorScheme.primaryForeground,
+                          labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, letterSpacing: 0.2),
+                          unselectedLabelColor: colorScheme.foreground.withValues(alpha: 0.5),
+                          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
+                          tabs: const [
+                            Tab(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(LucideIcons.disc, size: 16),
+                                  SizedBox(width: 6),
+                                  Text('專輯'),
+                                ],
+                              ),
+                            ),
+                            Tab(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(LucideIcons.music, size: 16),
+                                  SizedBox(width: 6),
+                                  Text('歌曲'),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                ),
-              ),
+                    ),
+                    if (ref.watch(activeServerProvider).value?.id != null)
+                      _DeleteAllButton(serverId: ref.watch(activeServerProvider).value!.id),
+                  ],
                 ),
               ),
             ),
@@ -239,7 +262,7 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
         SliverToBoxAdapter(
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 650), // Match typical grid max width
+              constraints: const BoxConstraints(maxWidth: 600), // Match typical grid max width
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                 child: Row(
@@ -263,7 +286,7 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
         SliverToBoxAdapter(
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 650),
+              constraints: const BoxConstraints(maxWidth: 600),
               child: AlbumsGrid(
                 albums: sortedAlbums,
                 physics: const BouncingScrollPhysics(),
@@ -301,7 +324,7 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
         SliverToBoxAdapter(
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 650),
+              constraints: const BoxConstraints(maxWidth: 600),
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                 child: Row(
@@ -331,7 +354,7 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
                 sliver: const SliverToBoxAdapter(child: SizedBox.shrink()),
               ),
               SliverConstrainedCrossAxis(
-                maxExtent: 650,
+                maxExtent: 568,
                 sliver: DecoratedSliver(
                   decoration: BoxDecoration(
                     color: colorScheme.card,
@@ -453,6 +476,123 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
         ),
         const SliverPadding(padding: EdgeInsets.only(bottom: 128)),
       ],
+    );
+  }
+}
+
+class _DeleteAllButton extends ConsumerStatefulWidget {
+  final int serverId;
+
+  const _DeleteAllButton({required this.serverId});
+
+  @override
+  ConsumerState<_DeleteAllButton> createState() => _DeleteAllButtonState();
+}
+
+class _DeleteAllButtonState extends ConsumerState<_DeleteAllButton> {
+  int _clickCount = 0;
+  Timer? _resetTimer;
+
+  void _handleClick() async {
+    setState(() {
+      _clickCount++;
+    });
+
+    _resetTimer?.cancel();
+
+    if (_clickCount >= 3) {
+      // Execute delete
+      final downloadService = ref.read(downloadServiceProvider);
+      await downloadService.deleteAllManualDownloads(widget.serverId);
+      ref.invalidate(downloadedTracksProvider);
+      
+      setState(() {
+        _clickCount = 0;
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('已刪除所有手動離線的音樂', style: TextStyle(color: Colors.white)),
+            backgroundColor: ShadTheme.of(context).colorScheme.primary,
+          ),
+        );
+      }
+    } else {
+      // Start reset timer (3 seconds to confirm)
+      _resetTimer = Timer(const Duration(seconds: 3), () {
+        if (mounted) {
+          setState(() {
+            _clickCount = 0;
+          });
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _resetTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ShadTheme.of(context);
+    final colorScheme = theme.colorScheme;
+    
+    String buttonText;
+    Color buttonColor;
+    Color borderColor;
+    Color textColor;
+    
+    switch (_clickCount) {
+      case 1:
+        buttonText = '確認';
+        buttonColor = colorScheme.destructive;
+        textColor = colorScheme.destructiveForeground;
+        borderColor = Colors.transparent;
+        break;
+      case 2:
+        buttonText = '最終確認';
+        buttonColor = colorScheme.destructive;
+        textColor = colorScheme.destructiveForeground;
+        borderColor = Colors.transparent;
+        break;
+      case 0:
+      default:
+        buttonText = '刪除全部';
+        buttonColor = Colors.transparent;
+        textColor = colorScheme.mutedForeground;
+        borderColor = colorScheme.border;
+        break;
+    }
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      height: 36,
+      width: 90,
+      child: ShadButton.outline(
+        onPressed: _handleClick,
+        backgroundColor: buttonColor,
+        hoverBackgroundColor: _clickCount == 0 
+            ? colorScheme.destructive.withValues(alpha: 0.1)
+            : buttonColor,
+        foregroundColor: textColor,
+        hoverForegroundColor: textColor,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: ShadDecoration(
+          border: ShadBorder.all(
+            color: borderColor,
+            width: 1,
+            radius: const BorderRadius.all(Radius.circular(8)),
+          ),
+        ),
+        child: Text(
+          buttonText,
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+        ),
+      ),
     );
   }
 }
