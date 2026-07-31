@@ -117,58 +117,47 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
         elevation: 0,
         automaticallyImplyLeading: false,
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(56),
+          preferredSize: const Size.fromHeight(88),
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 600),
-              child: Padding(
+              constraints: const BoxConstraints(maxWidth: 650),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 240),
+                  child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(14),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                    child: Container(
-                      height: 48,
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: colorScheme.background.withValues(alpha: 0.35),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: colorScheme.border.withValues(alpha: 0.25),
-                          width: 1.0,
-                        ),
-                      ),
-                      child: TabBar(
+                child: Container(
+                  height: 76,
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: colorScheme.card,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: colorScheme.border,
+                      width: 1.0,
+                    ),
+                  ),
+                  child: TabBar(
                         controller: _tabController,
                         overlayColor: WidgetStateProperty.all(Colors.transparent),
                         dividerColor: Colors.transparent,
                         indicatorSize: TabBarIndicatorSize.tab,
                         indicator: BoxDecoration(
-                          color: colorScheme.card.withValues(alpha: 0.8),
+                          color: colorScheme.primary,
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: colorScheme.border.withValues(alpha: 0.4), 
-                            width: 1.0
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.12),
-                              blurRadius: 10,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
                         ),
-                        labelColor: colorScheme.foreground,
-                        labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, letterSpacing: 0.2),
+                        labelColor: colorScheme.primaryForeground,
+                        labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, letterSpacing: 0.2),
                         unselectedLabelColor: colorScheme.foreground.withValues(alpha: 0.5),
-                        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+                        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
                         tabs: const [
-                          Tab(text: '專輯'),
-                          Tab(text: '歌曲'),
+                          Tab(text: '專輯', icon: Icon(LucideIcons.disc, size: 18), iconMargin: EdgeInsets.only(bottom: 4)),
+                          Tab(text: '歌曲', icon: Icon(LucideIcons.music, size: 18), iconMargin: EdgeInsets.only(bottom: 4)),
                         ],
                       ),
-                    ),
-                  ),
+                ),
+              ),
                 ),
               ),
             ),
@@ -312,7 +301,7 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
         SliverToBoxAdapter(
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 600),
+              constraints: const BoxConstraints(maxWidth: 650),
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                 child: Row(
@@ -342,7 +331,7 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
                 sliver: const SliverToBoxAdapter(child: SizedBox.shrink()),
               ),
               SliverConstrainedCrossAxis(
-                maxExtent: 600,
+                maxExtent: 650,
                 sliver: DecoratedSliver(
                   decoration: BoxDecoration(
                     color: colorScheme.card,
