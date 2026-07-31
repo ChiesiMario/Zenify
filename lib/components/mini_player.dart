@@ -41,7 +41,7 @@ class MiniPlayer extends ConsumerWidget {
         height: 64,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
-          color: colorScheme.card, // Or background, using card gives slight distinction if they differ
+          color: colorScheme.card,
           border: Border(
             top: BorderSide(color: colorScheme.border, width: 1),
           ),

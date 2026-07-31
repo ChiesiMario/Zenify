@@ -63,10 +63,12 @@ class FullPlayerScreen extends ConsumerWidget {
               child: Container(
             margin: isCompact ? EdgeInsets.zero : const EdgeInsets.only(top: 10),
             decoration: ShapeDecoration(
-              color: colorScheme.background,
+              color: colorScheme.card,
               shape: RoundedRectangleBorder(
                 borderRadius: isCompact ? BorderRadius.zero : const BorderRadius.vertical(top: Radius.circular(20)),
-                side: BorderSide.none,
+                side: theme.brightness == Brightness.dark 
+                    ? BorderSide(color: colorScheme.border, width: 1) 
+                    : BorderSide.none,
               ),
             ),
             child: SafeArea(

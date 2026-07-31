@@ -429,7 +429,7 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
               // 5. Streaming Platforms Bottom Section
               SliverToBoxAdapter(
                 child: Container(
-                  color: const Color(0xFFF4F4F5),
+                  color: colorScheme.secondary,
                   padding: const EdgeInsets.only(top: 24, bottom: 148),
                   child: Center(
                     child: ConstrainedBox(

@@ -65,8 +65,15 @@ class _PlayQueueSheetState extends ConsumerState<PlayQueueSheet> {
       padding: const EdgeInsets.only(top: 12),
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: colorScheme.background,
+        color: colorScheme.card,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        border: theme.brightness == Brightness.dark 
+            ? Border(
+                top: BorderSide(color: colorScheme.border, width: 1),
+                left: BorderSide(color: colorScheme.border, width: 1),
+                right: BorderSide(color: colorScheme.border, width: 1),
+              )
+            : null,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.15),
