@@ -49,14 +49,19 @@ const ServerSchema = CollectionSchema(
   deserializeProp: _serverDeserializeProp,
   idName: r'id',
   indexes: {
-    r'url': IndexSchema(
-      id: -5756857009679432345,
-      name: r'url',
+    r'url_username': IndexSchema(
+      id: -7250350982801213136,
+      name: r'url_username',
       unique: true,
       replace: true,
       properties: [
         IndexPropertySchema(
           name: r'url',
+          type: IndexType.hash,
+          caseSensitive: true,
+        ),
+        IndexPropertySchema(
+          name: r'username',
           type: IndexType.hash,
           caseSensitive: true,
         )
@@ -153,56 +158,89 @@ void _serverAttach(IsarCollection<dynamic> col, Id id, Server object) {
 }
 
 extension ServerByIndex on IsarCollection<Server> {
-  Future<Server?> getByUrl(String url) {
-    return getByIndex(r'url', [url]);
+  Future<Server?> getByUrlUsername(String url, String username) {
+    return getByIndex(r'url_username', [url, username]);
   }
 
-  Server? getByUrlSync(String url) {
-    return getByIndexSync(r'url', [url]);
+  Server? getByUrlUsernameSync(String url, String username) {
+    return getByIndexSync(r'url_username', [url, username]);
   }
 
-  Future<bool> deleteByUrl(String url) {
-    return deleteByIndex(r'url', [url]);
+  Future<bool> deleteByUrlUsername(String url, String username) {
+    return deleteByIndex(r'url_username', [url, username]);
   }
 
-  bool deleteByUrlSync(String url) {
-    return deleteByIndexSync(r'url', [url]);
+  bool deleteByUrlUsernameSync(String url, String username) {
+    return deleteByIndexSync(r'url_username', [url, username]);
   }
 
-  Future<List<Server?>> getAllByUrl(List<String> urlValues) {
-    final values = urlValues.map((e) => [e]).toList();
-    return getAllByIndex(r'url', values);
+  Future<List<Server?>> getAllByUrlUsername(
+      List<String> urlValues, List<String> usernameValues) {
+    final len = urlValues.length;
+    assert(usernameValues.length == len,
+        'All index values must have the same length');
+    final values = <List<dynamic>>[];
+    for (var i = 0; i < len; i++) {
+      values.add([urlValues[i], usernameValues[i]]);
+    }
+
+    return getAllByIndex(r'url_username', values);
   }
 
-  List<Server?> getAllByUrlSync(List<String> urlValues) {
-    final values = urlValues.map((e) => [e]).toList();
-    return getAllByIndexSync(r'url', values);
+  List<Server?> getAllByUrlUsernameSync(
+      List<String> urlValues, List<String> usernameValues) {
+    final len = urlValues.length;
+    assert(usernameValues.length == len,
+        'All index values must have the same length');
+    final values = <List<dynamic>>[];
+    for (var i = 0; i < len; i++) {
+      values.add([urlValues[i], usernameValues[i]]);
+    }
+
+    return getAllByIndexSync(r'url_username', values);
   }
 
-  Future<int> deleteAllByUrl(List<String> urlValues) {
-    final values = urlValues.map((e) => [e]).toList();
-    return deleteAllByIndex(r'url', values);
+  Future<int> deleteAllByUrlUsername(
+      List<String> urlValues, List<String> usernameValues) {
+    final len = urlValues.length;
+    assert(usernameValues.length == len,
+        'All index values must have the same length');
+    final values = <List<dynamic>>[];
+    for (var i = 0; i < len; i++) {
+      values.add([urlValues[i], usernameValues[i]]);
+    }
+
+    return deleteAllByIndex(r'url_username', values);
   }
 
-  int deleteAllByUrlSync(List<String> urlValues) {
-    final values = urlValues.map((e) => [e]).toList();
-    return deleteAllByIndexSync(r'url', values);
+  int deleteAllByUrlUsernameSync(
+      List<String> urlValues, List<String> usernameValues) {
+    final len = urlValues.length;
+    assert(usernameValues.length == len,
+        'All index values must have the same length');
+    final values = <List<dynamic>>[];
+    for (var i = 0; i < len; i++) {
+      values.add([urlValues[i], usernameValues[i]]);
+    }
+
+    return deleteAllByIndexSync(r'url_username', values);
   }
 
-  Future<Id> putByUrl(Server object) {
-    return putByIndex(r'url', object);
+  Future<Id> putByUrlUsername(Server object) {
+    return putByIndex(r'url_username', object);
   }
 
-  Id putByUrlSync(Server object, {bool saveLinks = true}) {
-    return putByIndexSync(r'url', object, saveLinks: saveLinks);
+  Id putByUrlUsernameSync(Server object, {bool saveLinks = true}) {
+    return putByIndexSync(r'url_username', object, saveLinks: saveLinks);
   }
 
-  Future<List<Id>> putAllByUrl(List<Server> objects) {
-    return putAllByIndex(r'url', objects);
+  Future<List<Id>> putAllByUrlUsername(List<Server> objects) {
+    return putAllByIndex(r'url_username', objects);
   }
 
-  List<Id> putAllByUrlSync(List<Server> objects, {bool saveLinks = true}) {
-    return putAllByIndexSync(r'url', objects, saveLinks: saveLinks);
+  List<Id> putAllByUrlUsernameSync(List<Server> objects,
+      {bool saveLinks = true}) {
+    return putAllByIndexSync(r'url_username', objects, saveLinks: saveLinks);
   }
 }
 
@@ -280,27 +318,29 @@ extension ServerQueryWhere on QueryBuilder<Server, Server, QWhereClause> {
     });
   }
 
-  QueryBuilder<Server, Server, QAfterWhereClause> urlEqualTo(String url) {
+  QueryBuilder<Server, Server, QAfterWhereClause> urlEqualToAnyUsername(
+      String url) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'url',
+        indexName: r'url_username',
         value: [url],
       ));
     });
   }
 
-  QueryBuilder<Server, Server, QAfterWhereClause> urlNotEqualTo(String url) {
+  QueryBuilder<Server, Server, QAfterWhereClause> urlNotEqualToAnyUsername(
+      String url) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'url',
+              indexName: r'url_username',
               lower: [],
               upper: [url],
               includeUpper: false,
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'url',
+              indexName: r'url_username',
               lower: [url],
               includeLower: false,
               upper: [],
@@ -308,15 +348,60 @@ extension ServerQueryWhere on QueryBuilder<Server, Server, QWhereClause> {
       } else {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'url',
+              indexName: r'url_username',
               lower: [url],
               includeLower: false,
               upper: [],
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'url',
+              indexName: r'url_username',
               lower: [],
               upper: [url],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Server, Server, QAfterWhereClause> urlUsernameEqualTo(
+      String url, String username) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'url_username',
+        value: [url, username],
+      ));
+    });
+  }
+
+  QueryBuilder<Server, Server, QAfterWhereClause> urlEqualToUsernameNotEqualTo(
+      String url, String username) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'url_username',
+              lower: [url],
+              upper: [url, username],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'url_username',
+              lower: [url, username],
+              includeLower: false,
+              upper: [url],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'url_username',
+              lower: [url, username],
+              includeLower: false,
+              upper: [url],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'url_username',
+              lower: [url],
+              upper: [url, username],
               includeUpper: false,
             ));
       }

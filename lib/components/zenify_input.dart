@@ -8,6 +8,7 @@ class ZenifyInput extends StatefulWidget {
   final ValueChanged<String>? onChanged;
   final bool autofocus;
   final FocusNode? focusNode;
+  final Widget? suffix;
 
   const ZenifyInput({
     super.key,
@@ -17,6 +18,7 @@ class ZenifyInput extends StatefulWidget {
     this.onChanged,
     this.autofocus = false,
     this.focusNode,
+    this.suffix,
   });
 
   @override
@@ -66,19 +68,30 @@ class _ZenifyInputState extends State<ZenifyInput> {
           width: 1.0,
         ),
       ),
-      child: ShadInput(
-        focusNode: _focusNode,
-        controller: widget.controller,
-        placeholder: widget.placeholder,
-        obscureText: widget.obscureText,
-        onChanged: widget.onChanged,
-        autofocus: widget.autofocus,
-        decoration: const ShadDecoration(
-          border: ShadBorder.none,
-          focusedBorder: ShadBorder.none,
-          secondaryBorder: ShadBorder.none,
-          secondaryFocusedBorder: ShadBorder.none,
-        ),
+      child: Row(
+        children: [
+          Expanded(
+            child: ShadInput(
+              focusNode: _focusNode,
+              controller: widget.controller,
+              placeholder: widget.placeholder,
+              obscureText: widget.obscureText,
+              onChanged: widget.onChanged,
+              autofocus: widget.autofocus,
+              decoration: const ShadDecoration(
+                border: ShadBorder.none,
+                focusedBorder: ShadBorder.none,
+                secondaryBorder: ShadBorder.none,
+                secondaryFocusedBorder: ShadBorder.none,
+              ),
+            ),
+          ),
+          if (widget.suffix != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: widget.suffix!,
+            ),
+        ],
       ),
     );
   }

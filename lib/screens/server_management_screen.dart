@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -5,6 +6,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/components/zenify_input.dart';
 import 'package:zenify/models/server.dart';
 import 'package:zenify/providers/app_providers.dart';
+import 'package:zenify/api/subsonic_api.dart';
 
 class ServerManagementScreen extends ConsumerStatefulWidget {
   const ServerManagementScreen({super.key});
@@ -141,104 +143,239 @@ class _ServerManagementScreenState extends ConsumerState<ServerManagementScreen>
   }
 
   void _showServerDialog(BuildContext context, WidgetRef ref, {Server? server}) {
-    final isEditing = server != null;
-    final urlController = TextEditingController(text: server?.url ?? '');
-    final usernameController = TextEditingController(text: server?.username ?? '');
-    final passwordController = TextEditingController(text: server?.password ?? '');
-    final theme = ShadTheme.of(context);
-    final colorScheme = theme.colorScheme;
-
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: colorScheme.card,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          titlePadding: const EdgeInsets.all(24).copyWith(bottom: 12),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 24),
-          actionsPadding: const EdgeInsets.all(24).copyWith(top: 16),
-          title: Text(isEditing ? '編輯伺服器' : '新增伺服器', style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.bold)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('請輸入 Navidrome / Subsonic 伺服器資訊', style: TextStyle(color: colorScheme.mutedForeground)),
-              const SizedBox(height: 20),
-              ZenifyInput(
-                controller: urlController,
-                placeholder: const Text('URL (例如: http://192.168.1.100:4533)'),
-                autofocus: true,
-              ),
-              const SizedBox(height: 16),
-              ZenifyInput(
-                controller: usernameController,
-                placeholder: const Text('帳號'),
-              ),
-              const SizedBox(height: 16),
-              ZenifyInput(
-                controller: passwordController,
-                placeholder: const Text('密碼'),
-                obscureText: true,
-              ),
-            ],
+      builder: (context) => _ServerEditDialog(server: server),
+    );
+  }
+}
+
+class _ServerEditDialog extends ConsumerStatefulWidget {
+  final Server? server;
+
+  const _ServerEditDialog({this.server});
+
+  @override
+  ConsumerState<_ServerEditDialog> createState() => _ServerEditDialogState();
+}
+
+class _ServerEditDialogState extends ConsumerState<_ServerEditDialog> {
+  late final TextEditingController _urlController;
+  late final TextEditingController _usernameController;
+  late final TextEditingController _passwordController;
+
+  bool _isConfirmingDelete = false;
+  bool _isCheckingConnection = false;
+  bool _isConnectionValid = false;
+  String? _connectionError;
+
+  bool get _isEditing => widget.server != null;
+
+  @override
+  void initState() {
+    super.initState();
+    _urlController = TextEditingController(text: widget.server?.url ?? '');
+    _usernameController = TextEditingController(text: widget.server?.username ?? '');
+    _passwordController = TextEditingController(text: widget.server?.password ?? '');
+
+    _isConnectionValid = _isEditing; // Assume valid if editing, unless changed
+  }
+
+  @override
+  void dispose() {
+    _urlController.dispose();
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  void _onInputChanged(String _) {
+    setState(() {
+      _isConnectionValid = false;
+      _connectionError = null;
+    });
+  }
+
+  Future<void> _checkConnection() async {
+    final url = _urlController.text.trim();
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text;
+
+    if (url.isEmpty || username.isEmpty || password.isEmpty) {
+      return;
+    }
+
+    setState(() {
+      _isCheckingConnection = true;
+      _connectionError = null;
+    });
+
+    try {
+      final tempServer = Server()
+        ..url = url
+        ..username = username
+        ..password = password;
+      final api = SubsonicApi(tempServer);
+      final isValid = await api.ping();
+
+      if (!mounted) return;
+
+      setState(() {
+        _isCheckingConnection = false;
+        if (isValid) {
+          _isConnectionValid = true;
+        } else {
+          _connectionError = '無法連線至伺服器或驗證失敗，請檢查設定。';
+          _isConnectionValid = false;
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isCheckingConnection = false;
+        _connectionError = '連線發生錯誤。';
+        _isConnectionValid = false;
+      });
+    }
+  }
+
+  Future<void> _saveServer() async {
+    if (_isCheckingConnection || !_isConnectionValid) return;
+
+    final url = _urlController.text.trim();
+    final username = _usernameController.text.trim();
+    
+    final serverToSave = widget.server ?? Server();
+    serverToSave
+      ..url = url
+      ..username = username
+      ..password = _passwordController.text;
+
+    if (!_isEditing) {
+      serverToSave.isActive = false;
+    }
+
+    final db = ref.read(databaseProvider);
+    await db.saveServer(serverToSave);
+    
+    if (!_isEditing) {
+      final allServers = await db.getServers();
+      if (allServers.length == 1) {
+        await db.setActiveServer(allServers.first.id);
+        ref.invalidate(activeServerProvider);
+      }
+    } else if (serverToSave.isActive) {
+      ref.invalidate(activeServerProvider);
+    }
+    
+    ref.invalidate(serversListProvider);
+    if (mounted) {
+      Navigator.pop(context);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ShadTheme.of(context);
+    final colorScheme = theme.colorScheme;
+    
+    final isInputEmpty = _urlController.text.trim().isEmpty || 
+                         _usernameController.text.trim().isEmpty || 
+                         _passwordController.text.isEmpty;
+
+    return AlertDialog(
+      backgroundColor: colorScheme.card,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      titlePadding: const EdgeInsets.all(24).copyWith(bottom: 12),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+      actionsPadding: const EdgeInsets.all(24).copyWith(top: 16),
+      title: Text(_isEditing ? '編輯伺服器' : '新增伺服器', style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.bold)),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('請輸入 Navidrome / Subsonic 伺服器資訊', style: TextStyle(color: colorScheme.mutedForeground)),
+          const SizedBox(height: 20),
+          ZenifyInput(
+            controller: _urlController,
+            placeholder: const Text('URL (例如: http://192.168.1.100:4533)'),
+            autofocus: true,
+            onChanged: _onInputChanged,
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          const SizedBox(height: 16),
+          ZenifyInput(
+            controller: _usernameController,
+            placeholder: const Text('帳號'),
+            onChanged: _onInputChanged,
+          ),
+          const SizedBox(height: 16),
+          ZenifyInput(
+            controller: _passwordController,
+            placeholder: const Text('密碼'),
+            obscureText: true,
+            onChanged: _onInputChanged,
+          ),
+          if (_connectionError != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 16.0),
+              child: Text(
+                _connectionError!, 
+                style: TextStyle(color: colorScheme.destructive, fontSize: 13)
               ),
-              child: Text('取消', style: TextStyle(color: colorScheme.mutedForeground, fontWeight: FontWeight.w600)),
             ),
-            ElevatedButton(
-              onPressed: () async {
-                final url = urlController.text.trim();
-                final username = usernameController.text.trim();
-                if (url.isEmpty || username.isEmpty) {
-                  return;
-                }
-                
-                final serverToSave = server ?? Server();
-                serverToSave
-                  ..url = url
-                  ..username = username
-                  ..password = passwordController.text;
-
-                if (!isEditing) {
-                  serverToSave.isActive = false;
-                }
-
-                final db = ref.read(databaseProvider);
-                await db.saveServer(serverToSave);
-                
-                if (!isEditing) {
-                  final allServers = await db.getServers();
-                  if (allServers.length == 1) {
-                    await db.setActiveServer(allServers.first.id);
-                    ref.invalidate(activeServerProvider);
+        ],
+      ),
+      actions: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            if (_isEditing)
+              ShadButton.outline(
+                onPressed: () async {
+                  if (_isConfirmingDelete) {
+                    await ref.read(databaseProvider).deleteServer(widget.server!.id);
+                    ref.invalidate(serversListProvider);
+                    if (widget.server!.isActive) {
+                      ref.invalidate(activeServerProvider);
+                    }
+                    if (mounted) {
+                      Navigator.pop(context);
+                    }
+                  } else {
+                    setState(() {
+                      _isConfirmingDelete = true;
+                    });
                   }
-                } else if (serverToSave.isActive) {
-                  // If we edited the active server, we should invalidate the active provider
-                  ref.invalidate(activeServerProvider);
-                }
-                
-                ref.invalidate(serversListProvider);
-                if (context.mounted) {
-                  Navigator.pop(context);
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: colorScheme.primary,
-                foregroundColor: colorScheme.primaryForeground,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                elevation: 0,
-              ),
-              child: Text(isEditing ? '儲存變更' : '儲存', style: const TextStyle(fontWeight: FontWeight.bold)),
+                },
+                child: Text(
+                  _isConfirmingDelete ? '確認刪除' : '刪除',
+                  style: _isConfirmingDelete ? TextStyle(color: colorScheme.destructive) : null,
+                ),
+              )
+            else
+              const SizedBox.shrink(),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ShadButton.outline(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('取消'),
+                ),
+                const SizedBox(width: 8),
+                ShadButton(
+                  onPressed: _isCheckingConnection || isInputEmpty
+                      ? null
+                      : _isConnectionValid
+                          ? _saveServer
+                          : _checkConnection,
+                  child: _isCheckingConnection 
+                      ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: colorScheme.primaryForeground))
+                      : Text(_isConnectionValid ? (_isEditing ? '儲存變更' : '儲存') : '檢查伺服器'),
+                ),
+              ],
             ),
           ],
-        );
-      },
+        ),
+      ],
     );
   }
 }
@@ -264,6 +401,48 @@ class _ServerSettingTile extends StatefulWidget {
 
 class _ServerSettingTileState extends State<_ServerSettingTile> {
   bool _isHovered = false;
+  bool _isChecking = false;
+
+  Future<void> _handleTap() async {
+    if (_isChecking) return;
+
+    setState(() {
+      _isChecking = true;
+    });
+
+    try {
+      final api = SubsonicApi(widget.server);
+      final isAvailable = await api.ping();
+
+      if (!mounted) return;
+
+      if (isAvailable) {
+        widget.onTap();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('無法連線至該伺服器，請檢查網路或伺服器設定。'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('伺服器連線發生錯誤。'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isChecking = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -276,7 +455,7 @@ class _ServerSettingTileState extends State<_ServerSettingTile> {
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: GestureDetector(
-        onTap: widget.onTap,
+        onTap: _handleTap,
         onLongPress: widget.onLongPress,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
@@ -314,15 +493,25 @@ class _ServerSettingTileState extends State<_ServerSettingTile> {
                     width: 1,
                   ),
                 ),
-                child: Icon(
-                  LucideIcons.server,
-                  size: 19,
-                  color: isActive
-                      ? colorScheme.primaryForeground
-                      : (_isHovered
-                          ? colorScheme.background
-                          : colorScheme.foreground),
-                ),
+                child: _isChecking
+                    ? Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: isActive
+                              ? colorScheme.primaryForeground
+                              : colorScheme.foreground,
+                        ),
+                      )
+                    : Icon(
+                        LucideIcons.server,
+                        size: 19,
+                        color: isActive
+                            ? colorScheme.primaryForeground
+                            : (_isHovered
+                                ? colorScheme.background
+                                : colorScheme.foreground),
+                      ),
               ),
               const SizedBox(width: 16),
               Expanded(

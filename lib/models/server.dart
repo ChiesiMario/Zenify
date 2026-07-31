@@ -6,7 +6,7 @@ part 'server.g.dart';
 class Server {
   Id id = Isar.autoIncrement;
 
-  @Index(unique: true, replace: true)
+  @Index(unique: true, replace: true, composite: [CompositeIndex('username')])
   late String url;
 
   late String username;
