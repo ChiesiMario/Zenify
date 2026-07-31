@@ -62,7 +62,7 @@ class MiniPlayer extends ConsumerWidget {
                   child: coverUrl == null
                       ? Icon(LucideIcons.music, color: colorScheme.mutedForeground)
                       : LocalCoverImage(
-                          id: currentSong['coverArt'],
+                          id: currentSong['albumId']?.toString() ?? currentSong['coverArt'],
                           serverId: server?.id ?? 0,
                           fallbackUrl: coverUrl,
                         ),

@@ -150,7 +150,7 @@ class FavoriteSongsScreen extends ConsumerWidget {
                                       child: coverUrl == null
                                           ? Icon(LucideIcons.music, size: 20, color: colorScheme.mutedForeground)
                                           : LocalCoverImage(
-                                              id: song['coverArt'],
+                                              id: song['albumId']?.toString() ?? song['parent']?.toString() ?? song['coverArt']?.toString() ?? '',
                                               serverId: server.id,
                                               fallbackUrl: coverUrl,
                                             ),

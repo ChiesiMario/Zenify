@@ -788,7 +788,7 @@ class _NowPlayingTabIconState extends ConsumerState<NowPlayingTabIcon> with Sing
                 child: coverUrl == null
                     ? Container(color: colorScheme.muted, child: Icon(LucideIcons.music, size: 24, color: colorScheme.mutedForeground))
                     : LocalCoverImage(
-                        id: currentSong['coverArt'],
+                        id: currentSong['albumId']?.toString() ?? currentSong['coverArt'],
                         serverId: server?.id ?? 0,
                         fallbackUrl: coverUrl,
                         isThumb: true,

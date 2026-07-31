@@ -52,7 +52,7 @@ class _LocalCoverImageState extends State<LocalCoverImage> {
         _isLoading = true;
         _checkLocalFileAsync();
       }
-    } catch (_) {
+    } catch (e) {
       _isLoading = false;
     }
   }

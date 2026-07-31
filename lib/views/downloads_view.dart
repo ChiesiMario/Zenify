@@ -397,7 +397,7 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
                               clipBehavior: Clip.antiAlias,
                               child: track.coverArt != null
                                   ? LocalCoverImage(
-                                      id: track.coverArt!,
+                                      id: track.albumId ?? track.coverArt!,
                                       serverId: track.serverId,
                                       fallbackUrl: api?.getCoverArtUrl(track.coverArt!),
                                     )

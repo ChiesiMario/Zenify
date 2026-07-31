@@ -98,9 +98,9 @@ class AlbumDetailScreen extends ConsumerWidget {
                                 fit: StackFit.expand,
                                 children: [
                                   coverUrl == null
-                                      ? Icon(LucideIcons.music, size: 80, color: colorScheme.mutedForeground)
+                                      ? Container(color: colorScheme.muted)
                                       : LocalCoverImage(
-                                          id: album['coverArt'],
+                                          id: album['albumId']?.toString() ?? album['parent']?.toString() ?? album['coverArt']?.toString() ?? album['id'],
                                           serverId: server?.id ?? 0,
                                           fallbackUrl: coverUrl,
                                           isThumb: false,

@@ -211,7 +211,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                 width: 48,
                                 height: 48,
                                 child: LocalCoverImage(
-                                  id: coverId ?? '',
+                                  id: song['albumId']?.toString() ?? coverId ?? '',
                                   serverId: server?.id ?? 0,
                                   fallbackUrl: fallbackUrl,
                                   isThumb: true,
