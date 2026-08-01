@@ -4,6 +4,10 @@ import 'package:zenify/services/image_service.dart';
 import 'package:zenify/models/album.dart';
 import 'package:zenify/models/artist.dart';
 import 'package:zenify/providers/app_providers.dart';
+import 'package:zenify/views/playlists_view.dart';
+import 'package:zenify/models/favorite_item.dart';
+import 'package:zenify/models/playlist_cache.dart';
+import 'package:zenify/models/album_detail_cache.dart';
 
 class SyncState {
   final bool isSyncing;
@@ -134,9 +138,94 @@ class SyncNotifier extends Notifier<SyncState> {
         );
       }
 
+      // 4. 同步最愛 (Favorites)
+      state = state.copyWith(message: '同步最愛項目...', progress: 0.95);
+      final starred = await api.getStarred();
+      List<FavoriteItem> favItems = [];
+      
+      void addFavs(List<dynamic> items, String type) {
+        for (var item in items) {
+          favItems.add(FavoriteItem()
+            ..serverId = server.id
+            ..itemId = item['id'].toString()
+            ..itemType = type
+            ..rawData = jsonEncode(item)
+          );
+        }
+      }
+      
+      addFavs(starred['artists'] ?? [], 'artist');
+      addFavs(starred['albums'] ?? [], 'album');
+      addFavs(starred['songs'] ?? [], 'song');
+      
+      await db.clearFavorites(server.id);
+      await db.saveFavorites(favItems);
+
+      // 5. 同步播放清單 (Playlists)
+      state = state.copyWith(message: '同步播放清單...', progress: 0.97);
+      final playlists = await api.getPlaylists();
+      List<PlaylistCache> playlistCaches = [];
+      
+      for (var p in playlists) {
+        final pId = p['id'].toString();
+        // Fetch detailed playlist to get tracks
+        final detailed = await api.getPlaylist(pId);
+        if (detailed != null) {
+          playlistCaches.add(PlaylistCache()
+            ..serverId = server.id
+            ..playlistId = pId
+            ..name = detailed['name'] ?? p['name'] ?? 'Unknown'
+            ..rawData = jsonEncode(detailed)
+          );
+        } else {
+          playlistCaches.add(PlaylistCache()
+            ..serverId = server.id
+            ..playlistId = pId
+            ..name = p['name'] ?? 'Unknown'
+            ..rawData = jsonEncode(p)
+          );
+        }
+      }
+      
+      await db.clearPlaylists(server.id);
+      await db.savePlaylists(playlistCaches);
+
+      // 6. 同步已離線歌曲的專輯資訊
+      state = state.copyWith(message: '同步離線專輯資料中...', progress: 0.98);
+      
+      final downloadedTracks = await db.getDownloadedTracks(server.id);
+      final offlineAlbumIds = downloadedTracks
+          .where((t) => t.isComplete && t.albumId != null)
+          .map((t) => t.albumId!)
+          .toSet();
+
+      int offlineAlbumsFetched = 0;
+      final totalOfflineAlbums = offlineAlbumIds.length;
+      
+      for (final aId in offlineAlbumIds) {
+        final existing = await db.getAlbumDetail(server.id, aId);
+        if (existing == null) {
+          final result = await api.getAlbum(aId);
+          if (result != null) {
+            final cache = AlbumDetailCache()
+              ..serverId = server.id
+              ..albumId = aId
+              ..rawData = jsonEncode(result);
+            await db.saveAlbumDetail(cache);
+          }
+        }
+        offlineAlbumsFetched++;
+        state = state.copyWith(
+          message: '同步離線專輯資料中... ($offlineAlbumsFetched/$totalOfflineAlbums)',
+          progress: 0.98 + (0.01 * (offlineAlbumsFetched / (totalOfflineAlbums > 0 ? totalOfflineAlbums : 1))),
+        );
+      }
+
       // 重新載入列表
       ref.invalidate(albumsProvider);
       ref.invalidate(artistsProvider);
+      ref.invalidate(favoritesProvider);
+      ref.invalidate(playlistsProvider);
 
       state = state.copyWith(isSyncing: false, message: '同步完成！共載入 ${allAlbums.length} 張專輯。', progress: 1.0);
     } catch (e) {

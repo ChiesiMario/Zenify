@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:convert';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/screens/playlist_detail_screen.dart';
@@ -7,6 +8,24 @@ import 'package:zenify/screens/playlist_detail_screen.dart';
 import 'package:zenify/providers/sort_providers.dart';
 
 final playlistsProvider = FutureProvider<List<dynamic>>((ref) async {
+  final networkState = ref.watch(networkProvider);
+  if (networkState.isOffline) {
+    final serverAsyncValue = ref.read(activeServerProvider);
+    if (!serverAsyncValue.hasValue || serverAsyncValue.value == null) {
+      return [];
+    }
+    final db = ref.read(databaseProvider);
+    final cachedPlaylists = await db.getPlaylists(serverAsyncValue.value!.id);
+    
+    List<dynamic> result = [];
+    for (var p in cachedPlaylists) {
+      try {
+        result.add(jsonDecode(p.rawData));
+      } catch (_) {}
+    }
+    return result;
+  }
+
   final api = ref.watch(subsonicApiProvider);
   if (api == null) return [];
   return await api.getPlaylists();

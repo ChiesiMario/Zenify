@@ -48,6 +48,10 @@ class _LocalCoverImageState extends State<LocalCoverImage> {
         final path = ImageService().getCoverPathSync(widget.id, widget.serverId, isThumb: widget.isThumb);
         _localFile = File(path);
         _isLoading = false;
+      } else if (!widget.isThumb && ImageService().isCoverCachedSync(widget.id, widget.serverId, isThumb: true)) {
+        final path = ImageService().getCoverPathSync(widget.id, widget.serverId, isThumb: true);
+        _localFile = File(path);
+        _isLoading = false;
       } else {
         _isLoading = true;
         _checkLocalFileAsync();
@@ -67,7 +71,14 @@ class _LocalCoverImageState extends State<LocalCoverImage> {
       }
       if (mounted) {
         setState(() {
-          _localFile = success ? file : null;
+          if (success) {
+            _localFile = file;
+          } else if (!widget.isThumb && ImageService().isCoverCachedSync(widget.id, widget.serverId, isThumb: true)) {
+            final thumbPath = ImageService().getCoverPathSync(widget.id, widget.serverId, isThumb: true);
+            _localFile = File(thumbPath);
+          } else {
+            _localFile = null;
+          }
           _isLoading = false;
         });
       }

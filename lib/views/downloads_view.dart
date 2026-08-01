@@ -236,6 +236,12 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
     final albums = albumGroups.entries.map((e) {
       final tracks = e.value;
       final firstTrack = tracks.first;
+      dynamic year;
+      try {
+        final rawMap = jsonDecode(firstTrack.rawData);
+        year = rawMap['year'];
+      } catch (_) {}
+
       return {
         'id': e.key == 'unknown' ? null : e.key,
         'title': firstTrack.album ?? '未知專輯',
@@ -243,6 +249,7 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
         'artistId': null, // We don't save artistId in DownloadedTrack
         'coverArt': firstTrack.coverArt,
         'songCount': tracks.length,
+        'year': year,
       };
     }).toList();
 
@@ -292,6 +299,7 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
                 physics: const BouncingScrollPhysics(),
                 shrinkWrap: true,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
+                hideOfflineIcon: true,
               ),
             ),
           ),

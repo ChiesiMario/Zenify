@@ -27,6 +27,13 @@ class AlbumDetailScreen extends ConsumerWidget {
     final albumAsync = ref.watch(albumDetailProvider(albumId));
     final api = ref.watch(subsonicApiProvider);
     final server = ref.watch(activeServerProvider).value;
+    final networkState = ref.watch(networkProvider);
+    final downloadedTracksAsync = ref.watch(downloadedTracksProvider);
+    final downloadedTracks = downloadedTracksAsync.valueOrNull ?? [];
+    final downloadedIds = downloadedTracks
+        .where((t) => t.isComplete && File(t.localPath).existsSync())
+        .map((t) => t.songId)
+        .toSet();
 
     return Scaffold(
       backgroundColor: colorScheme.background,
@@ -216,8 +223,11 @@ class AlbumDetailScreen extends ConsumerWidget {
                                 child: ShadButton(
                                   size: ShadButtonSize.lg,
                                   onPressed: () {
-                                    if (songList.isNotEmpty) {
-                                      ref.read(audioProvider.notifier).playQueue(songList, 0);
+                                    final playableSongs = networkState.isOffline 
+                                      ? songList.where((s) => downloadedIds.contains(s['id']?.toString())).toList() 
+                                      : songList;
+                                    if (playableSongs.isNotEmpty) {
+                                      ref.read(audioProvider.notifier).playQueue(playableSongs, 0);
                                     }
                                   },
                                   child: const Row(
@@ -235,8 +245,11 @@ class AlbumDetailScreen extends ConsumerWidget {
                                 child: ShadButton.secondary(
                                   size: ShadButtonSize.lg,
                                   onPressed: () {
-                                    if (songList.isNotEmpty) {
-                                      final shuffledList = List<dynamic>.from(songList)..shuffle();
+                                    final playableSongs = networkState.isOffline 
+                                      ? songList.where((s) => downloadedIds.contains(s['id']?.toString())).toList() 
+                                      : songList;
+                                    if (playableSongs.isNotEmpty) {
+                                      final shuffledList = List<dynamic>.from(playableSongs)..shuffle();
                                       ref.read(audioProvider.notifier).playQueue(shuffledList, 0);
                                     }
                                   },
@@ -310,84 +323,90 @@ class AlbumDetailScreen extends ConsumerWidget {
                                 
                                 final isFirst = localIndex == 0;
                                 final isLast = localIndex == group.length - 1;
+                                
+                                final isOfflineUnplayable = networkState.isOffline && !downloadedIds.contains(song['id']?.toString());
+                                final opacity = isOfflineUnplayable ? 0.3 : 1.0;
 
                                 return Container(
                                   decoration: BoxDecoration(
                                     border: isLast ? null : Border(bottom: BorderSide(color: colorScheme.border.withValues(alpha: 0.5), width: 0.5)),
                                   ),
-                                  child: Material(
-                                    color: Colors.transparent,
-                                    borderRadius: BorderRadius.vertical(
-                                      top: isFirst ? const Radius.circular(12) : Radius.zero,
-                                      bottom: isLast ? const Radius.circular(12) : Radius.zero,
-                                    ),
-                                    clipBehavior: Clip.antiAlias,
-                                    child: ListTile(
-                                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                                      leading: SizedBox(
-                                        width: 24,
-                                        child: Center(
-                                          child: Text(
-                                            song['track']?.toString() ?? '${localIndex + 1}',
-                                            style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13, fontWeight: FontWeight.w600),
+                                  child: Opacity(
+                                    opacity: opacity,
+                                    child: Material(
+                                      color: Colors.transparent,
+                                      borderRadius: BorderRadius.vertical(
+                                        top: isFirst ? const Radius.circular(12) : Radius.zero,
+                                        bottom: isLast ? const Radius.circular(12) : Radius.zero,
+                                      ),
+                                      clipBehavior: Clip.antiAlias,
+                                      child: ListTile(
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                                        leading: SizedBox(
+                                          width: 24,
+                                          child: Center(
+                                            child: Text(
+                                              song['track']?.toString() ?? '${localIndex + 1}',
+                                              style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13, fontWeight: FontWeight.w600),
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                      title: Text(
-                                        song['title'] ?? '未知歌曲',
-                                        style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.w600, fontSize: 14),
-                                      ),
-                                      subtitle: song['artist'] != album['artist']
-                                          ? Text(song['artist'] ?? '', style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12))
-                                          : null,
-                                      trailing: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            duration,
-                                            style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13, fontWeight: FontWeight.w500),
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Consumer(
-                                            builder: (context, ref, child) {
-                                              final favoritesAsync = ref.watch(favoritesProvider);
-                                              final songId = song['id']?.toString();
-                                              final isFavorite = favoritesAsync.value?['songs']?.any(
-                                                (s) => s['id']?.toString() == songId,
-                                              ) ?? (song['starred'] != null);
+                                        title: Text(
+                                          song['title'] ?? '未知歌曲',
+                                          style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.w600, fontSize: 14),
+                                        ),
+                                        subtitle: song['artist'] != album['artist']
+                                            ? Text(song['artist'] ?? '', style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12))
+                                            : null,
+                                        trailing: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              duration,
+                                              style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13, fontWeight: FontWeight.w500),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Consumer(
+                                              builder: (context, ref, child) {
+                                                final favoritesAsync = ref.watch(favoritesProvider);
+                                                final songId = song['id']?.toString();
+                                                final isFavorite = favoritesAsync.value?['songs']?.any(
+                                                  (s) => s['id']?.toString() == songId,
+                                                ) ?? (song['starred'] != null);
 
-                                              final mutedIconColor = colorScheme.mutedForeground.withValues(alpha: 0.3);
+                                                final mutedIconColor = colorScheme.mutedForeground.withValues(alpha: 0.3);
 
-                                              return SizedBox(
-                                                width: 28,
-                                                height: 28,
-                                                child: IconButton(
-                                                  padding: EdgeInsets.zero,
-                                                  constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                                                  icon: Icon(
-                                                    isFavorite ? Icons.favorite : LucideIcons.heart,
-                                                    color: isFavorite ? const Color(0xFFEF4444) : mutedIconColor,
-                                                    size: 16,
+                                                return SizedBox(
+                                                  width: 28,
+                                                  height: 28,
+                                                  child: IconButton(
+                                                    padding: EdgeInsets.zero,
+                                                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                                                    icon: Icon(
+                                                      isFavorite ? Icons.favorite : LucideIcons.heart,
+                                                      color: isFavorite ? const Color(0xFFEF4444) : mutedIconColor,
+                                                      size: 16,
+                                                    ),
+                                                    onPressed: isOfflineUnplayable ? null : () async {
+                                                      if (songId == null || api == null) return;
+                                                      if (isFavorite) {
+                                                        await api.unstar(id: songId);
+                                                      } else {
+                                                        await api.star(id: songId);
+                                                      }
+                                                      ref.invalidate(favoritesProvider);
+                                                    },
+                                                    tooltip: isFavorite ? '取消最愛' : '加入最愛',
                                                   ),
-                                                  onPressed: () async {
-                                                    if (songId == null || api == null) return;
-                                                    if (isFavorite) {
-                                                      await api.unstar(id: songId);
-                                                    } else {
-                                                      await api.star(id: songId);
-                                                    }
-                                                    ref.invalidate(favoritesProvider);
-                                                  },
-                                                  tooltip: isFavorite ? '取消最愛' : '加入最愛',
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                        ],
+                                                );
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                        onTap: isOfflineUnplayable ? null : () {
+                                          ref.read(audioProvider.notifier).playQueue(songList, absoluteIndex);
+                                        },
                                       ),
-                                      onTap: () {
-                                        ref.read(audioProvider.notifier).playQueue(songList, absoluteIndex);
-                                      },
                                     ),
                                   ),
                                 );
@@ -522,6 +541,9 @@ class _AlbumOfflineBentoCardState extends ConsumerState<_AlbumOfflineBentoCard> 
       return p != null && p > 0.0 && p < 1.0;
     });
 
+    final networkState = ref.watch(networkProvider);
+    final isOffline = networkState.isOffline;
+
     final effectiveOfflined = _optimisticState ?? isAllOfflined;
 
     final String titleStr = _optimisticState == true
@@ -552,12 +574,14 @@ class _AlbumOfflineBentoCardState extends ConsumerState<_AlbumOfflineBentoCard> 
       }
     }
 
+    final isDisabled = isDownloading || isOffline;
+
     return MouseRegion(
-      cursor: isDownloading ? SystemMouseCursors.basic : SystemMouseCursors.click,
+      cursor: isDisabled ? SystemMouseCursors.basic : SystemMouseCursors.click,
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: GestureDetector(
-        onTap: isDownloading ? null : () => _handleToggle(!effectiveOfflined),
+        onTap: isDisabled ? null : () => _handleToggle(!effectiveOfflined),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           curve: Curves.easeOut,
@@ -566,31 +590,30 @@ class _AlbumOfflineBentoCardState extends ConsumerState<_AlbumOfflineBentoCard> 
             color: colorScheme.card,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: (_isHovered && !isDownloading)
+              color: (_isHovered && !isDisabled)
                   ? colorScheme.foreground.withValues(alpha: 0.4)
                   : colorScheme.border,
               width: 1.0,
             ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  SizedBox(
-                    height: 38,
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Opacity(
-                        opacity: isDownloading ? 0.4 : 1.0,
+          child: Opacity(
+            opacity: isDisabled ? 0.4 : 1.0,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    SizedBox(
+                      height: 38,
+                      child: Align(
+                        alignment: Alignment.centerLeft,
                         child: ShadSwitch(
                           value: effectiveOfflined,
-                          onChanged: isDownloading ? null : (value) => _handleToggle(value),
+                          onChanged: isDisabled ? null : (value) => _handleToggle(value),
                         ),
                       ),
                     ),
-                  ),
                 ],
               ),
               const SizedBox(height: 16),
@@ -650,6 +673,7 @@ class _AlbumOfflineBentoCardState extends ConsumerState<_AlbumOfflineBentoCard> 
                 overflow: TextOverflow.ellipsis,
               ),
             ],
+          ),
           ),
         ),
       ),

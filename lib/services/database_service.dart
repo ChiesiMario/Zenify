@@ -5,6 +5,9 @@ import 'package:zenify/models/server.dart';
 import 'package:zenify/models/album.dart';
 import 'package:zenify/models/artist.dart';
 import 'package:zenify/models/downloaded_track.dart';
+import 'package:zenify/models/favorite_item.dart';
+import 'package:zenify/models/playlist_cache.dart';
+import 'package:zenify/models/album_detail_cache.dart';
 
 class DatabaseService {
   late Future<Isar> db;
@@ -18,7 +21,7 @@ class DatabaseService {
       await PathService.ensureInitialized();
       final dir = await PathService.getSupportDir();
       return await Isar.open(
-        [ServerSchema, AlbumSchema, ArtistSchema, DownloadedTrackSchema],
+        [ServerSchema, AlbumSchema, ArtistSchema, DownloadedTrackSchema, FavoriteItemSchema, PlaylistCacheSchema, AlbumDetailCacheSchema],
         directory: dir.path,
         inspector: true,
       );
@@ -136,6 +139,75 @@ class DatabaseService {
     final isar = await db;
     await isar.writeTxn(() async {
       await isar.downloadedTracks.delete(id);
+    });
+  }
+
+  /// Get album detail cache
+  Future<AlbumDetailCache?> getAlbumDetail(int serverId, String albumId) async {
+    final isar = await db;
+    return await isar.albumDetailCaches
+        .filter()
+        .serverIdEqualTo(serverId)
+        .and()
+        .albumIdEqualTo(albumId)
+        .findFirst();
+  }
+
+  /// Save album detail cache
+  Future<void> saveAlbumDetail(AlbumDetailCache cache) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      await isar.albumDetailCaches.put(cache);
+    });
+  }
+
+  /// Get all favorites for a server
+  Future<List<FavoriteItem>> getFavorites(int serverId) async {
+    final isar = await db;
+    return await isar.favoriteItems.filter().serverIdEqualTo(serverId).findAll();
+  }
+
+  /// Save favorites
+  Future<void> saveFavorites(List<FavoriteItem> items) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      await isar.favoriteItems.putAll(items);
+    });
+  }
+  
+  /// Clear favorites for a server
+  Future<void> clearFavorites(int serverId) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      await isar.favoriteItems.filter().serverIdEqualTo(serverId).deleteAll();
+    });
+  }
+
+  /// Get all playlists for a server
+  Future<List<PlaylistCache>> getPlaylists(int serverId) async {
+    final isar = await db;
+    return await isar.playlistCaches.filter().serverIdEqualTo(serverId).findAll();
+  }
+  
+  /// Get single playlist by ID
+  Future<PlaylistCache?> getPlaylist(int serverId, String playlistId) async {
+    final isar = await db;
+    return await isar.playlistCaches.filter().serverIdEqualTo(serverId).and().playlistIdEqualTo(playlistId).findFirst();
+  }
+
+  /// Save playlists
+  Future<void> savePlaylists(List<PlaylistCache> items) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      await isar.playlistCaches.putAll(items);
+    });
+  }
+  
+  /// Clear playlists for a server
+  Future<void> clearPlaylists(int serverId) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      await isar.playlistCaches.filter().serverIdEqualTo(serverId).deleteAll();
     });
   }
 

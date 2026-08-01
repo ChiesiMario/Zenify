@@ -136,12 +136,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildNavItem(int index, IconData icon, String label, ShadColorScheme colorScheme) {
+  Widget _buildNavItem(int index, IconData icon, String label, ShadColorScheme colorScheme, {bool isDisabled = false}) {
     final isSelected = _currentIndex == index;
     
     return Expanded(
       child: _NavItemButton(
         isSelected: isSelected,
+        isDisabled: isDisabled,
         icon: icon,
         label: label,
         colorScheme: colorScheme,
@@ -434,7 +435,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           _buildNavItem(0, LucideIcons.disc, '專輯', colorScheme),
-                          _buildNavItem(1, LucideIcons.users, '藝術家', colorScheme),
+                          _buildNavItem(1, LucideIcons.users, '藝術家', colorScheme, isDisabled: networkState.isOffline),
                           _buildNavItem(2, LucideIcons.heart, '最愛', colorScheme),
                         ],
                       ),
@@ -870,6 +871,7 @@ class _NavItemButton extends StatefulWidget {
   final String label;
   final ShadColorScheme colorScheme;
   final VoidCallback onTap;
+  final bool isDisabled;
 
   const _NavItemButton({
     required this.isSelected,
@@ -877,6 +879,7 @@ class _NavItemButton extends StatefulWidget {
     required this.label,
     required this.colorScheme,
     required this.onTap,
+    this.isDisabled = false,
   });
 
   @override
@@ -895,19 +898,27 @@ class _NavItemButtonState extends State<_NavItemButton> {
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
-      cursor: SystemMouseCursors.click,
+      cursor: widget.isDisabled ? SystemMouseCursors.basic : SystemMouseCursors.click,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTapDown: (_) => setState(() => _isPressed = true),
+        onTapDown: (_) {
+          if (!widget.isDisabled) setState(() => _isPressed = true);
+        },
         onTapUp: (_) {
+          if (widget.isDisabled) {
+            ZenifyToast.showError(context, '服務器已離線');
+            return;
+          }
           setState(() => _isPressed = false);
           widget.onTap();
         },
         onTapCancel: () => setState(() => _isPressed = false),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOutCubic,
-          transform: Matrix4.translationValues(
+        child: Opacity(
+          opacity: widget.isDisabled ? 0.4 : 1.0,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            transform: Matrix4.translationValues(
             0,
             _isPressed ? 0.5 : (_isHovered ? -1.5 : 0.0),
             0,
@@ -936,6 +947,7 @@ class _NavItemButtonState extends State<_NavItemButton> {
               ),
             ),
           ),
+        ),
         ),
       ),
     );

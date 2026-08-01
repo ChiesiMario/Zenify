@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/components/local_cover_image.dart';
+import 'package:zenify/components/zenify_toast.dart';
 
 class AlbumCard extends StatefulWidget {
   final String title;
@@ -8,11 +9,14 @@ class AlbumCard extends StatefulWidget {
   final String? coverArtId;
   final String? fallbackCoverUrl;
   final int serverId;
+  final String? yearText;
+  final bool isOfflineAlbum;
   final VoidCallback onTap;
   final VoidCallback? onPlayTap;
   final VoidCallback? onMoreTap;
   final VoidCallback? onArtistTap;
   final double padding;
+  final bool isDisabled;
 
   const AlbumCard({
     super.key,
@@ -22,10 +26,13 @@ class AlbumCard extends StatefulWidget {
     required this.fallbackCoverUrl,
     required this.serverId,
     required this.onTap,
+    this.yearText,
+    this.isOfflineAlbum = false,
     this.onPlayTap,
     this.onMoreTap,
     this.onArtistTap,
     this.padding = 10.0,
+    this.isDisabled = false,
   });
 
   @override
@@ -42,14 +49,20 @@ class _AlbumCardState extends State<AlbumCard> {
     final colorScheme = theme.colorScheme;
 
     return MouseRegion(
-      cursor: SystemMouseCursors.click,
+      cursor: widget.isDisabled ? SystemMouseCursors.basic : SystemMouseCursors.click,
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: GestureDetector(
-        onTap: widget.onTap,
+        onTap: widget.isDisabled ? () {
+          ZenifyToast.showError(context, '服務器已離線');
+        } : widget.onTap,
         behavior: HitTestBehavior.opaque,
-        child: Container(
-          padding: EdgeInsets.all(widget.padding),
+        child: Opacity(
+          opacity: widget.isDisabled ? 0.4 : 1.0,
+          child: AbsorbPointer(
+            absorbing: widget.isDisabled,
+            child: Container(
+              padding: EdgeInsets.all(widget.padding),
           decoration: const BoxDecoration(
             color: Colors.transparent,
           ),
@@ -121,6 +134,59 @@ class _AlbumCardState extends State<AlbumCard> {
                                 Container(
                                   color: Colors.black.withValues(alpha: 0.50),
                                 ),
+                                  // Top Left Year Label
+                                  if (widget.yearText != null && widget.yearText!.isNotEmpty)
+                                    Positioned(
+                                      left: 10,
+                                      top: 10,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(12),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(alpha: 0.2),
+                                              blurRadius: 6,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Text(
+                                          widget.yearText!,
+                                          style: const TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  // Top Right Offline Icon
+                                  if (widget.isOfflineAlbum)
+                                    Positioned(
+                                      right: 10,
+                                      top: 10,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(alpha: 0.2),
+                                              blurRadius: 6,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        child: const Icon(
+                                          LucideIcons.checkCircle2,
+                                          color: Colors.black,
+                                          size: 14,
+                                        ),
+                                      ),
+                                    ),
                                 // Bottom Left Play Button
                                 Positioned(
                                   left: 10,
@@ -189,6 +255,8 @@ class _AlbumCardState extends State<AlbumCard> {
               ),
             ],
           ),
+        ),
+        ),
         ),
       ),
     );

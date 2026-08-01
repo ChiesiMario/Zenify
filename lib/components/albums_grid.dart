@@ -5,6 +5,7 @@ import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/audio_provider.dart';
 import 'package:zenify/screens/album_detail_screen.dart';
 import 'package:zenify/screens/artist_detail_screen.dart';
+import 'package:zenify/providers/download_provider.dart';
 
 class AlbumsGrid extends ConsumerWidget {
   final List<dynamic> albums;
@@ -13,6 +14,7 @@ class AlbumsGrid extends ConsumerWidget {
   final EdgeInsetsGeometry padding;
   final bool isHome;
   final bool showYearInsteadOfArtist;
+  final bool hideOfflineIcon;
 
   const AlbumsGrid({
     super.key,
@@ -22,12 +24,21 @@ class AlbumsGrid extends ConsumerWidget {
     this.padding = EdgeInsets.zero,
     this.isHome = false,
     this.showYearInsteadOfArtist = false,
+    this.hideOfflineIcon = false,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final server = ref.watch(activeServerProvider).value;
     final api = ref.watch(subsonicApiProvider);
+    final networkState = ref.watch(networkProvider);
+    final downloadedTracksAsync = ref.watch(downloadedTracksProvider);
+    final downloadedTracks = downloadedTracksAsync.valueOrNull ?? [];
+    final offlineAlbumIds = downloadedTracks
+        .where((t) => t.isManualDownload && t.isComplete)
+        .map((t) => t.albumId)
+        .whereType<String>()
+        .toSet();
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -118,6 +129,8 @@ class AlbumsGrid extends ConsumerWidget {
             final fallbackUrl = api != null && albumCoverId != null 
                 ? api.getCoverArtUrl(albumCoverId, size: 250) 
                 : null;
+            final isOffline = offlineAlbumIds.contains(album['id']?.toString());
+            final isDisabled = networkState.isOffline && !isOffline;
             
             return AlbumCard(
               title: title,
@@ -125,7 +138,10 @@ class AlbumsGrid extends ConsumerWidget {
               coverArtId: albumCoverId,
               fallbackCoverUrl: fallbackUrl,
               serverId: server?.id ?? 0,
+              yearText: album['year']?.toString(),
+              isOfflineAlbum: hideOfflineIcon ? false : isOffline,
               padding: 0,
+              isDisabled: isDisabled,
               onTap: () {
                 Navigator.push(
                   context,

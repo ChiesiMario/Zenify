@@ -59,10 +59,10 @@ class MiniPlayer extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(4),
                   ),
                   clipBehavior: Clip.antiAlias,
-                  child: coverUrl == null
+                  child: (currentSong['albumId'] == null && currentSong['coverArt'] == null)
                       ? Icon(LucideIcons.music, color: colorScheme.mutedForeground)
                       : LocalCoverImage(
-                          id: currentSong['albumId']?.toString() ?? currentSong['coverArt'],
+                          id: currentSong['albumId']?.toString() ?? currentSong['coverArt'].toString(),
                           serverId: server?.id ?? 0,
                           fallbackUrl: coverUrl,
                         ),

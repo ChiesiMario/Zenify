@@ -174,10 +174,10 @@ class FullPlayerScreen extends ConsumerWidget {
                                           child: Stack(
                                             fit: StackFit.expand,
                                             children: [
-                                              coverUrl == null 
+                                              (currentSong['albumId'] == null && currentSong['coverArt'] == null) 
                                                   ? Center(child: Icon(LucideIcons.music, size: 80, color: colorScheme.mutedForeground))
                                                   : LocalCoverImage(
-                                                      id: currentSong['albumId']?.toString() ?? currentSong['coverArt'],
+                                                      id: currentSong['albumId']?.toString() ?? currentSong['coverArt'].toString(),
                                                       serverId: server?.id ?? 0,
                                                       fallbackUrl: coverUrl,
                                                       isThumb: false,

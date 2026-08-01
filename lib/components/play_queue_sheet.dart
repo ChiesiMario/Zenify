@@ -170,7 +170,7 @@ class _PlayQueueSheetState extends ConsumerState<PlayQueueSheet> {
                   final song = queue[index];
                   final isCurrent = index == currentIndex;
                   final duration = song['duration'] != null ? _formatDuration(song['duration']) : '--:--';
-                  final albumCoverId = song['coverArt'] ?? song['albumId'];
+                  final albumCoverId = song['albumId']?.toString() ?? song['coverArt']?.toString();
                   final fallbackUrl = api != null && albumCoverId != null
                       ? api.getCoverArtUrl(albumCoverId, size: 250)
                       : null;

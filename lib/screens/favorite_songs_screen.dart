@@ -328,6 +328,9 @@ class _FavoriteHeroBannerState extends ConsumerState<_FavoriteHeroBanner> {
       return p != null && p > 0.0 && p < 1.0;
     });
 
+    final networkState = ref.watch(networkProvider);
+    final isOffline = networkState.isOffline;
+
     final effectiveOfflined = _optimisticState ?? isAllOfflined;
 
     final String statusStr = _optimisticState == true
@@ -354,6 +357,7 @@ class _FavoriteHeroBannerState extends ConsumerState<_FavoriteHeroBanner> {
           child: _OfflineBentoCard(
             effectiveOfflined: effectiveOfflined,
             isDownloading: isDownloading,
+            isOffline: isOffline,
             statusStr: statusStr,
             songCount: widget.songs.length,
             onToggle: _handleToggle,
@@ -367,6 +371,7 @@ class _FavoriteHeroBannerState extends ConsumerState<_FavoriteHeroBanner> {
 class _OfflineBentoCard extends StatefulWidget {
   final bool effectiveOfflined;
   final bool isDownloading;
+  final bool isOffline;
   final String statusStr;
   final int songCount;
   final Function(bool) onToggle;
@@ -374,6 +379,7 @@ class _OfflineBentoCard extends StatefulWidget {
   const _OfflineBentoCard({
     required this.effectiveOfflined,
     required this.isDownloading,
+    required this.isOffline,
     required this.statusStr,
     required this.songCount,
     required this.onToggle,
@@ -391,12 +397,14 @@ class _OfflineBentoCardState extends State<_OfflineBentoCard> {
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
 
+    final isDisabled = widget.isDownloading || widget.isOffline;
+
     return MouseRegion(
-      cursor: widget.isDownloading ? SystemMouseCursors.basic : SystemMouseCursors.click,
+      cursor: isDisabled ? SystemMouseCursors.basic : SystemMouseCursors.click,
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: GestureDetector(
-        onTap: widget.isDownloading ? null : () => widget.onToggle(!widget.effectiveOfflined),
+        onTap: isDisabled ? null : () => widget.onToggle(!widget.effectiveOfflined),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           curve: Curves.easeOut,
@@ -411,22 +419,21 @@ class _OfflineBentoCardState extends State<_OfflineBentoCard> {
               width: 1.0,
             ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                height: 38,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Opacity(
-                    opacity: widget.isDownloading ? 0.4 : 1.0,
+          child: Opacity(
+            opacity: isDisabled ? 0.4 : 1.0,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  height: 38,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
                     child: ShadSwitch(
                       value: widget.effectiveOfflined,
-                      onChanged: widget.isDownloading ? null : widget.onToggle,
+                      onChanged: isDisabled ? null : widget.onToggle,
                     ),
                   ),
                 ),
-              ),
               const SizedBox(height: 16),
               Row(
                 children: [
@@ -473,6 +480,7 @@ class _OfflineBentoCardState extends State<_OfflineBentoCard> {
                 overflow: TextOverflow.ellipsis,
               ),
             ],
+          ),
           ),
         ),
       ),
