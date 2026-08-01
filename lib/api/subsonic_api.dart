@@ -67,7 +67,7 @@ class SubsonicApi {
   Future<bool> ping() async {
     try {
       final uri = _buildUri('ping');
-      final response = await http.get(uri);
+      final response = await http.get(uri).timeout(const Duration(seconds: 5));
       
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);

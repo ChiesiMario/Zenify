@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zenify/providers/app_providers.dart';
+import 'package:zenify/providers/theme_provider.dart';
 
 class NetworkState {
   final bool isOffline;
@@ -11,10 +12,17 @@ class NetworkNotifier extends StateNotifier<NetworkState> {
   final Ref _ref;
   Timer? _timer;
   bool _isChecking = false;
+  static const _offlineKey = 'is_offline_mode';
 
-  NetworkNotifier(this._ref) : super(NetworkState()) {
+  NetworkNotifier(Ref ref) : _ref = ref, super(NetworkState(
+    isOffline: ref.read(sharedPreferencesProvider).getBool(_offlineKey) ?? false
+  )) {
     _startTimer();
     checkNetwork(); // 初始檢測
+  }
+
+  Future<void> _saveOfflineState(bool isOffline) async {
+    await _ref.read(sharedPreferencesProvider).setBool(_offlineKey, isOffline);
   }
 
   void _startTimer() {
@@ -53,11 +61,32 @@ class NetworkNotifier extends StateNotifier<NetworkState> {
     if (mounted) {
       if (success && state.isOffline) {
         state = NetworkState(isOffline: false);
+        await _saveOfflineState(false);
       } else if (!success && !state.isOffline) {
         state = NetworkState(isOffline: true);
+        await _saveOfflineState(true);
       }
     }
     _isChecking = false;
+  }
+
+  Future<bool> testConnectionManual() async {
+    final api = _ref.read(subsonicApiProvider);
+    if (api == null) return false;
+    
+    try {
+      final result = await api.ping();
+      if (result) {
+        if (mounted && state.isOffline) {
+          state = NetworkState(isOffline: false);
+          await _saveOfflineState(false);
+        }
+        return true;
+      }
+    } catch (e) {
+      // 忽略錯誤
+    }
+    return false;
   }
 
   @override

@@ -13,6 +13,7 @@ import 'package:zenify/screens/full_player_screen.dart';
 import 'package:zenify/components/local_cover_image.dart';
 import 'package:zenify/screens/album_detail_screen.dart';
 import 'package:zenify/screens/artist_detail_screen.dart';
+import 'package:zenify/components/zenify_toast.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:zenify/services/sync_service.dart';
@@ -64,6 +65,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   ];
 
   String _currentSubTitle = '';
+  bool _isTestingConnection = false;
 
   bool _shouldShowSortButton() {
     if (_currentIndex == 0) {
@@ -258,15 +260,55 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       )
                     : Container(
                         key: const ValueKey('title'),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text('Zenify.', style: TextStyle(fontWeight: FontWeight.w900, color: colorScheme.foreground)),
-                            if (networkState.isOffline) ...[
-                              const SizedBox(width: 8),
-                              Text('已離線。', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: colorScheme.destructive)),
-                            ],
-                          ],
+                        child: MouseRegion(
+                          cursor: networkState.isOffline && !_isTestingConnection 
+                              ? SystemMouseCursors.click 
+                              : SystemMouseCursors.basic,
+                          child: GestureDetector(
+                            onTap: networkState.isOffline && !_isTestingConnection ? () async {
+                              setState(() {
+                                _isTestingConnection = true;
+                              });
+                              
+                              final success = await ref.read(networkProvider.notifier).testConnectionManual();
+                              
+                              if (mounted) {
+                                setState(() {
+                                  _isTestingConnection = false;
+                                });
+                                if (!success) {
+                                  ZenifyToast.showError(context, '連線測試失敗，伺服器仍處於離線狀態');
+                                } else {
+                                  ZenifyToast.showSuccess(context, '連線成功！已恢復為正常模式');
+                                }
+                              }
+                            } : null,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (_isTestingConnection) ...[
+                                  SizedBox(
+                                    width: 12,
+                                    height: 12,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: colorScheme.foreground,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                ],
+                                Text(
+                                  networkState.isOffline 
+                                      ? (_isTestingConnection ? '連線測試中...' : 'Offline.') 
+                                      : 'Zenify.',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w900,
+                                    color: colorScheme.foreground,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
               ),
