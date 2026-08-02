@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:zenify/models/downloaded_track.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/download_provider.dart';
@@ -466,23 +467,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                       child: Row(
                         children: [
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: colorScheme.foreground,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Center(
-                              child: Text(
-                                'Z',
-                                style: TextStyle(
-                                  color: colorScheme.background,
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: -1,
-                                ),
-                              ),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.asset(
+                              'assets/icon/app_icon.png',
+                              width: 44,
+                              height: 44,
+                              fit: BoxFit.cover,
                             ),
                           ),
                           const SizedBox(width: 16),
@@ -525,13 +516,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '極簡現代黑白風 Subsonic 音樂播放器',
+                                                  '極簡現代黑白風 Subsonic 音樂播放器',
                                   style: TextStyle(
                                     color: colorScheme.mutedForeground,
                                     fontSize: 13,
                                     fontWeight: FontWeight.w400,
                                   ),
                                 ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          ShadButton.outline(
+                            onPressed: () async {
+                              final url = Uri.parse('https://github.com/ChiesiMario/Zenify');
+                              if (await canLaunchUrl(url)) {
+                                await launchUrl(url);
+                              }
+                            },
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(LucideIcons.code, size: 16, color: colorScheme.foreground),
+                                const SizedBox(width: 6),
+                                const Text('GitHub'),
                               ],
                             ),
                           ),
