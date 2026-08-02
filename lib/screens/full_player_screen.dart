@@ -8,6 +8,10 @@ import 'package:zenify/components/zenify_toast.dart';
 import 'package:zenify/components/play_queue_sheet.dart';
 import 'package:zenify/screens/album_detail_screen.dart';
 import 'package:zenify/screens/artist_detail_screen.dart';
+import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'package:file_selector/file_selector.dart';
+import 'package:zenify/api/subsonic_api.dart';
 
 class FullPlayerScreen extends ConsumerWidget {
   const FullPlayerScreen({super.key});
@@ -92,7 +96,7 @@ class FullPlayerScreen extends ConsumerWidget {
                         _TopUtilityButton(
                           icon: LucideIcons.info,
                           tooltip: '歌曲資訊',
-                          onPressed: () => _showSongInfoDialog(context, currentSong, colorScheme),
+                          onPressed: () => _showSongInfoDialog(context, currentSong, colorScheme, api),
                         ),
                         _TopUtilityButton(
                           icon: isFavorite ? Icons.favorite : LucideIcons.heart,
@@ -615,12 +619,11 @@ class _TopUtilityButtonState extends State<_TopUtilityButton> {
   }
 }
 
-void _showSongInfoDialog(BuildContext context, Map<String, dynamic> song, ShadColorScheme colorScheme) {
+void _showSongInfoDialog(BuildContext context, Map<String, dynamic> song, ShadColorScheme colorScheme, SubsonicApi? api) {
   final title = song['title'] ?? '未知歌曲';
   final artist = song['artist'] ?? '未知藝術家';
   final album = song['album'] ?? '未知專輯';
   final year = song['year']?.toString() ?? '未知';
-  final genre = song['genre']?.toString() ?? '未知';
   final bitRate = song['bitRate'] != null ? '${song['bitRate']} kbps' : null;
   final suffix = song['suffix']?.toString().toUpperCase() ?? song['contentType']?.toString().split('/').last.toUpperCase();
   final durationSec = song['duration'] as int?;
@@ -630,58 +633,116 @@ void _showSongInfoDialog(BuildContext context, Map<String, dynamic> song, ShadCo
   showDialog(
     context: context,
     builder: (context) {
-      return Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          width: 340,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: colorScheme.background,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '歌曲詳細資訊',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.foreground,
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(LucideIcons.x, size: 18, color: colorScheme.mutedForeground),
-                    onPressed: () => Navigator.pop(context),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
+      bool isDownloading = false;
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return Dialog(
+            backgroundColor: Colors.transparent,
+            child: Container(
+              width: 340,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: colorScheme.background,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              _buildInfoRow('標題', title, colorScheme),
-              _buildInfoRow('藝術家', artist, colorScheme),
-              _buildInfoRow('專輯', album, colorScheme),
-              _buildInfoRow('年份', year, colorScheme),
-              _buildInfoRow('曲風', genre, colorScheme),
-              if (durationStr != null) _buildInfoRow('時長', durationStr, colorScheme),
-              if (suffix != null) _buildInfoRow('格式', suffix, colorScheme),
-              if (bitRate != null) _buildInfoRow('位元率', bitRate, colorScheme),
-              if (fileSizeMb != null) _buildInfoRow('檔案大小', fileSizeMb, colorScheme),
-            ],
-          ),
-        ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '歌曲詳細資訊',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.foreground,
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(LucideIcons.x, size: 18, color: colorScheme.mutedForeground),
+                        onPressed: () => Navigator.pop(context),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _buildInfoRow('標題', title, colorScheme),
+                  _buildInfoRow('藝術家', artist, colorScheme),
+                  _buildInfoRow('專輯', album, colorScheme),
+                  _buildInfoRow('年份', year, colorScheme),
+                  if (durationStr != null) _buildInfoRow('時長', durationStr, colorScheme),
+                  if (suffix != null) _buildInfoRow('格式', suffix, colorScheme),
+                  if (bitRate != null) _buildInfoRow('位元率', bitRate, colorScheme),
+                  if (fileSizeMb != null) _buildInfoRow('檔案大小', fileSizeMb, colorScheme),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ShadButton(
+                      onPressed: (isDownloading || api == null) ? null : () async {
+                        final songId = song['id']?.toString();
+                        if (songId == null) return;
+                        
+                        try {
+                          final fileExtension = song['suffix']?.toString().toLowerCase() ?? 'mp3';
+                          final suggestedName = '${artist.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')} - ${title.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')}.$fileExtension';
+                          
+                          final location = await getSaveLocation(
+                            suggestedName: suggestedName,
+                          );
+                          
+                          if (location == null) return; // User canceled
+                          
+                          setState(() => isDownloading = true);
+                          ZenifyToast.showSuccess(context, '開始下載...');
+                          
+                          final url = api.getStreamUrl(songId);
+                          final response = await http.get(Uri.parse(url));
+                          
+                          if (response.statusCode == 200) {
+                            final file = File(location.path);
+                            await file.writeAsBytes(response.bodyBytes);
+                            if (context.mounted) {
+                              ZenifyToast.showSuccess(context, '下載完成！');
+                            }
+                          } else {
+                            if (context.mounted) {
+                              ZenifyToast.showError(context, '下載失敗：HTTP ${response.statusCode}');
+                            }
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ZenifyToast.showError(context, '下載時發生錯誤：$e');
+                          }
+                        } finally {
+                          if (context.mounted) {
+                            setState(() => isDownloading = false);
+                          }
+                        }
+                      },
+                      child: isDownloading 
+                          ? const SizedBox(
+                              width: 16, 
+                              height: 16, 
+                              child: CircularProgressIndicator(strokeWidth: 2)
+                            )
+                          : const Text('匯出音樂檔案'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
       );
     },
   );
