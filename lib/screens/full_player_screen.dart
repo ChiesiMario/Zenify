@@ -96,7 +96,7 @@ class FullPlayerScreen extends ConsumerWidget {
                         _TopUtilityButton(
                           icon: LucideIcons.info,
                           tooltip: '歌曲資訊',
-                          onPressed: () => _showSongInfoDialog(context, currentSong, colorScheme, api),
+                          onPressed: () => _showSongInfoDialog(context, currentSong, colorScheme, ref),
                         ),
                         _TopUtilityButton(
                           icon: isFavorite ? Icons.favorite : LucideIcons.heart,
@@ -619,7 +619,7 @@ class _TopUtilityButtonState extends State<_TopUtilityButton> {
   }
 }
 
-void _showSongInfoDialog(BuildContext context, Map<String, dynamic> song, ShadColorScheme colorScheme, SubsonicApi? api) {
+void _showSongInfoDialog(BuildContext context, Map<String, dynamic> song, ShadColorScheme colorScheme, WidgetRef ref) {
   final title = song['title'] ?? '未知歌曲';
   final artist = song['artist'] ?? '未知藝術家';
   final album = song['album'] ?? '未知專輯';
@@ -688,7 +688,8 @@ void _showSongInfoDialog(BuildContext context, Map<String, dynamic> song, ShadCo
                   SizedBox(
                     width: double.infinity,
                     child: ShadButton(
-                      onPressed: (isDownloading || api == null) ? null : () async {
+                      onPressed: (isDownloading) ? null : () async {
+                        final api = ref.read(subsonicApiProvider);
                         final songId = song['id']?.toString();
                         if (songId == null) return;
                         
@@ -705,6 +706,29 @@ void _showSongInfoDialog(BuildContext context, Map<String, dynamic> song, ShadCo
                           setState(() => isDownloading = true);
                           ZenifyToast.showSuccess(context, '開始下載...');
                           
+                          final db = ref.read(databaseProvider);
+                          final downloadedTrack = await db.getDownloadedTrack(songId);
+                          
+                          if (downloadedTrack != null && downloadedTrack.isComplete) {
+                            final localFile = File(downloadedTrack.localPath);
+                            if (await localFile.exists()) {
+                              // 從本機快取複製
+                              await localFile.copy(location.path);
+                              if (context.mounted) {
+                                ZenifyToast.showSuccess(context, '已從快取秒速完成匯出！');
+                              }
+                              return;
+                            }
+                          }
+                          
+                          if (api == null) {
+                            if (context.mounted) {
+                              ZenifyToast.showError(context, '無法連接伺服器，且無本機快取');
+                            }
+                            return;
+                          }
+                          
+                          // 如果沒有快取或快取不完整，回退到從網路下載
                           final url = api.getStreamUrl(songId);
                           final response = await http.get(Uri.parse(url));
                           
