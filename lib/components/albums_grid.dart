@@ -144,6 +144,18 @@ class AlbumsGrid extends ConsumerWidget {
               padding: 0,
               isDisabled: isDisabled,
               isArtistDisabled: networkState.isOffline,
+              isStarred: album['starred'] != null,
+              onStarToggle: api == null ? null : (shouldStar) async {
+                final aId = album['id'];
+                if (aId == null) return;
+                if (shouldStar) {
+                  await api.star(albumId: aId);
+                  album['starred'] = DateTime.now().toIso8601String();
+                } else {
+                  await api.unstar(albumId: aId);
+                  album.remove('starred');
+                }
+              },
               onTap: () {
                 Navigator.push(
                   context,

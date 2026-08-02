@@ -92,6 +92,8 @@ class AlbumDetailScreen extends ConsumerWidget {
                           Builder(
                             builder: (context) {
                               bool isCoverHovered = false;
+                              bool isEnlargeHovered = false;
+                              bool isStarHovered = false;
                               bool isStarred = album['starred'] != null;
                               bool isUpdatingStar = false;
                               return StatefulBuilder(
@@ -144,28 +146,21 @@ class AlbumDetailScreen extends ConsumerWidget {
                                               opacity: isCoverHovered ? 1.0 : 0.0,
                                               duration: const Duration(milliseconds: 200),
                                               child: Container(
-                                                decoration: BoxDecoration(
-                                                  gradient: LinearGradient(
-                                                    begin: Alignment.topCenter,
-                                                    end: Alignment.bottomCenter,
-                                                    colors: [
-                                                      Colors.black.withValues(alpha: 0.4),
-                                                      Colors.transparent,
-                                                      Colors.black.withValues(alpha: 0.6),
-                                                    ],
-                                                  ),
-                                                ),
+                                                color: Colors.black.withValues(alpha: 0.50),
                                               ),
                                             ),
                                             // Action Buttons on Hover
                                             if (isCoverHovered) ...[
                                               // Top Right: View Original Image
                                               Positioned(
-                                                top: 8,
-                                                right: 8,
-                                                child: IconButton(
-                                                  icon: const Icon(LucideIcons.maximize2, color: Colors.white, size: 20),
-                                                  onPressed: () {
+                                                top: 10,
+                                                right: 10,
+                                                child: MouseRegion(
+                                                  cursor: SystemMouseCursors.click,
+                                                  onEnter: (_) => setState(() => isEnlargeHovered = true),
+                                                  onExit: (_) => setState(() => isEnlargeHovered = false),
+                                                  child: GestureDetector(
+                                                    onTap: () {
                                                     showDialog(
                                                       context: context,
                                                       barrierColor: colorScheme.background,
@@ -267,57 +262,106 @@ class AlbumDetailScreen extends ConsumerWidget {
                                                       },
                                                     );
                                                   },
+                                                  child: Container(
+                                                    padding: const EdgeInsets.all(6),
+                                                    decoration: BoxDecoration(
+                                                      color: isEnlargeHovered ? Colors.black : Colors.white,
+                                                      shape: BoxShape.circle,
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: Colors.black.withValues(alpha: 0.2),
+                                                          blurRadius: 6,
+                                                          offset: const Offset(0, 2),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    child: Icon(
+                                                      LucideIcons.maximize2,
+                                                      color: isEnlargeHovered ? Colors.white : Colors.black,
+                                                      size: 16,
+                                                    ),
+                                                  ),
+                                                ),
                                                 ),
                                               ),
                                               // Bottom Right: Star/Unstar
                                               Positioned(
-                                                bottom: 8,
-                                                right: 8,
-                                                child: isUpdatingStar
-                                                  ? const Padding(
-                                                      padding: EdgeInsets.all(12.0),
-                                                      child: SizedBox(
-                                                        width: 20, height: 20,
-                                                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                                                      ),
-                                                    )
-                                                  : IconButton(
-                                                      icon: Icon(
-                                                        isStarred ? Icons.favorite : Icons.favorite_border,
-                                                        color: isStarred ? Colors.red : Colors.white,
-                                                        size: 24,
-                                                      ),
-                                                      onPressed: () async {
-                                                        if (networkState.isOffline) {
+                                                bottom: 10,
+                                                right: 10,
+                                                child: MouseRegion(
+                                                  cursor: SystemMouseCursors.click,
+                                                  onEnter: (_) {
+                                                    if (!networkState.isOffline) setState(() => isStarHovered = true);
+                                                  },
+                                                  onExit: (_) {
+                                                    if (!networkState.isOffline) setState(() => isStarHovered = false);
+                                                  },
+                                                  child: GestureDetector(
+                                                    onTap: networkState.isOffline
+                                                      ? () {
                                                           ZenifyToast.showError(context, '服務器已離線');
-                                                          return;
                                                         }
-                                                        setState(() => isUpdatingStar = true);
-                                                        try {
-                                                          final api = SubsonicApi(server!);
-                                                          final albumId = album['id']?.toString();
-                                                          if (isStarred) {
-                                                            await api.unstar(albumId: albumId);
-                                                            setState(() {
-                                                              isStarred = false;
-                                                              album.remove('starred');
-                                                            });
-                                                            if (context.mounted) ZenifyToast.showSuccess(context, '已取消收藏');
-                                                          } else {
-                                                            await api.star(albumId: albumId);
-                                                            setState(() {
-                                                              isStarred = true;
-                                                              album['starred'] = DateTime.now().toIso8601String();
-                                                            });
-                                                            if (context.mounted) ZenifyToast.showSuccess(context, '已加入收藏');
+                                                      : (isUpdatingStar ? null : () async {
+                                                          setState(() => isUpdatingStar = true);
+                                                          try {
+                                                            final api = SubsonicApi(server!);
+                                                            final albumId = album['id']?.toString();
+                                                            if (isStarred) {
+                                                              await api.unstar(albumId: albumId);
+                                                              setState(() {
+                                                                isStarred = false;
+                                                                album.remove('starred');
+                                                              });
+                                                              if (context.mounted) ZenifyToast.showSuccess(context, '已取消收藏');
+                                                            } else {
+                                                              await api.star(albumId: albumId);
+                                                              setState(() {
+                                                                isStarred = true;
+                                                                album['starred'] = DateTime.now().toIso8601String();
+                                                              });
+                                                              if (context.mounted) ZenifyToast.showSuccess(context, '已加入收藏');
+                                                            }
+                                                          } catch (e) {
+                                                            if (context.mounted) ZenifyToast.showError(context, '操作失敗：$e');
+                                                          } finally {
+                                                            if (context.mounted) setState(() => isUpdatingStar = false);
                                                           }
-                                                        } catch (e) {
-                                                          if (context.mounted) ZenifyToast.showError(context, '操作失敗：$e');
-                                                        } finally {
-                                                          if (context.mounted) setState(() => isUpdatingStar = false);
-                                                        }
-                                                      },
+                                                        }),
+                                                    child: Opacity(
+                                                      opacity: networkState.isOffline ? 0.5 : 1.0,
+                                                      child: Container(
+                                                        padding: const EdgeInsets.all(6),
+                                                        decoration: BoxDecoration(
+                                                          color: isStarHovered ? Colors.black : Colors.white,
+                                                          shape: BoxShape.circle,
+                                                          boxShadow: [
+                                                            BoxShadow(
+                                                              color: Colors.black.withValues(alpha: 0.2),
+                                                              blurRadius: 6,
+                                                              offset: const Offset(0, 2),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        child: isUpdatingStar
+                                                            ? SizedBox(
+                                                                width: 16,
+                                                                height: 16,
+                                                                child: CircularProgressIndicator(
+                                                                  strokeWidth: 2,
+                                                                  color: isStarHovered ? Colors.white : Colors.black,
+                                                                ),
+                                                              )
+                                                            : Icon(
+                                                                isStarred ? Icons.favorite : Icons.favorite_border,
+                                                                color: isStarred 
+                                                                  ? Colors.red 
+                                                                  : (isStarHovered ? Colors.white : Colors.black),
+                                                                size: 16,
+                                                              ),
+                                                      ),
                                                     ),
+                                                  ),
+                                                ),
                                               ),
                                             ],
                                           ],

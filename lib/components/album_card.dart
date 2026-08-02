@@ -19,6 +19,8 @@ class AlbumCard extends StatefulWidget {
   final double padding;
   final bool isDisabled;
   final bool isArtistDisabled;
+  final bool isStarred;
+  final Future<void> Function(bool)? onStarToggle;
 
   const AlbumCard({
     super.key,
@@ -36,6 +38,8 @@ class AlbumCard extends StatefulWidget {
     this.padding = 10.0,
     this.isDisabled = false,
     this.isArtistDisabled = false,
+    this.isStarred = false,
+    this.onStarToggle,
   });
 
   @override
@@ -45,6 +49,17 @@ class AlbumCard extends StatefulWidget {
 class _AlbumCardState extends State<AlbumCard> {
   bool _isHovered = false;
   bool _isArtistHovered = false;
+  bool _isStarHovered = false;
+  bool? _optimisticIsStarred;
+  bool _isUpdatingStar = false;
+
+  @override
+  void didUpdateWidget(covariant AlbumCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.isStarred != widget.isStarred) {
+      _optimisticIsStarred = null;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -165,28 +180,78 @@ class _AlbumCardState extends State<AlbumCard> {
                                         ),
                                       ),
                                     ),
-                                  // Top Right Offline Icon
-                                  if (widget.isOfflineAlbum)
+                                  // Top Right Star Button
+                                  if ((_isHovered || _isUpdatingStar) && widget.onStarToggle != null)
                                     Positioned(
                                       right: 10,
                                       top: 10,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(4),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          shape: BoxShape.circle,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withValues(alpha: 0.2),
-                                              blurRadius: 6,
-                                              offset: const Offset(0, 2),
+                                      child: MouseRegion(
+                                        cursor: SystemMouseCursors.click,
+                                        onEnter: (_) {
+                                          if (!widget.isArtistDisabled) setState(() => _isStarHovered = true);
+                                        },
+                                        onExit: (_) {
+                                          if (!widget.isArtistDisabled) setState(() => _isStarHovered = false);
+                                        },
+                                        child: GestureDetector(
+                                          onTap: widget.isArtistDisabled
+                                            ? () {
+                                                ZenifyToast.showError(context, '服務器已離線');
+                                              }
+                                            : (_isUpdatingStar ? null : () async {
+                                                setState(() => _isUpdatingStar = true);
+                                                try {
+                                                  final isCurrentlyStarred = _optimisticIsStarred ?? widget.isStarred;
+                                                  await widget.onStarToggle!(!isCurrentlyStarred);
+                                                  if (mounted) {
+                                                    setState(() {
+                                                      _optimisticIsStarred = !isCurrentlyStarred;
+                                                    });
+                                                    ZenifyToast.showSuccess(context, isCurrentlyStarred ? '已取消收藏' : '已加入收藏');
+                                                  }
+                                                } catch (e) {
+                                                  if (mounted) {
+                                                    ZenifyToast.showError(context, '收藏失敗：$e');
+                                                  }
+                                                } finally {
+                                                  if (mounted) {
+                                                    setState(() => _isUpdatingStar = false);
+                                                  }
+                                                }
+                                              }),
+                                          child: Opacity(
+                                            opacity: widget.isArtistDisabled ? 0.5 : 1.0,
+                                            child: Container(
+                                              padding: const EdgeInsets.all(6),
+                                              decoration: BoxDecoration(
+                                                color: _isStarHovered ? Colors.black : Colors.white,
+                                                shape: BoxShape.circle,
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black.withValues(alpha: 0.2),
+                                                    blurRadius: 6,
+                                                    offset: const Offset(0, 2),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: _isUpdatingStar
+                                                  ? SizedBox(
+                                                      width: 16,
+                                                      height: 16,
+                                                      child: CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                        color: _isStarHovered ? Colors.white : Colors.black,
+                                                      ),
+                                                    )
+                                                  : Icon(
+                                                      (_optimisticIsStarred ?? widget.isStarred) ? Icons.favorite : Icons.favorite_border,
+                                                      color: (_optimisticIsStarred ?? widget.isStarred) 
+                                                        ? Colors.red 
+                                                        : (_isStarHovered ? Colors.white : Colors.black),
+                                                      size: 16,
+                                                    ),
                                             ),
-                                          ],
-                                        ),
-                                        child: const Icon(
-                                          LucideIcons.checkCircle2,
-                                          color: Colors.black,
-                                          size: 14,
+                                          ),
                                         ),
                                       ),
                                     ),
