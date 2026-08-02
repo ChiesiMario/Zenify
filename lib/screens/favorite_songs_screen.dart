@@ -638,14 +638,6 @@ class _HoverablePlayIconButtonState extends State<_HoverablePlayIconButton> {
               decoration: BoxDecoration(
                 color: bgColor,
                 shape: BoxShape.circle,
-                boxShadow: [
-                  if (widget.isPrimary && _isHovered)
-                    BoxShadow(
-                      color: bgColor.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                ],
               ),
               child: Center(
                 child: Icon(
