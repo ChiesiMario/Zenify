@@ -10,6 +10,9 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/components/local_cover_image.dart';
 import 'package:zenify/screens/artist_detail_screen.dart';
 import 'package:zenify/components/zenify_toast.dart';
+import 'package:zenify/api/subsonic_api.dart';
+import 'package:file_selector/file_selector.dart';
+import 'package:zenify/services/image_service.dart';
 
 class AlbumDetailScreen extends ConsumerWidget {
   final String albumId;
@@ -86,49 +89,245 @@ class AlbumDetailScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           // Album Cover
-                          Container(
-                            width: 250,
-                            height: 250,
-                            decoration: BoxDecoration(
-                              color: colorScheme.muted,
-                              borderRadius: BorderRadius.circular(8),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.2),
-                                  blurRadius: 30,
-                                  offset: const Offset(0, 15),
-                                ),
-                              ],
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              clipBehavior: Clip.antiAliasWithSaveLayer,
-                              child: Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  coverUrl == null
-                                      ? Container(color: colorScheme.muted)
-                                      : LocalCoverImage(
-                                          id: album['albumId']?.toString() ?? album['parent']?.toString() ?? album['coverArt']?.toString() ?? album['id'],
-                                          serverId: server?.id ?? 0,
-                                          fallbackUrl: coverUrl,
-                                          isThumb: false,
-                                          fit: BoxFit.cover,
-                                        ),
-                                  IgnorePointer(
+                          Builder(
+                            builder: (context) {
+                              bool isCoverHovered = false;
+                              bool isStarred = album['starred'] != null;
+                              bool isUpdatingStar = false;
+                              return StatefulBuilder(
+                                builder: (context, setState) {
+                                  return MouseRegion(
+                                    onEnter: (_) => setState(() => isCoverHovered = true),
+                                    onExit: (_) => setState(() => isCoverHovered = false),
                                     child: Container(
+                                      width: 250,
+                                      height: 250,
                                       decoration: BoxDecoration(
+                                        color: colorScheme.muted,
                                         borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                          color: colorScheme.foreground.withValues(alpha: 0.08),
-                                          width: 1.0,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(alpha: 0.2),
+                                            blurRadius: 30,
+                                            offset: const Offset(0, 15),
+                                          ),
+                                        ],
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        clipBehavior: Clip.antiAliasWithSaveLayer,
+                                        child: Stack(
+                                          fit: StackFit.expand,
+                                          children: [
+                                            coverUrl == null
+                                                ? Container(color: colorScheme.muted)
+                                                : LocalCoverImage(
+                                                    id: album['albumId']?.toString() ?? album['parent']?.toString() ?? album['coverArt']?.toString() ?? album['id'],
+                                                    serverId: server?.id ?? 0,
+                                                    fallbackUrl: coverUrl,
+                                                    isThumb: false,
+                                                    fit: BoxFit.cover,
+                                                  ),
+                                            IgnorePointer(
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  borderRadius: BorderRadius.circular(8),
+                                                  border: Border.all(
+                                                    color: colorScheme.foreground.withValues(alpha: 0.08),
+                                                    width: 1.0,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            // Overlay gradient on hover
+                                            AnimatedOpacity(
+                                              opacity: isCoverHovered ? 1.0 : 0.0,
+                                              duration: const Duration(milliseconds: 200),
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  gradient: LinearGradient(
+                                                    begin: Alignment.topCenter,
+                                                    end: Alignment.bottomCenter,
+                                                    colors: [
+                                                      Colors.black.withValues(alpha: 0.4),
+                                                      Colors.transparent,
+                                                      Colors.black.withValues(alpha: 0.6),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            // Action Buttons on Hover
+                                            if (isCoverHovered) ...[
+                                              // Top Right: View Original Image
+                                              Positioned(
+                                                top: 8,
+                                                right: 8,
+                                                child: IconButton(
+                                                  icon: const Icon(LucideIcons.maximize2, color: Colors.white, size: 20),
+                                                  onPressed: () {
+                                                    showDialog(
+                                                      context: context,
+                                                      barrierColor: colorScheme.background,
+                                                      builder: (context) {
+                                                        bool isDialogHovered = false;
+                                                        return StatefulBuilder(
+                                                          builder: (context, setDialogState) {
+                                                            return GestureDetector(
+                                                              onTap: () => Navigator.pop(context),
+                                                              child: Center(
+                                                                child: MouseRegion(
+                                                                  onEnter: (_) => setDialogState(() => isDialogHovered = true),
+                                                                  onExit: (_) => setDialogState(() => isDialogHovered = false),
+                                                                  child: Stack(
+                                                                    alignment: Alignment.center,
+                                                                    children: [
+                                                                      Container(
+                                                                        constraints: BoxConstraints(
+                                                                          maxWidth: MediaQuery.of(context).size.width * 0.7,
+                                                                          maxHeight: MediaQuery.of(context).size.height * 0.8,
+                                                                        ),
+                                                                        decoration: BoxDecoration(
+                                                                          boxShadow: [
+                                                                            BoxShadow(
+                                                                              color: Colors.black.withValues(alpha: 0.3),
+                                                                              blurRadius: 40,
+                                                                              offset: const Offset(0, 20),
+                                                                            ),
+                                                                          ],
+                                                                        ),
+                                                                        child: coverUrl == null 
+                                                                          ? const SizedBox.shrink()
+                                                                          : LocalCoverImage(
+                                                                              id: album['albumId']?.toString() ?? album['parent']?.toString() ?? album['coverArt']?.toString() ?? album['id'],
+                                                                              serverId: server?.id ?? 0,
+                                                                              fallbackUrl: coverUrl,
+                                                                              isThumb: false,
+                                                                              fit: BoxFit.contain,
+                                                                            ),
+                                                                      ),
+                                                                      if (isDialogHovered)
+                                                                        Positioned.fill(
+                                                                          child: Container(color: Colors.black.withValues(alpha: 0.4)),
+                                                                        ),
+                                                                      if (isDialogHovered)
+                                                                        Positioned.fill(
+                                                                          child: LayoutBuilder(
+                                                                            builder: (context, constraints) {
+                                                                              final size = (constraints.maxWidth * 0.15).clamp(16.0, 48.0);
+                                                                              return Center(
+                                                                                child: IconButton(
+                                                                                  iconSize: size,
+                                                                                  icon: Icon(LucideIcons.download, color: Colors.white, size: size),
+                                                                                  style: IconButton.styleFrom(
+                                                                                    hoverColor: Colors.black,
+                                                                                    shape: RoundedRectangleBorder(
+                                                                                      borderRadius: BorderRadius.circular(14),
+                                                                                    ),
+                                                                                  ),
+                                                                                  onPressed: () async {
+                                                                            final coverId = album['albumId']?.toString() ?? album['parent']?.toString() ?? album['coverArt']?.toString() ?? album['id'];
+                                                                            final highResPath = ImageService().getCoverPathSync(coverId, server?.id ?? 0, isThumb: false);
+                                                                            final thumbPath = ImageService().getCoverPathSync(coverId, server?.id ?? 0, isThumb: true);
+                                                                            File sourceFile = File(highResPath);
+                                                                            if (!sourceFile.existsSync()) {
+                                                                              sourceFile = File(thumbPath);
+                                                                            }
+                                                                            if (!sourceFile.existsSync()) {
+                                                                              ZenifyToast.showError(context, '無法取得本地圖片檔案');
+                                                                              return;
+                                                                            }
+                                                                            final saveLocation = await getSaveLocation(
+                                                                              suggestedName: '${album['name'] ?? 'cover'}.png',
+                                                                              acceptedTypeGroups: [
+                                                                                const XTypeGroup(label: 'PNG Image', extensions: ['png']),
+                                                                              ],
+                                                                            );
+                                                                            if (saveLocation != null) {
+                                                                              try {
+                                                                                await sourceFile.copy(saveLocation.path);
+                                                                                if (context.mounted) ZenifyToast.showSuccess(context, '圖片已成功匯出');
+                                                                              } catch (e) {
+                                                                                if (context.mounted) ZenifyToast.showError(context, '匯出失敗：$e');
+                                                                              }
+                                                                            }
+                                                                                   }
+                                                                                 ),
+                                                                               );
+                                                                             },
+                                                                           ),
+                                                                         ),
+                                                                    ],
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            );
+                                                          },
+                                                        );
+                                                      },
+                                                    );
+                                                  },
+                                                ),
+                                              ),
+                                              // Bottom Right: Star/Unstar
+                                              Positioned(
+                                                bottom: 8,
+                                                right: 8,
+                                                child: isUpdatingStar
+                                                  ? const Padding(
+                                                      padding: EdgeInsets.all(12.0),
+                                                      child: SizedBox(
+                                                        width: 20, height: 20,
+                                                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                                      ),
+                                                    )
+                                                  : IconButton(
+                                                      icon: Icon(
+                                                        isStarred ? Icons.favorite : Icons.favorite_border,
+                                                        color: isStarred ? Colors.red : Colors.white,
+                                                        size: 24,
+                                                      ),
+                                                      onPressed: () async {
+                                                        if (networkState.isOffline) {
+                                                          ZenifyToast.showError(context, '服務器已離線');
+                                                          return;
+                                                        }
+                                                        setState(() => isUpdatingStar = true);
+                                                        try {
+                                                          final api = SubsonicApi(server!);
+                                                          final albumId = album['id']?.toString();
+                                                          if (isStarred) {
+                                                            await api.unstar(albumId: albumId);
+                                                            setState(() {
+                                                              isStarred = false;
+                                                              album.remove('starred');
+                                                            });
+                                                            if (context.mounted) ZenifyToast.showSuccess(context, '已取消收藏');
+                                                          } else {
+                                                            await api.star(albumId: albumId);
+                                                            setState(() {
+                                                              isStarred = true;
+                                                              album['starred'] = DateTime.now().toIso8601String();
+                                                            });
+                                                            if (context.mounted) ZenifyToast.showSuccess(context, '已加入收藏');
+                                                          }
+                                                        } catch (e) {
+                                                          if (context.mounted) ZenifyToast.showError(context, '操作失敗：$e');
+                                                        } finally {
+                                                          if (context.mounted) setState(() => isUpdatingStar = false);
+                                                        }
+                                                      },
+                                                    ),
+                                              ),
+                                            ],
+                                          ],
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                                  );
+                                },
+                              );
+                            },
                           ),
                           const SizedBox(height: 16),
                           // Typography

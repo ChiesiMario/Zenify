@@ -131,22 +131,22 @@ class _ZenifyAppState extends ConsumerState<ZenifyApp> with WindowListener {
       themeMode: themeMode,
       materialThemeBuilder: (context, theme) => theme.copyWith(
         textTheme: theme.textTheme.apply(
-          fontFamily: 'Nunito',
-          fontFamilyFallback: const ['NotoSansTC', 'NotoSansSC', 'Microsoft JhengHei UI', 'Microsoft YaHei UI', 'Segoe UI', 'sans-serif'],
+          fontFamily: 'NotoSansTC',
+          fontFamilyFallback: const ['Nunito', 'NotoSansSC', 'Microsoft JhengHei UI', 'Microsoft YaHei UI', 'Segoe UI', 'sans-serif'],
         ),
       ),
       theme: ShadThemeData(
         brightness: Brightness.light,
         colorScheme: const ShadZincColorScheme.light(),
         textTheme: ShadTextTheme(
-          family: 'Nunito',
+          family: 'NotoSansTC',
         ),
       ),
       darkTheme: ShadThemeData(
         brightness: Brightness.dark,
         colorScheme: const ShadZincColorScheme.dark(),
         textTheme: ShadTextTheme(
-          family: 'Nunito',
+          family: 'NotoSansTC',
         ),
       ),
       builder: (context, child) {
@@ -158,8 +158,8 @@ class _ZenifyAppState extends ConsumerState<ZenifyApp> with WindowListener {
           textDirection: TextDirection.ltr,
           child: DefaultTextStyle(
             style: const TextStyle(
-              fontFamily: 'Nunito',
-              fontFamilyFallback: ['NotoSansTC', 'NotoSansSC', 'Microsoft JhengHei UI', 'Microsoft YaHei UI', 'Segoe UI', 'sans-serif'],
+              fontFamily: 'NotoSansTC',
+              fontFamilyFallback: ['Nunito', 'NotoSansSC', 'Microsoft JhengHei UI', 'Microsoft YaHei UI', 'Segoe UI', 'sans-serif'],
             ),
             child: Stack(
               children: [

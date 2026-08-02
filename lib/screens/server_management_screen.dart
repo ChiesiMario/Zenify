@@ -7,6 +7,7 @@ import 'package:zenify/components/zenify_input.dart';
 import 'package:zenify/models/server.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/api/subsonic_api.dart';
+import 'package:zenify/components/zenify_toast.dart';
 
 class ServerManagementScreen extends ConsumerStatefulWidget {
   const ServerManagementScreen({super.key});
@@ -419,21 +420,11 @@ class _ServerSettingTileState extends State<_ServerSettingTile> {
       if (isAvailable) {
         widget.onTap();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('無法連線至該伺服器，請檢查網路或伺服器設定。'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        ZenifyToast.showError(context, '無法連線至該伺服器，請檢查網路或伺服器設定。');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('伺服器連線發生錯誤。'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        ZenifyToast.showError(context, '伺服器連線發生錯誤。');
       }
     } finally {
       if (mounted) {
