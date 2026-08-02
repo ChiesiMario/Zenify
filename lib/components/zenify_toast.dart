@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 class ZenifyToast {
+  static OverlayEntry? _currentEntry;
+
   /// 顯示共用的玻璃質感 Toast
   static void show({
     required BuildContext context,
@@ -12,6 +14,13 @@ class ZenifyToast {
   }) {
     final colorScheme = ShadTheme.of(context).colorScheme;
     final overlayState = Overlay.of(context, rootOverlay: true);
+    
+    // 如果畫面上已經有 Toast，立即將它移除
+    if (_currentEntry?.mounted ?? false) {
+      _currentEntry?.remove();
+    }
+    _currentEntry = null;
+
     late OverlayEntry overlayEntry;
 
     overlayEntry = OverlayEntry(
@@ -21,12 +30,18 @@ class ZenifyToast {
           isError: isError,
           colorScheme: colorScheme,
           onDismiss: () {
-            overlayEntry.remove();
+            if (_currentEntry == overlayEntry) {
+              if (overlayEntry.mounted) {
+                overlayEntry.remove();
+              }
+              _currentEntry = null;
+            }
           },
         );
       },
     );
 
+    _currentEntry = overlayEntry;
     overlayState.insert(overlayEntry);
   }
 

@@ -715,7 +715,7 @@ void _showSongInfoDialog(BuildContext context, Map<String, dynamic> song, ShadCo
                               // 從本機快取複製
                               await localFile.copy(location.path);
                               if (context.mounted) {
-                                ZenifyToast.showSuccess(context, '已從快取秒速完成匯出！');
+                                ZenifyToast.showSuccess(context, '下載完成！');
                               }
                               return;
                             }
@@ -754,10 +754,10 @@ void _showSongInfoDialog(BuildContext context, Map<String, dynamic> song, ShadCo
                         }
                       },
                       child: isDownloading 
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 16, 
                               height: 16, 
-                              child: CircularProgressIndicator(strokeWidth: 2)
+                              child: CircularProgressIndicator(strokeWidth: 2, color: colorScheme.primaryForeground)
                             )
                           : const Text('匯出音樂檔案'),
                     ),
