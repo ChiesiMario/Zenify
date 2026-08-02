@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zenify/components/album_card.dart';
+import 'package:zenify/components/zenify_toast.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/audio_provider.dart';
 import 'package:zenify/screens/album_detail_screen.dart';
@@ -154,16 +155,20 @@ class AlbumsGrid extends ConsumerWidget {
               },
               onPlayTap: () async {
                 final albumId = album['id'];
-                if (albumId != null && api != null) {
-                  final albumData = await api.getAlbum(albumId.toString());
-                  if (albumData != null) {
-                    var songs = albumData['song'];
-                    if (songs != null) {
-                      if (songs is! List) songs = [songs];
-                      if (songs.isNotEmpty) {
-                        ref.read(audioProvider.notifier).playQueue(List<dynamic>.from(songs), 0);
+                if (albumId != null) {
+                  try {
+                    final albumData = await ref.read(albumDetailProvider(albumId.toString()).future);
+                    if (albumData != null) {
+                      var songs = albumData['song'];
+                      if (songs != null) {
+                        if (songs is! List) songs = [songs];
+                        if (songs.isNotEmpty) {
+                          ref.read(audioProvider.notifier).playQueue(List<dynamic>.from(songs), 0);
+                        }
                       }
                     }
+                  } catch (e) {
+                    print('Error playing album from grid: $e');
                   }
                 }
               },
