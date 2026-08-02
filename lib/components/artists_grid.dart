@@ -22,6 +22,7 @@ class ArtistsGrid extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final server = ref.watch(activeServerProvider).value;
     final api = ref.watch(subsonicApiProvider);
+    final networkState = ref.watch(networkProvider);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -98,6 +99,7 @@ class ArtistsGrid extends ConsumerWidget {
               coverArtId: coverArtId,
               fallbackCoverUrl: fallbackUrl,
               serverId: server?.id ?? 0,
+              isDisabled: networkState.isOffline,
               onTap: () {
                 Navigator.push(
                   context,

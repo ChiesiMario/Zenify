@@ -134,8 +134,45 @@ class AudioNotifier extends Notifier<AudioState> {
       final prefs = ref.read(sharedPreferencesProvider);
       final position = prefs.getInt('audio_position') ?? 0;
       if (state.currentIndex >= 0 && state.currentIndex < state.queue.length) {
-        // Load the track but do not auto-play
-        await _playIndex(state.currentIndex, autoPlay: false, startPosition: Duration(milliseconds: position));
+        final networkState = ref.read(networkProvider);
+        bool isPlayable = true;
+        Set<String> downloadedIds = {};
+
+        if (networkState.isOffline) {
+          final downloadedTracks = ref.read(downloadedTracksProvider).value ?? [];
+          downloadedIds = downloadedTracks.map((t) => t.songId).toSet();
+          isPlayable = downloadedIds.contains(state.queue[state.currentIndex]['id']?.toString());
+        }
+
+        if (isPlayable) {
+          await _playIndex(state.currentIndex, autoPlay: false, startPosition: Duration(milliseconds: position));
+        } else {
+          int nextIndex = state.currentIndex + 1;
+          bool foundPlayable = false;
+
+          while (nextIndex < state.queue.length) {
+            if (downloadedIds.contains(state.queue[nextIndex]['id']?.toString())) {
+              foundPlayable = true;
+              break;
+            }
+            nextIndex++;
+          }
+          
+          if (!foundPlayable && state.repeatMode == AudioRepeatMode.all) {
+            nextIndex = 0;
+            while (nextIndex <= state.currentIndex) {
+              if (downloadedIds.contains(state.queue[nextIndex]['id']?.toString())) {
+                foundPlayable = true;
+                break;
+              }
+              nextIndex++;
+            }
+          }
+
+          if (foundPlayable) {
+            await _playIndex(nextIndex, autoPlay: false);
+          }
+        }
       }
     } catch (e) {
       print('Failed to restore playback state: $e');
@@ -227,31 +264,50 @@ class AudioNotifier extends Notifier<AudioState> {
   }
 
   Future<void> playQueue(List<dynamic> songs, int initialIndex) async {
+    final networkState = ref.read(networkProvider);
+    List<dynamic> playableSongs = songs;
+    int playableIndex = initialIndex;
+
+    if (networkState.isOffline) {
+      final downloadedTracks = ref.read(downloadedTracksProvider).value ?? [];
+      final downloadedIds = downloadedTracks.map((t) => t.songId).toSet();
+      
+      final targetSongId = (initialIndex >= 0 && initialIndex < songs.length) ? songs[initialIndex]['id'] : null;
+      
+      playableSongs = songs.where((s) => downloadedIds.contains(s['id']?.toString())).toList();
+      if (playableSongs.isEmpty) return; // Nothing to play
+      
+      if (targetSongId != null) {
+        playableIndex = playableSongs.indexWhere((s) => s['id'] == targetSongId);
+        if (playableIndex == -1) playableIndex = 0;
+      }
+    }
+
     final prefs = ref.read(sharedPreferencesProvider);
     final isShuffled = prefs.getBool('audio_is_shuffled') ?? false;
 
-    if (isShuffled && songs.isNotEmpty) {
-      final initialSong = songs[initialIndex];
-      final remaining = List<dynamic>.from(songs);
-      remaining.removeAt(initialIndex);
+    if (isShuffled && playableSongs.isNotEmpty) {
+      final initialSong = playableSongs[playableIndex];
+      final remaining = List<dynamic>.from(playableSongs);
+      remaining.removeAt(playableIndex);
       remaining.shuffle();
       
       final newQueue = [initialSong, ...remaining];
       
       this.state = this.state.copyWith(
         queue: newQueue,
-        originalQueue: songs,
+        originalQueue: playableSongs,
         isShuffled: true,
       );
       await _playIndex(0);
     } else {
       this.state = this.state.copyWith(
-        queue: songs,
-        originalQueue: songs,
+        queue: playableSongs,
+        originalQueue: playableSongs,
         isShuffled: false,
       );
       _saveQueueState();
-      await _playIndex(initialIndex);
+      await _playIndex(playableIndex);
     }
   }
 
@@ -389,24 +445,85 @@ class AudioNotifier extends Notifier<AudioState> {
   }
   
   Future<void> skipToNext() async {
-    if (state.currentIndex >= state.queue.length - 1) {
-      if (state.repeatMode == AudioRepeatMode.all) {
-        await _playIndex(0);
+    final networkState = ref.read(networkProvider);
+    Set<String> downloadedIds = {};
+    if (networkState.isOffline) {
+      final downloadedTracks = ref.read(downloadedTracksProvider).value ?? [];
+      downloadedIds = downloadedTracks.map((t) => t.songId).toSet();
+    }
+
+    int nextIndex = state.currentIndex + 1;
+    bool foundPlayable = false;
+
+    while (nextIndex < state.queue.length) {
+      if (!networkState.isOffline || downloadedIds.contains(state.queue[nextIndex]['id']?.toString())) {
+        foundPlayable = true;
+        break;
       }
+      nextIndex++;
+    }
+
+    if (!foundPlayable) {
+      if (state.repeatMode == AudioRepeatMode.all) {
+        nextIndex = 0;
+        while (nextIndex <= state.currentIndex) {
+          if (!networkState.isOffline || downloadedIds.contains(state.queue[nextIndex]['id']?.toString())) {
+            foundPlayable = true;
+            break;
+          }
+          nextIndex++;
+        }
+      }
+    }
+
+    if (foundPlayable) {
+      await _playIndex(nextIndex);
     } else {
-      await _playIndex(state.currentIndex + 1);
+      await _player.stop();
     }
   }
 
   Future<void> skipToPrevious() async {
     if (state.position.inSeconds > 3) {
       await _player.seek(Duration.zero);
-    } else {
-      if (state.currentIndex == 0 && state.repeatMode == AudioRepeatMode.all) {
-        await _playIndex(state.queue.length - 1);
-      } else if (state.currentIndex > 0) {
-        await _playIndex(state.currentIndex - 1);
+      return;
+    }
+
+    final networkState = ref.read(networkProvider);
+    Set<String> downloadedIds = {};
+    if (networkState.isOffline) {
+      final downloadedTracks = ref.read(downloadedTracksProvider).value ?? [];
+      downloadedIds = downloadedTracks.map((t) => t.songId).toSet();
+    }
+
+    int prevIndex = state.currentIndex - 1;
+    bool foundPlayable = false;
+
+    while (prevIndex >= 0) {
+      if (!networkState.isOffline || downloadedIds.contains(state.queue[prevIndex]['id']?.toString())) {
+        foundPlayable = true;
+        break;
       }
+      prevIndex--;
+    }
+
+    if (!foundPlayable) {
+      if (state.repeatMode == AudioRepeatMode.all) {
+        prevIndex = state.queue.length - 1;
+        while (prevIndex > state.currentIndex) {
+          if (!networkState.isOffline || downloadedIds.contains(state.queue[prevIndex]['id']?.toString())) {
+            foundPlayable = true;
+            break;
+          }
+          prevIndex--;
+        }
+      }
+    }
+
+    if (foundPlayable) {
+      await _playIndex(prevIndex);
+    } else {
+      await _player.seek(Duration.zero);
     }
   }
 

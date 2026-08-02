@@ -4,6 +4,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/providers/audio_provider.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/components/local_cover_image.dart';
+import 'package:zenify/components/zenify_toast.dart';
 import 'package:zenify/components/play_queue_sheet.dart';
 import 'package:zenify/screens/album_detail_screen.dart';
 import 'package:zenify/screens/artist_detail_screen.dart';
@@ -23,6 +24,7 @@ class FullPlayerScreen extends ConsumerWidget {
     final audioNotifier = ref.read(audioProvider.notifier);
     final api = ref.watch(subsonicApiProvider);
     final server = ref.watch(activeServerProvider).value;
+    final networkState = ref.watch(networkProvider);
     final currentSong = audioState.currentSong;
     
     final theme = ShadTheme.of(context);
@@ -96,6 +98,7 @@ class FullPlayerScreen extends ConsumerWidget {
                           icon: isFavorite ? Icons.favorite : LucideIcons.heart,
                           tooltip: isFavorite ? '取消最愛' : '加入最愛',
                           iconColor: isFavorite ? const Color(0xFFEF4444) : null,
+                          isDisabled: networkState.isOffline,
                           onPressed: () async {
                             final songId = currentSong['id']?.toString();
                             if (songId == null || api == null) return;
@@ -218,6 +221,7 @@ class FullPlayerScreen extends ConsumerWidget {
                                   Flexible(
                                     child: _HoverableLink(
                                       text: currentSong['artist'] ?? '未知藝術家',
+                                      isDisabled: networkState.isOffline,
                                       style: TextStyle(
                                         color: colorScheme.mutedForeground,
                                         fontSize: 14,
@@ -368,12 +372,14 @@ class _HoverableLink extends StatefulWidget {
   final String text;
   final VoidCallback onTap;
   final TextStyle style;
+  final bool isDisabled;
 
   const _HoverableLink({
     Key? key,
     required this.text,
     required this.onTap,
     required this.style,
+    this.isDisabled = false,
   }) : super(key: key);
 
   @override
@@ -386,20 +392,22 @@ class _HoverableLinkState extends State<_HoverableLink> {
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: Text(
-          widget.text,
-          style: widget.style.copyWith(
-            decoration: _isHovered ? TextDecoration.underline : TextDecoration.none,
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: widget.isDisabled ? () {
+            ZenifyToast.showError(context, '服務器已離線');
+          } : widget.onTap,
+          child: Text(
+            widget.text,
+            style: widget.style.copyWith(
+              decoration: (_isHovered && !widget.isDisabled) ? TextDecoration.underline : TextDecoration.none,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
         ),
-      ),
     );
   }
 }
@@ -538,9 +546,11 @@ class _SecondaryPlayerButtonState extends State<_SecondaryPlayerButton> {
 
 class _TopUtilityButton extends StatefulWidget {
   final IconData icon;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final String tooltip;
   final Color? iconColor;
+
+  final bool isDisabled;
 
   const _TopUtilityButton({
     Key? key,
@@ -548,6 +558,7 @@ class _TopUtilityButton extends StatefulWidget {
     required this.onPressed,
     required this.tooltip,
     this.iconColor,
+    this.isDisabled = false,
   }) : super(key: key);
 
   @override
@@ -561,27 +572,32 @@ class _TopUtilityButtonState extends State<_TopUtilityButton> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = ShadTheme.of(context).colorScheme;
-    
+    final bool isDisabled = widget.isDisabled || widget.onPressed == null;
+
     return Tooltip(
       message: widget.tooltip,
       child: MouseRegion(
-        onEnter: (_) => setState(() => _isHovered = true),
-        onExit: (_) => setState(() => _isHovered = false),
+        onEnter: (_) { if (!isDisabled) setState(() => _isHovered = true); },
+        onExit: (_) { if (!isDisabled) setState(() => _isHovered = false); },
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTapDown: (_) => setState(() => _isPressed = true),
+          onTapDown: (_) { if (!isDisabled) setState(() => _isPressed = true); },
           onTapUp: (_) {
-            setState(() => _isPressed = false);
-            widget.onPressed();
+            if (isDisabled) {
+              ZenifyToast.showError(context, '服務器已離線');
+            } else if (widget.onPressed != null) {
+              setState(() => _isPressed = false);
+              widget.onPressed!();
+            }
           },
-          onTapCancel: () => setState(() => _isPressed = false),
+          onTapCancel: () { if (!isDisabled) setState(() => _isPressed = false); },
           child: AnimatedScale(
             scale: _isPressed ? 0.85 : (_isHovered ? 1.15 : 1.0),
             duration: const Duration(milliseconds: 150),
             curve: Curves.easeOutCubic,
             child: AnimatedOpacity(
-              opacity: _isPressed ? 0.5 : (_isHovered ? 1.0 : (widget.iconColor != null ? 0.85 : 0.7)),
+              opacity: isDisabled ? 0.3 : (_isPressed ? 0.5 : (_isHovered ? 1.0 : (widget.iconColor != null ? 0.85 : 0.7))),
               duration: const Duration(milliseconds: 150),
               child: Padding(
                 padding: const EdgeInsets.all(8.0),

@@ -142,6 +142,7 @@ class AlbumsGrid extends ConsumerWidget {
               isOfflineAlbum: hideOfflineIcon ? false : isOffline,
               padding: 0,
               isDisabled: isDisabled,
+              isArtistDisabled: networkState.isOffline,
               onTap: () {
                 Navigator.push(
                   context,

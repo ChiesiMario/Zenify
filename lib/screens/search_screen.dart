@@ -93,6 +93,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final colorScheme = theme.colorScheme;
     final server = ref.watch(activeServerProvider).value;
     final api = ref.watch(subsonicApiProvider);
+    final networkState = ref.watch(networkProvider);
 
     return Scaffold(
       backgroundColor: colorScheme.background,
@@ -162,6 +163,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                   coverArtId: coverId,
                                   fallbackCoverUrl: fallbackUrl,
                                   serverId: server?.id ?? 0,
+                                  isDisabled: networkState.isOffline,
                                   onTap: () {
                                     Navigator.push(
                                       context,

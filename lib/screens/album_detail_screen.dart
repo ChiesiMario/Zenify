@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +9,7 @@ import 'package:zenify/providers/download_provider.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/components/local_cover_image.dart';
 import 'package:zenify/screens/artist_detail_screen.dart';
+import 'package:zenify/components/zenify_toast.dart';
 
 class AlbumDetailScreen extends ConsumerWidget {
   final String albumId;
@@ -150,41 +152,43 @@ class AlbumDetailScreen extends ConsumerWidget {
                               return StatefulBuilder(
                                 builder: (context, setState) {
                                   return MouseRegion(
-                                cursor: SystemMouseCursors.click,
-                                onEnter: (_) => setState(() => isHovered = true),
-                                onExit: (_) => setState(() => isHovered = false),
-                                child: GestureDetector(
-                                  onTap: () {
-                                    final artistId = album['artistId'];
-                                    if (artistId != null) {
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          settings: RouteSettings(name: album['artist']),
-                                          builder: (context) => ArtistDetailScreen(
-                                            artistId: artistId, 
-                                            artistName: album['artist'] ?? '未知藝術家',
+                                      cursor: SystemMouseCursors.click,
+                                      onEnter: (_) => setState(() => isHovered = true),
+                                      onExit: (_) => setState(() => isHovered = false),
+                                      child: GestureDetector(
+                                        onTap: networkState.isOffline ? () {
+                                          ZenifyToast.showError(context, '服務器已離線');
+                                        } : () {
+                                          final artistId = album['artistId'];
+                                          if (artistId != null) {
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                settings: RouteSettings(name: album['artist']),
+                                                builder: (context) => ArtistDetailScreen(
+                                                  artistId: artistId, 
+                                                  artistName: album['artist'] ?? '未知藝術家',
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                        },
+                                        child: Text(
+                                          album['artist'] ?? '未知藝術家',
+                                          style: TextStyle(
+                                            color: colorScheme.mutedForeground,
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.normal,
+                                            height: 1.1,
+                                            decoration: (isHovered && !networkState.isOffline) ? TextDecoration.underline : TextDecoration.none,
                                           ),
+                                          textAlign: TextAlign.center,
                                         ),
-                                      );
-                                    }
-                                  },
-                                  child: Text(
-                                    album['artist'] ?? '未知藝術家',
-                                    style: TextStyle(
-                                      color: colorScheme.mutedForeground,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.normal,
-                                      height: 1.1,
-                                      decoration: isHovered ? TextDecoration.underline : TextDecoration.none,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                                );
-                              },
-                            );
-                          },
-                        ),
+                                      ),
+                                    );
+                                },
+                              );
+                            },
+                          ),
                           const SizedBox(height: 4),
                           Builder(
                             builder: (context) {
@@ -376,27 +380,32 @@ class AlbumDetailScreen extends ConsumerWidget {
 
                                                 final mutedIconColor = colorScheme.mutedForeground.withValues(alpha: 0.3);
 
-                                                return SizedBox(
-                                                  width: 28,
-                                                  height: 28,
-                                                  child: IconButton(
-                                                    padding: EdgeInsets.zero,
-                                                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                                                    icon: Icon(
-                                                      isFavorite ? Icons.favorite : LucideIcons.heart,
-                                                      color: isFavorite ? const Color(0xFFEF4444) : mutedIconColor,
-                                                      size: 16,
+                                                return Opacity(
+                                                  opacity: networkState.isOffline ? 0.3 : 1.0,
+                                                  child: SizedBox(
+                                                    width: 28,
+                                                    height: 28,
+                                                    child: IconButton(
+                                                      padding: EdgeInsets.zero,
+                                                      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                                                      icon: Icon(
+                                                        isFavorite ? Icons.favorite : LucideIcons.heart,
+                                                        color: isFavorite ? const Color(0xFFEF4444) : mutedIconColor,
+                                                        size: 16,
+                                                      ),
+                                                      onPressed: networkState.isOffline ? () {
+                                                        ZenifyToast.showError(context, '服務器已離線');
+                                                      } : () async {
+                                                        if (songId == null || api == null) return;
+                                                        if (isFavorite) {
+                                                          await api.unstar(id: songId);
+                                                        } else {
+                                                          await api.star(id: songId);
+                                                        }
+                                                        ref.invalidate(favoritesProvider);
+                                                      },
+                                                      tooltip: isFavorite ? '取消最愛' : '加入最愛',
                                                     ),
-                                                    onPressed: isOfflineUnplayable ? null : () async {
-                                                      if (songId == null || api == null) return;
-                                                      if (isFavorite) {
-                                                        await api.unstar(id: songId);
-                                                      } else {
-                                                        await api.star(id: songId);
-                                                      }
-                                                      ref.invalidate(favoritesProvider);
-                                                    },
-                                                    tooltip: isFavorite ? '取消最愛' : '加入最愛',
                                                   ),
                                                 );
                                               },

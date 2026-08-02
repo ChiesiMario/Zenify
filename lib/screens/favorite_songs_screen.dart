@@ -4,6 +4,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/audio_provider.dart';
 import 'package:zenify/components/local_cover_image.dart';
+import 'package:zenify/components/zenify_toast.dart';
 
 import 'package:zenify/providers/sort_providers.dart';
 import 'dart:io';
@@ -227,33 +228,39 @@ class _FavoriteSongButtonState extends ConsumerState<_FavoriteSongButton> {
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
     final api = ref.watch(subsonicApiProvider);
+    final networkState = ref.watch(networkProvider);
 
     final mutedIconColor = colorScheme.mutedForeground.withValues(alpha: 0.3);
 
-    return SizedBox(
-      width: 28,
-      height: 28,
-      child: IconButton(
-        padding: EdgeInsets.zero,
-        constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-        icon: Icon(
-          _isFavorite ? Icons.favorite : LucideIcons.heart,
-          color: _isFavorite ? const Color(0xFFEF4444) : mutedIconColor,
-          size: 16,
+    return Opacity(
+      opacity: networkState.isOffline ? 0.3 : 1.0,
+      child: SizedBox(
+        width: 28,
+        height: 28,
+        child: IconButton(
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+          icon: Icon(
+            _isFavorite ? Icons.favorite : LucideIcons.heart,
+            color: _isFavorite ? const Color(0xFFEF4444) : mutedIconColor,
+            size: 16,
+          ),
+          onPressed: networkState.isOffline ? () {
+            ZenifyToast.showError(context, '服務器已離線');
+          } : () async {
+            if (api == null) return;
+            setState(() {
+              _isFavorite = !_isFavorite;
+            });
+            if (_isFavorite) {
+              await api.star(id: widget.songId);
+            } else {
+              await api.unstar(id: widget.songId);
+            }
+            // 特意不 invalidate favoritesProvider，讓歌曲保留在畫面上
+          },
+          tooltip: _isFavorite ? '取消最愛' : '加入最愛',
         ),
-        onPressed: () async {
-          if (api == null) return;
-          setState(() {
-            _isFavorite = !_isFavorite;
-          });
-          if (_isFavorite) {
-            await api.star(id: widget.songId);
-          } else {
-            await api.unstar(id: widget.songId);
-          }
-          // 特意不 invalidate favoritesProvider，讓歌曲保留在畫面上
-        },
-        tooltip: _isFavorite ? '取消最愛' : '加入最愛',
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/components/local_cover_image.dart';
 import 'package:zenify/components/zenify_toast.dart';
+import 'package:zenify/components/zenify_toast.dart';
 
 class AlbumCard extends StatefulWidget {
   final String title;
@@ -17,6 +18,7 @@ class AlbumCard extends StatefulWidget {
   final VoidCallback? onArtistTap;
   final double padding;
   final bool isDisabled;
+  final bool isArtistDisabled;
 
   const AlbumCard({
     super.key,
@@ -33,6 +35,7 @@ class AlbumCard extends StatefulWidget {
     this.onArtistTap,
     this.padding = 10.0,
     this.isDisabled = false,
+    this.isArtistDisabled = false,
   });
 
   @override
@@ -228,38 +231,40 @@ class _AlbumCardState extends State<AlbumCard> {
               const SizedBox(height: 2),
               // Artist (Apple Music 11px muted text, clickable)
               MouseRegion(
-                cursor: widget.onArtistTap != null ? SystemMouseCursors.click : SystemMouseCursors.basic,
-                onEnter: (_) => setState(() => _isArtistHovered = true),
-                onExit: (_) => setState(() => _isArtistHovered = false),
-                child: GestureDetector(
-                  onTap: widget.onArtistTap,
-                  child: Text(
-                    widget.artist,
-                    style: TextStyle(
-                      color: _isArtistHovered && widget.onArtistTap != null
-                          ? colorScheme.foreground
-                          : colorScheme.mutedForeground,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w400,
-                      letterSpacing: 0.15,
-                      height: 1.15,
-                      decoration: _isArtistHovered && widget.onArtistTap != null
-                          ? TextDecoration.underline
-                          : TextDecoration.none,
+                  cursor: (widget.onArtistTap != null) ? SystemMouseCursors.click : SystemMouseCursors.basic,
+                  onEnter: (_) => setState(() => _isArtistHovered = true),
+                  onExit: (_) => setState(() => _isArtistHovered = false),
+                  child: GestureDetector(
+                    onTap: widget.isArtistDisabled ? () {
+                      ZenifyToast.showError(context, '服務器已離線');
+                    } : widget.onArtistTap,
+                    child: Text(
+                      widget.artist,
+                      style: TextStyle(
+                        color: _isArtistHovered && widget.onArtistTap != null && !widget.isArtistDisabled
+                            ? colorScheme.foreground
+                            : colorScheme.mutedForeground,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w400,
+                        letterSpacing: 0.15,
+                        height: 1.15,
+                        decoration: _isArtistHovered && widget.onArtistTap != null && !widget.isArtistDisabled
+                            ? TextDecoration.underline
+                            : TextDecoration.none,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.left,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.left,
                   ),
                 ),
-              ),
             ],
           ),
         ),
-        ),
-        ),
       ),
-    );
+    ),
+  ),
+);
   }
 }
 

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/components/local_cover_image.dart';
 import 'package:zenify/components/albums_grid.dart';
+import 'package:zenify/components/zenify_toast.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/audio_provider.dart';
 
@@ -40,6 +41,7 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
     final artistDetailAsync = ref.watch(artistDetailProvider(widget.artistId));
     final server = ref.watch(activeServerProvider).value;
     final api = ref.watch(subsonicApiProvider);
+    final networkState = ref.watch(networkProvider);
 
     return Scaffold(
       backgroundColor: colorScheme.background,
@@ -343,27 +345,32 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
 
                                                     final mutedIconColor = colorScheme.mutedForeground.withValues(alpha: 0.3);
 
-                                                    return SizedBox(
-                                                      width: 28,
-                                                      height: 28,
-                                                      child: IconButton(
-                                                        padding: EdgeInsets.zero,
-                                                        constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                                                        icon: Icon(
-                                                          isFavorite ? Icons.favorite : LucideIcons.heart,
-                                                          color: isFavorite ? const Color(0xFFEF4444) : mutedIconColor,
-                                                          size: 16,
+                                                    return Opacity(
+                                                      opacity: networkState.isOffline ? 0.3 : 1.0,
+                                                      child: SizedBox(
+                                                        width: 28,
+                                                        height: 28,
+                                                        child: IconButton(
+                                                          padding: EdgeInsets.zero,
+                                                          constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                                                          icon: Icon(
+                                                            isFavorite ? Icons.favorite : LucideIcons.heart,
+                                                            color: isFavorite ? const Color(0xFFEF4444) : mutedIconColor,
+                                                            size: 16,
+                                                          ),
+                                                          onPressed: networkState.isOffline ? () {
+                                                            ZenifyToast.showError(context, '服務器已離線');
+                                                          } : () async {
+                                                            if (songId == null || api == null) return;
+                                                            if (isFavorite) {
+                                                              await api.unstar(id: songId);
+                                                            } else {
+                                                              await api.star(id: songId);
+                                                            }
+                                                            ref.invalidate(favoritesProvider);
+                                                          },
+                                                          tooltip: isFavorite ? '取消最愛' : '加入最愛',
                                                         ),
-                                                        onPressed: () async {
-                                                          if (songId == null || api == null) return;
-                                                          if (isFavorite) {
-                                                            await api.unstar(id: songId);
-                                                          } else {
-                                                            await api.star(id: songId);
-                                                          }
-                                                          ref.invalidate(favoritesProvider);
-                                                        },
-                                                        tooltip: isFavorite ? '取消最愛' : '加入最愛',
                                                       ),
                                                     );
                                                   },
