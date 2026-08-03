@@ -10,6 +10,7 @@ import 'package:zenify/providers/sort_providers.dart';
 import 'dart:io';
 import 'package:zenify/providers/download_provider.dart';
 import 'package:zenify/services/download_service.dart';
+import 'package:zenify/providers/offline_preference_provider.dart';
 
 class FavoriteSongsScreen extends ConsumerWidget {
   const FavoriteSongsScreen({super.key});
@@ -252,6 +253,7 @@ class _FavoriteSongButtonState extends ConsumerState<_FavoriteSongButton> {
             setState(() {
               _isFavorite = !_isFavorite;
             });
+            
             if (_isFavorite) {
               await api.star(id: widget.songId);
             } else {
@@ -280,10 +282,8 @@ class _FavoriteHeroBanner extends ConsumerStatefulWidget {
 }
 
 class _FavoriteHeroBannerState extends ConsumerState<_FavoriteHeroBanner> {
-  bool? _optimisticState;
-
   Future<void> _handleToggle(bool turnOn) async {
-    setState(() => _optimisticState = turnOn);
+    await ref.read(offlinePreferenceProvider.notifier).setFavoritesOffline(turnOn);
     final downloadService = ref.read(downloadServiceProvider);
     
     try {
@@ -307,10 +307,6 @@ class _FavoriteHeroBannerState extends ConsumerState<_FavoriteHeroBanner> {
       }
     } finally {
       ref.invalidate(downloadedTracksProvider);
-      await ref.read(downloadedTracksProvider.future);
-      if (mounted) {
-        setState(() => _optimisticState = null);
-      }
     }
   }
 
@@ -322,27 +318,13 @@ class _FavoriteHeroBannerState extends ConsumerState<_FavoriteHeroBanner> {
     final downloadedTracks = downloadedTracksAsync.valueOrNull ?? [];
     final downloadProgress = ref.watch(downloadProgressProvider);
 
-    final manualDownloadedIds = downloadedTracks
-        .where((t) => t.isManualDownload && t.isComplete && File(t.localPath).existsSync())
-        .map((t) => t.songId)
-        .toSet();
-
-    final isAllOfflined = widget.songs.isNotEmpty &&
-        widget.songs.every((s) => manualDownloadedIds.contains(s['id'].toString()));
-
-    final isDownloading = _optimisticState != null || widget.songs.any((s) {
-      final p = downloadProgress[s['id'].toString()];
-      return p != null && p > 0.0 && p < 1.0;
-    });
-
     final networkState = ref.watch(networkProvider);
     final isOffline = networkState.isOffline;
+    
+    final prefsState = ref.watch(offlinePreferenceProvider).valueOrNull;
+    final effectiveOfflined = prefsState?.favoritesPreference ?? false;
 
-    final effectiveOfflined = _optimisticState ?? isAllOfflined;
-
-    final String statusStr = _optimisticState == true
-        ? '正在離線歌曲...'
-        : (effectiveOfflined ? '已全數離線' : '共 ${widget.songs.length} 首歌曲');
+    final String statusStr = effectiveOfflined ? '已開啟離線同步' : '共 ${widget.songs.length} 首歌曲';
 
     return Row(
       children: [
@@ -363,7 +345,6 @@ class _FavoriteHeroBannerState extends ConsumerState<_FavoriteHeroBanner> {
         Expanded(
           child: _OfflineBentoCard(
             effectiveOfflined: effectiveOfflined,
-            isDownloading: isDownloading,
             isOffline: isOffline,
             statusStr: statusStr,
             songCount: widget.songs.length,
@@ -377,7 +358,6 @@ class _FavoriteHeroBannerState extends ConsumerState<_FavoriteHeroBanner> {
 
 class _OfflineBentoCard extends StatefulWidget {
   final bool effectiveOfflined;
-  final bool isDownloading;
   final bool isOffline;
   final String statusStr;
   final int songCount;
@@ -385,7 +365,6 @@ class _OfflineBentoCard extends StatefulWidget {
 
   const _OfflineBentoCard({
     required this.effectiveOfflined,
-    required this.isDownloading,
     required this.isOffline,
     required this.statusStr,
     required this.songCount,
@@ -404,7 +383,7 @@ class _OfflineBentoCardState extends State<_OfflineBentoCard> {
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
 
-    final isDisabled = widget.isDownloading || widget.isOffline;
+    final isDisabled = widget.isOffline;
 
     return MouseRegion(
       cursor: isDisabled ? SystemMouseCursors.basic : SystemMouseCursors.click,
@@ -420,7 +399,7 @@ class _OfflineBentoCardState extends State<_OfflineBentoCard> {
             color: colorScheme.card,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: (_isHovered && !widget.isDownloading)
+              color: (_isHovered && !isDisabled)
                   ? colorScheme.foreground.withValues(alpha: 0.4)
                   : colorScheme.border,
               width: 1.0,

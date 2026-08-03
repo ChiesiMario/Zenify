@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:tray_manager/tray_manager.dart';
 import 'package:zenify/providers/theme_provider.dart';
 import 'package:zenify/screens/home_screen.dart';
 import 'package:zenify/components/custom_title_bar.dart';
@@ -12,6 +13,7 @@ import 'package:zenify/services/image_service.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
+import 'package:zenify/services/background_sync_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,6 +48,26 @@ void main() async {
       title: 'Zenify',
     );
     
+    await windowManager.setPreventClose(true);
+    
+    await trayManager.setIcon(
+      Platform.isWindows ? 'assets/icon/app_icon.ico' : 'assets/icon/app_icon.png',
+    );
+    Menu menu = Menu(
+      items: [
+        MenuItem(
+          key: 'show_window',
+          label: '顯示主畫面',
+        ),
+        MenuItem.separator(),
+        MenuItem(
+          key: 'exit_app',
+          label: '退出程式',
+        ),
+      ],
+    );
+    await trayManager.setContextMenu(menu);
+
     windowManager.waitUntilReadyToShow(windowOptions, () async {
       try {
         final double? x = prefs.getDouble('window_x');
@@ -85,17 +107,54 @@ class ZenifyApp extends ConsumerStatefulWidget {
   ConsumerState<ZenifyApp> createState() => _ZenifyAppState();
 }
 
-class _ZenifyAppState extends ConsumerState<ZenifyApp> with WindowListener {
+class _ZenifyAppState extends ConsumerState<ZenifyApp> with WindowListener, TrayListener {
   @override
   void initState() {
     super.initState();
     windowManager.addListener(this);
+    trayManager.addListener(this);
+    
+    // Start background sync
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(backgroundSyncServiceProvider).start();
+    });
   }
 
   @override
   void dispose() {
+    ref.read(backgroundSyncServiceProvider).stop();
+    trayManager.removeListener(this);
     windowManager.removeListener(this);
     super.dispose();
+  }
+
+  @override
+  void onWindowClose() async {
+    bool isPreventClose = await windowManager.isPreventClose();
+    if (isPreventClose) {
+      await windowManager.hide();
+    }
+  }
+
+  @override
+  void onTrayIconMouseDown() {
+    windowManager.show();
+    windowManager.focus();
+  }
+
+  @override
+  void onTrayIconRightMouseDown() {
+    trayManager.popUpContextMenu();
+  }
+
+  @override
+  void onTrayMenuItemClick(MenuItem menuItem) {
+    if (menuItem.key == 'show_window') {
+      windowManager.show();
+      windowManager.focus();
+    } else if (menuItem.key == 'exit_app') {
+      windowManager.destroy();
+    }
   }
 
   Future<void> _saveWindowBounds() async {

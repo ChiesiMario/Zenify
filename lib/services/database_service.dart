@@ -8,6 +8,7 @@ import 'package:zenify/models/downloaded_track.dart';
 import 'package:zenify/models/favorite_item.dart';
 import 'package:zenify/models/playlist_cache.dart';
 import 'package:zenify/models/album_detail_cache.dart';
+import 'package:zenify/models/offline_preference.dart';
 
 class DatabaseService {
   late Future<Isar> db;
@@ -21,7 +22,7 @@ class DatabaseService {
       await PathService.ensureInitialized();
       final dir = await PathService.getSupportDir();
       return await Isar.open(
-        [ServerSchema, AlbumSchema, ArtistSchema, DownloadedTrackSchema, FavoriteItemSchema, PlaylistCacheSchema, AlbumDetailCacheSchema],
+        [ServerSchema, AlbumSchema, ArtistSchema, DownloadedTrackSchema, FavoriteItemSchema, PlaylistCacheSchema, AlbumDetailCacheSchema, OfflinePreferenceSchema],
         directory: dir.path,
         inspector: true,
       );
@@ -271,6 +272,33 @@ class DatabaseService {
         currentBytes -= track.sizeBytes;
         await isar.downloadedTracks.delete(track.id);
       }
+    });
+  }
+
+  /// Get offline preference
+  Future<OfflinePreference?> getOfflinePreference(int serverId, String type, String targetId) async {
+    final isar = await db;
+    return await isar.offlinePreferences
+        .filter()
+        .serverIdEqualTo(serverId)
+        .and()
+        .typeEqualTo(type)
+        .and()
+        .targetIdEqualTo(targetId)
+        .findFirst();
+  }
+
+  /// Get all offline preferences that are true
+  Future<List<OfflinePreference>> getActiveOfflinePreferences() async {
+    final isar = await db;
+    return await isar.offlinePreferences.filter().isOfflineEqualTo(true).findAll();
+  }
+
+  /// Save offline preference
+  Future<void> saveOfflinePreference(OfflinePreference pref) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      await isar.offlinePreferences.put(pref);
     });
   }
 }

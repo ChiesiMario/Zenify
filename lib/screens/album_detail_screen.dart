@@ -13,6 +13,7 @@ import 'package:zenify/components/zenify_toast.dart';
 import 'package:zenify/api/subsonic_api.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:zenify/services/image_service.dart';
+import 'package:zenify/providers/offline_preference_provider.dart';
 
 class AlbumDetailScreen extends ConsumerWidget {
   final String albumId;
@@ -692,6 +693,7 @@ class AlbumDetailScreen extends ConsumerWidget {
                                       child: _AlbumOfflineBentoCard(
                                         songList: songList,
                                         serverId: server?.id ?? 0,
+                                        albumId: album['id']?.toString() ?? '',
                                       ),
                                     ),
                                     const SizedBox(width: 12),
@@ -726,10 +728,12 @@ class AlbumDetailScreen extends ConsumerWidget {
 class _AlbumOfflineBentoCard extends ConsumerStatefulWidget {
   final List<dynamic> songList;
   final int serverId;
+  final String albumId;
 
   const _AlbumOfflineBentoCard({
     required this.songList,
     required this.serverId,
+    required this.albumId,
   });
 
   @override
@@ -738,10 +742,10 @@ class _AlbumOfflineBentoCard extends ConsumerStatefulWidget {
 
 class _AlbumOfflineBentoCardState extends ConsumerState<_AlbumOfflineBentoCard> {
   bool _isHovered = false;
-  bool? _optimisticState;
 
   Future<void> _handleToggle(bool turnOn) async {
-    setState(() => _optimisticState = turnOn);
+    if (widget.albumId.isEmpty) return;
+    await ref.read(offlinePreferenceProvider.notifier).setAlbumOffline(widget.albumId, turnOn);
     final downloadService = ref.read(downloadServiceProvider);
     
     try {
@@ -765,10 +769,6 @@ class _AlbumOfflineBentoCardState extends ConsumerState<_AlbumOfflineBentoCard> 
       }
     } finally {
       ref.invalidate(downloadedTracksProvider);
-      await ref.read(downloadedTracksProvider.future);
-      if (mounted) {
-        setState(() => _optimisticState = null);
-      }
     }
   }
 
@@ -780,31 +780,14 @@ class _AlbumOfflineBentoCardState extends ConsumerState<_AlbumOfflineBentoCard> 
     final downloadedTracks = downloadedTracksAsync.valueOrNull ?? [];
     final downloadProgress = ref.watch(downloadProgressProvider);
 
-    final manualDownloadedIds = downloadedTracks
-        .where((t) => t.isManualDownload && t.isComplete && File(t.localPath).existsSync())
-        .map((t) => t.songId)
-        .toSet();
-
-    final isAllOfflined = widget.songList.isNotEmpty &&
-        widget.songList.every((s) => manualDownloadedIds.contains(s['id'].toString()));
-
-    final isDownloading = _optimisticState != null || widget.songList.any((s) {
-      final p = downloadProgress[s['id'].toString()];
-      return p != null && p > 0.0 && p < 1.0;
-    });
-
     final networkState = ref.watch(networkProvider);
     final isOffline = networkState.isOffline;
+    
+    final prefsState = ref.watch(offlinePreferenceProvider).valueOrNull;
+    final effectiveOfflined = prefsState?.albumPreferences[widget.albumId] ?? false;
 
-    final effectiveOfflined = _optimisticState ?? isAllOfflined;
-
-    final String titleStr = _optimisticState == true
-        ? '離線中...'
-        : (effectiveOfflined ? '已離線' : '離線');
-
-    final String subtitleStr = _optimisticState == true
-        ? '正在離線全專輯歌曲...'
-        : (effectiveOfflined ? '已儲存至離線音樂' : '離線本專輯所有歌曲');
+    final String titleStr = effectiveOfflined ? '已離線' : '離線';
+    final String subtitleStr = effectiveOfflined ? '已儲存至離線音樂' : '離線本專輯所有歌曲';
 
     int totalBytes = 0;
     for (final song in widget.songList) {
@@ -826,7 +809,7 @@ class _AlbumOfflineBentoCardState extends ConsumerState<_AlbumOfflineBentoCard> 
       }
     }
 
-    final isDisabled = isDownloading || isOffline;
+    final isDisabled = isOffline;
 
     return MouseRegion(
       cursor: isDisabled ? SystemMouseCursors.basic : SystemMouseCursors.click,
