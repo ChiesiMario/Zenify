@@ -1,3 +1,4 @@
+import 'package:zenify/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zenify/components/album_card.dart';
@@ -30,6 +31,7 @@ class AlbumsGrid extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final server = ref.watch(activeServerProvider).value;
     final api = ref.watch(subsonicApiProvider);
     final networkState = ref.watch(networkProvider);
@@ -121,10 +123,10 @@ class AlbumsGrid extends ConsumerWidget {
           itemCount: albums.length,
           itemBuilder: (context, index) {
             final album = albums[index];
-            final title = album['title'] ?? album['name'] ?? '未知專輯';
+            final title = album['title'] ?? album['name'] ?? l10n.unknownAlbum;
             final artist = showYearInsteadOfArtist 
-                ? (album['year']?.toString() ?? '未知年份') 
-                : (album['artist'] ?? album['year']?.toString() ?? '未知藝術家');
+                ? (album['year']?.toString() ?? l10n.unknownYear) 
+                : (album['artist'] ?? album['year']?.toString() ?? l10n.unknownArtist);
             final artistId = album['artistId'];
             final albumCoverId = album['coverArt'] ?? album['id'];
             final fallbackUrl = api != null && albumCoverId != null 

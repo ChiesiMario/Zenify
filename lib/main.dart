@@ -14,6 +14,9 @@ import 'package:just_audio_background/just_audio_background.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'package:zenify/services/background_sync_service.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:zenify/l10n/app_localizations.dart';
+import 'package:zenify/providers/locale_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -53,11 +56,12 @@ void main() async {
     await trayManager.setIcon(
       Platform.isWindows ? 'assets/icon/app_icon.ico' : 'assets/icon/app_icon.png',
     );
+    await trayManager.setToolTip('Zenify');
     Menu menu = Menu(
       items: [
         MenuItem(
           key: 'show_window',
-          label: '顯示主畫面',
+          label: '顯示主介面',
         ),
         MenuItem.separator(),
         MenuItem(
@@ -184,9 +188,18 @@ class _ZenifyAppState extends ConsumerState<ZenifyApp> with WindowListener, Tray
   @override
   Widget build(BuildContext context) {
     final themeMode = ref.watch(themeModeProvider);
+    final locale = ref.watch(localeProvider);
 
     return ShadApp(
       title: 'Zenify',
+      locale: locale,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: AppLocalizations.supportedLocales,
       themeMode: themeMode,
       materialThemeBuilder: (context, theme) => theme.copyWith(
         textTheme: theme.textTheme.apply(

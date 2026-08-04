@@ -1,3 +1,4 @@
+import 'package:zenify/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
@@ -36,6 +37,7 @@ class FavoriteAlbumsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final activeServer = ref.watch(activeServerProvider);
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
@@ -47,7 +49,7 @@ class FavoriteAlbumsScreen extends ConsumerWidget {
         data: (server) {
           if (server == null) {
             return Center(
-              child: Text('未連接伺服器，請先在右上角新增', style: TextStyle(color: colorScheme.mutedForeground)),
+              child: Text(l10n.serverNotConnectedHint, style: TextStyle(color: colorScheme.mutedForeground)),
             );
           }
 
@@ -58,7 +60,7 @@ class FavoriteAlbumsScreen extends ConsumerWidget {
               final albums = _sortAlbums(rawAlbums, sortOption);
 
               if (albums.isEmpty) {
-                return Center(child: Text('目前沒有任何喜愛的專輯', style: TextStyle(color: colorScheme.mutedForeground)));
+                return Center(child: Text(l10n.noFavoriteAlbums, style: TextStyle(color: colorScheme.mutedForeground)));
               }
 
               return ListView(
@@ -87,7 +89,7 @@ class FavoriteAlbumsScreen extends ConsumerWidget {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        '收藏的專輯',
+                                        l10n.favoriteAlbumsTitle,
                                         style: TextStyle(
                                           color: colorScheme.foreground,
                                           fontSize: 22,
@@ -97,7 +99,7 @@ class FavoriteAlbumsScreen extends ConsumerWidget {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        '共 ${albums.length} 張專輯',
+                                        l10n.totalAlbumsCount(albums.length.toString()),
                                         style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13),
                                       ),
                                     ],
@@ -118,12 +120,12 @@ class FavoriteAlbumsScreen extends ConsumerWidget {
                                         }
                                       }
                                     },
-                                    child: const Row(
+                                    child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Icon(LucideIcons.shuffle, size: 15),
-                                        SizedBox(width: 6),
-                                        Text('隨機播放一張專輯', style: TextStyle(fontWeight: FontWeight.w600)),
+                                        const Icon(LucideIcons.shuffle, size: 15),
+                                        const SizedBox(width: 6),
+                                        Text(l10n.shufflePlayAnAlbum, style: const TextStyle(fontWeight: FontWeight.w600)),
                                       ],
                                     ),
                                   ),
@@ -144,11 +146,11 @@ class FavoriteAlbumsScreen extends ConsumerWidget {
               );
             },
             loading: () => Center(child: CircularProgressIndicator(color: colorScheme.foreground)),
-            error: (err, stack) => Center(child: Text('加載喜愛項目失敗: $err', style: TextStyle(color: colorScheme.destructive))),
+            error: (err, stack) => Center(child: Text(l10n.loadFavoritesFailed(err.toString()), style: TextStyle(color: colorScheme.destructive))),
           );
         },
         loading: () => Center(child: CircularProgressIndicator(color: colorScheme.foreground)),
-        error: (err, stack) => Center(child: Text('加載伺服器狀態失敗', style: TextStyle(color: colorScheme.destructive))),
+        error: (err, stack) => Center(child: Text(l10n.loadServerStatusFailed, style: TextStyle(color: colorScheme.destructive))),
       ),
     );
   }

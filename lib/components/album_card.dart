@@ -1,3 +1,4 @@
+import 'package:zenify/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/components/local_cover_image.dart';
@@ -63,6 +64,7 @@ class _AlbumCardState extends State<AlbumCard> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -72,7 +74,7 @@ class _AlbumCardState extends State<AlbumCard> {
       onExit: (_) => setState(() => _isHovered = false),
       child: GestureDetector(
         onTap: widget.isDisabled ? () {
-          ZenifyToast.showError(context, '服務器已離線');
+          ZenifyToast.showError(context, l10n.serverOffline);
         } : widget.onTap,
         behavior: HitTestBehavior.opaque,
         child: Opacity(
@@ -196,7 +198,7 @@ class _AlbumCardState extends State<AlbumCard> {
                                         child: GestureDetector(
                                           onTap: widget.isArtistDisabled
                                             ? () {
-                                                ZenifyToast.showError(context, '服務器已離線');
+                                                ZenifyToast.showError(context, l10n.serverOffline);
                                               }
                                             : (_isUpdatingStar ? null : () async {
                                                 setState(() => _isUpdatingStar = true);
@@ -207,11 +209,11 @@ class _AlbumCardState extends State<AlbumCard> {
                                                     setState(() {
                                                       _optimisticIsStarred = !isCurrentlyStarred;
                                                     });
-                                                    ZenifyToast.showSuccess(context, isCurrentlyStarred ? '已取消收藏' : '已加入收藏');
+                                                    ZenifyToast.showSuccess(context, isCurrentlyStarred ? l10n.unfavorited : l10n.favorited);
                                                   }
                                                 } catch (e) {
                                                   if (mounted) {
-                                                    ZenifyToast.showError(context, '收藏失敗：$e');
+                                                    ZenifyToast.showError(context, l10n.favoriteFailed(e.toString()));
                                                   }
                                                 } finally {
                                                   if (mounted) {
@@ -301,7 +303,7 @@ class _AlbumCardState extends State<AlbumCard> {
                   onExit: (_) => setState(() => _isArtistHovered = false),
                   child: GestureDetector(
                     onTap: widget.isArtistDisabled ? () {
-                      ZenifyToast.showError(context, '服務器已離線');
+                      ZenifyToast.showError(context, l10n.serverOffline);
                     } : widget.onArtistTap,
                     child: Text(
                       widget.artist,
@@ -347,6 +349,7 @@ class _AlbumPlayButtonState extends State<_AlbumPlayButton> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),

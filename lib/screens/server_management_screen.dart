@@ -1,3 +1,4 @@
+import 'package:zenify/l10n/app_localizations.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,6 +20,7 @@ class ServerManagementScreen extends ConsumerStatefulWidget {
 class _ServerManagementScreenState extends ConsumerState<ServerManagementScreen> {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final serversAsync = ref.watch(serversListProvider);
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
@@ -39,7 +41,7 @@ class _ServerManagementScreenState extends ConsumerState<ServerManagementScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '已儲存的伺服器',
+                          l10n.savedServers,
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
@@ -83,18 +85,20 @@ class _ServerManagementScreenState extends ConsumerState<ServerManagementScreen>
           );
         },
         loading: () => Center(child: CircularProgressIndicator(color: colorScheme.foreground)),
-        error: (err, stack) => Center(child: Text('載入失敗: $err', style: TextStyle(color: colorScheme.destructive))),
+        error: (err, stack) => Center(child: Text(l10n.loadFailedErr(err.toString()), style: TextStyle(color: colorScheme.destructive))),
       ),
     );
   }
 
   Widget _buildAddServerTile(BuildContext context, ShadColorScheme colorScheme) {
+    final l10n = AppLocalizations.of(context)!;
     return _AddServerSettingTile(
       onTap: () => _showServerDialog(context, ref),
     );
   }
 
   void _showDeleteConfirmationDialog(BuildContext context, Server server, ShadColorScheme colorScheme) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -104,10 +108,10 @@ class _ServerManagementScreenState extends ConsumerState<ServerManagementScreen>
           children: [
             Icon(LucideIcons.trash2, color: colorScheme.destructive),
             const SizedBox(width: 8),
-            Text('刪除伺服器', style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.bold)),
+            Text(l10n.deleteServer, style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.bold)),
           ],
         ),
-        content: Text('確定要刪除這個伺服器嗎？此操作無法還原。', style: TextStyle(color: colorScheme.mutedForeground)),
+        content: Text(l10n.confirmDeleteServer, style: TextStyle(color: colorScheme.mutedForeground)),
         actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         actions: [
           TextButton(
@@ -116,7 +120,7 @@ class _ServerManagementScreenState extends ConsumerState<ServerManagementScreen>
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
-            child: Text('取消', style: TextStyle(color: colorScheme.mutedForeground, fontWeight: FontWeight.w600)),
+            child: Text(l10n.cancel, style: TextStyle(color: colorScheme.mutedForeground, fontWeight: FontWeight.w600)),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -136,7 +140,7 @@ class _ServerManagementScreenState extends ConsumerState<ServerManagementScreen>
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               elevation: 0,
             ),
-            child: const Text('確認刪除', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: Text(l10n.confirmDelete, style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -144,6 +148,7 @@ class _ServerManagementScreenState extends ConsumerState<ServerManagementScreen>
   }
 
   void _showServerDialog(BuildContext context, WidgetRef ref, {Server? server}) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => _ServerEditDialog(server: server),
@@ -206,6 +211,8 @@ class _ServerEditDialogState extends ConsumerState<_ServerEditDialog> {
       return;
     }
 
+    final l10n = AppLocalizations.of(context)!;
+
     setState(() {
       _isCheckingConnection = true;
       _connectionError = null;
@@ -226,7 +233,7 @@ class _ServerEditDialogState extends ConsumerState<_ServerEditDialog> {
         if (isValid) {
           _isConnectionValid = true;
         } else {
-          _connectionError = '無法連線至伺服器或驗證失敗，請檢查設定。';
+          _connectionError = l10n.serverConnectionOrAuthFailed;
           _isConnectionValid = false;
         }
       });
@@ -234,7 +241,7 @@ class _ServerEditDialogState extends ConsumerState<_ServerEditDialog> {
       if (!mounted) return;
       setState(() {
         _isCheckingConnection = false;
-        _connectionError = '連線發生錯誤。';
+        _connectionError = l10n.connectionError;
         _isConnectionValid = false;
       });
     }
@@ -277,6 +284,7 @@ class _ServerEditDialogState extends ConsumerState<_ServerEditDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
     
@@ -290,28 +298,28 @@ class _ServerEditDialogState extends ConsumerState<_ServerEditDialog> {
       titlePadding: const EdgeInsets.all(24).copyWith(bottom: 12),
       contentPadding: const EdgeInsets.symmetric(horizontal: 24),
       actionsPadding: const EdgeInsets.all(24).copyWith(top: 16),
-      title: Text(_isEditing ? '編輯伺服器' : '新增伺服器', style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.bold)),
+      title: Text(_isEditing ? l10n.editServer : l10n.addServer, style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.bold)),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('請輸入 Navidrome / Subsonic 伺服器資訊', style: TextStyle(color: colorScheme.mutedForeground)),
+          Text(l10n.enterServerInfo, style: TextStyle(color: colorScheme.mutedForeground)),
           const SizedBox(height: 20),
           ZenifyInput(
             controller: _urlController,
-            placeholder: const Text('URL (例如: http://192.168.1.100:4533)'),
+            placeholder: Text(l10n.serverUrlExample),
             autofocus: true,
             onChanged: _onInputChanged,
           ),
           const SizedBox(height: 16),
           ZenifyInput(
             controller: _usernameController,
-            placeholder: const Text('帳號'),
+            placeholder: Text(l10n.username),
             onChanged: _onInputChanged,
           ),
           const SizedBox(height: 16),
           ZenifyInput(
             controller: _passwordController,
-            placeholder: const Text('密碼'),
+            placeholder: Text(l10n.password),
             obscureText: true,
             onChanged: _onInputChanged,
           ),
@@ -348,7 +356,7 @@ class _ServerEditDialogState extends ConsumerState<_ServerEditDialog> {
                   }
                 },
                 child: Text(
-                  _isConfirmingDelete ? '確認刪除' : '刪除',
+                  _isConfirmingDelete ? l10n.confirmDelete : l10n.delete,
                   style: _isConfirmingDelete ? TextStyle(color: colorScheme.destructive) : null,
                 ),
               )
@@ -359,7 +367,7 @@ class _ServerEditDialogState extends ConsumerState<_ServerEditDialog> {
               children: [
                 ShadButton.outline(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('取消'),
+                  child: Text(l10n.cancel),
                 ),
                 const SizedBox(width: 8),
                 ShadButton(
@@ -370,7 +378,7 @@ class _ServerEditDialogState extends ConsumerState<_ServerEditDialog> {
                           : _checkConnection,
                   child: _isCheckingConnection 
                       ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: colorScheme.primaryForeground))
-                      : Text(_isConnectionValid ? (_isEditing ? '儲存變更' : '儲存') : '檢查伺服器'),
+                      : Text(_isConnectionValid ? (_isEditing ? l10n.saveChanges : l10n.save) : l10n.checkServer),
                 ),
               ],
             ),
@@ -406,6 +414,8 @@ class _ServerSettingTileState extends State<_ServerSettingTile> {
 
   Future<void> _handleTap() async {
     if (_isChecking) return;
+    
+    final l10n = AppLocalizations.of(context)!;
 
     setState(() {
       _isChecking = true;
@@ -420,11 +430,11 @@ class _ServerSettingTileState extends State<_ServerSettingTile> {
       if (isAvailable) {
         widget.onTap();
       } else {
-        ZenifyToast.showError(context, '無法連線至該伺服器，請檢查網路或伺服器設定。');
+        ZenifyToast.showError(context, l10n.cannotConnectCheckSettings);
       }
     } catch (e) {
       if (mounted) {
-        ZenifyToast.showError(context, '伺服器連線發生錯誤。');
+        ZenifyToast.showError(context, l10n.serverConnectionError);
       }
     } finally {
       if (mounted) {
@@ -437,6 +447,7 @@ class _ServerSettingTileState extends State<_ServerSettingTile> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
     final isActive = widget.isActive;
@@ -566,6 +577,7 @@ class _AddServerSettingTileState extends State<_AddServerSettingTile> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -621,7 +633,7 @@ class _AddServerSettingTileState extends State<_AddServerSettingTile> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '新增伺服器',
+                      l10n.addServer,
                       style: TextStyle(
                         color: colorScheme.foreground,
                         fontSize: 15,
@@ -631,7 +643,7 @@ class _AddServerSettingTileState extends State<_AddServerSettingTile> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '新增 Navidrome 或 Subsonic 連線',
+                      l10n.addNavidromeOrSubsonic,
                       style: TextStyle(
                         color: colorScheme.mutedForeground,
                         fontSize: 13,

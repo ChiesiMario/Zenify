@@ -1,0 +1,518 @@
+{
+  "@@locale": "en",
+  "settingsTitle": "Settings & Preferences",
+  "themeAppearance": "Appearance",
+  "themeLight": "Light Mode",
+  "themeDark": "Dark Mode",
+  "themeSystem": "System Auto",
+  "storageAndCache": "Storage & Cache",
+  "accountAndServer": "Account & Server",
+  "aboutZenify": "About ZENIFY",
+  "languageSetting": "Language",
+  "languageSystem": "System Default",
+  "languageEnglish": "English",
+  "languageTraditionalChinese": "繁體中文",
+  "languageSimplifiedChinese": "简体中文",
+  "navAlbums": "Albums",
+  "navArtists": "Artists",
+  "navFavorites": "Favorites",
+  "navSearch": "Search",
+  "homeConnectionTesting": "Testing connection...",
+  "homeOffline": "Offline.",
+  "homeSyncing": "Syncing...",
+  "homeSyncNow": "Sync Now",
+  "homeStatsTitle": "Local Data Stats",
+  "homeStatsAlbums": "Albums",
+  "homeStatsArtists": "Artists",
+  "homeStatsCovers": "Downloaded Covers",
+  "homeSortDefault": "Default",
+  "homeSortNameAsc": "Name (A-Z)",
+  "homeSortNameDesc": "Name (Z-A)",
+  "homeSortYearDesc": "Year (Newest)",
+  "homeSortYearAsc": "Year (Oldest)",
+  "homeSortRandom": "Random",
+  "homeSortAlbumCountDesc": "Album Count",
+  "homeSortRecentDownload": "Recent Download",
+  "homeTestConnectionFailed": "Connection test failed. Server is still offline.",
+  "homeTestConnectionSuccess": "Connection successful! Restored to normal mode.",
+  "homeAudioPlayerDisposed": "AudioPlayer disposed! Safe to Shift+R now.",
+  "searchPlaceholder": "Search songs, albums, or artists...",
+  "searchHistory": "Recent Searches",
+  "searchNoResults": "No results found",
+  "searchHistoryClear": "Clear All",
+  "searchSearching": "Searching...",
+  "playerPlay": "Play",
+  "playerPause": "Pause",
+  "playerNext": "Next",
+  "playerPrevious": "Previous",
+  "playerLyrics": "Lyrics",
+  "playerQueue": "Queue",
+  "playerShuffle": "Shuffle",
+  "playerRepeat": "Repeat",
+  "playerRepeatOne": "Repeat One",
+  "playerRepeatOff": "Repeat Off",
+  "playerSpeed": "Speed",
+  "playerQuality": "Quality",
+  "playerNoLyrics": "No lyrics available",
+  "playerAudioCacheError": "Audio cache error",
+  "playerVolume": "Volume",
+  "unknownSong": "Unknown Song",
+  "unknownArtist": "Unknown Artist",
+  "unknownAlbum": "Unknown Album",
+  "noSongPlaying": "No song playing",
+  "songInfo": "Song Info",
+  "addToFavorites": "Add to Favorites",
+  "removeFromFavorites": "Remove from Favorites",
+  "playQueue": "Play Queue",
+  "serverOffline": "Server is offline",
+  "exportMusicFile": "Export Music File",
+  "downloadStarted": "Download started...",
+  "downloadComplete": "Download complete!",
+  "downloadFailed": "Download failed",
+  "noCacheOrServer": "Cannot connect to server and no local cache available",
+  "songDetails": "Song Details",
+  "songTitle": "Title",
+  "songArtist": "Artist",
+  "songAlbum": "Album",
+  "songYear": "Year",
+  "songDuration": "Duration",
+  "songFormat": "Format",
+  "songBitrate": "Bitrate",
+  "songFileSize": "File Size",
+  "showHomeScreen": "Show Home Screen",
+  "exitApp": "Exit App",
+  "unknownYear": "Unknown Year",
+  "unfavorited": "Removed from Favorites",
+  "favorited": "Added to Favorites",
+  "favoriteFailed": "Favorite failed: {error}",
+  "@favoriteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "queueSongCount": "{count} Songs",
+  "@queueSongCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "removeFromQueue": "Remove from Queue",
+  "albumInfoNotFound": "Album info not found",
+  "cannotGetLocalImage": "Cannot get local image file",
+  "imageExportedSuccessfully": "Image exported successfully",
+  "exportFailed": "Export failed: {error}",
+  "@exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "operationFailed": "Operation failed: {error}",
+  "@operationFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "songCount": "{count} Songs",
+  "@songCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "loadFailed": "Load failed: {error}",
+  "@loadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "offlineOperationFailed": "Offline operation failed, song might not be downloadable or server error",
+  "offlineStatus": "Offline",
+  "offline": "Offline",
+  "savedToOfflineMusic": "Saved to offline music",
+  "offlineAllAlbumSongs": "Download all songs in album",
+  "songCountWidget": "{count} Songs",
+  "@songCountWidget": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "qqMusic": "QQ Music",
+  "neteaseMusic": "NetEase Music",
+  "searchInOtherPlatforms": "Search in other platforms",
+  "cannotLoadArtistData": "Cannot load artist data",
+  "albumCountVar": "{count} Albums",
+  "@albumCountVar": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "songCountVar": "{count} Songs",
+  "@songCountVar": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "about": "About",
+  "popularSongs": "Popular Songs",
+  "showMore": "Show More",
+  "loadFailedErr": "Load failed: {error}",
+  "@loadFailedErr": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "readMore": "Read More",
+  "collapse": "Collapse",
+  "serverNotConnectedHint": "Not connected to server, please add one in the top right",
+  "noFavoriteAlbums": "No favorite albums",
+  "favoriteAlbumsTitle": "Favorite Albums",
+  "totalAlbumsCount": "{count} Albums in total",
+  "@totalAlbumsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "shufflePlayAnAlbum": "Shuffle play an album",
+  "loadFavoritesFailed": "Load favorites failed: {error}",
+  "@loadFavoritesFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "loadServerStatusFailed": "Load server status failed",
+  "noFavoriteSongs": "No favorite songs",
+  "offlineSyncEnabled": "Offline sync enabled",
+  "totalSongsCountWidget": "{count} Songs in total",
+  "@totalSongsCountWidget": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "offlineFavoriteSongs": "Offline favorite songs",
+  "songCountWidgetShort": "{count}",
+  "@songCountWidgetShort": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "playAll": "Play All",
+  "startPlayingFavoriteSongs": "Start playing favorite songs",
+  "unknown": "Unknown",
+  "downloadError": "Download error: {error}",
+  "@downloadError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "songs": "Songs",
+  "cannotLoadPlaylist": "Cannot load playlist",
+  "playlistSongCount": "{count} Songs",
+  "@playlistSongCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistIsEmpty": "Playlist is empty",
+  "savedServers": "Saved Servers",
+  "deleteServer": "Delete Server",
+  "confirmDeleteServer": "Are you sure you want to delete this server? This action cannot be undone.",
+  "cancel": "Cancel",
+  "confirmDelete": "Confirm Delete",
+  "serverConnectionOrAuthFailed": "Cannot connect to server or authentication failed, please check settings.",
+  "connectionError": "Connection error.",
+  "editServer": "Edit Server",
+  "addServer": "Add Server",
+  "enterServerInfo": "Please enter Navidrome / Subsonic server info",
+  "serverUrlExample": "URL (e.g. http://192.168.1.100:4533)",
+  "username": "Username",
+  "password": "Password",
+  "delete": "Delete",
+  "saveChanges": "Save Changes",
+  "save": "Save",
+  "checkServer": "Check Server",
+  "cannotConnectCheckSettings": "Cannot connect to this server, please check network or server settings.",
+  "serverConnectionError": "Server connection error.",
+  "addNavidromeOrSubsonic": "Add Navidrome or Subsonic connection",
+  "noServerConfigured": "No server configured",
+  "themeDescription": "Toggle dark mode, light mode or follow system setting",
+  "selectTheme": "Select Theme",
+  "playbackCacheManagement": "Playback Cache Management",
+  "cacheUsed": "Cache used: {size} ({count} songs)",
+  "@cacheUsed": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      },
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "clearCache": "Clear Cache",
+  "offlineMusicCacheLocation": "Offline music and cache storage location",
+  "loading": "Loading...",
+  "selectThisDirectory": "Select this directory",
+  "preparingToMoveFiles": "Preparing to move files...",
+  "movingFiles": "Moving files",
+  "movedFilesProgress": "Moved {current} / {total} files",
+  "@movedFilesProgress": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "updatingDatabase": "Updating database...",
+  "errorOccurred": "Error occurred: {error}",
+  "@errorOccurred": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "changeDirectory": "Change Directory",
+  "noLimit": "No Limit",
+  "cacheSizeLimit": "Cache Size Limit",
+  "reduceCacheSize": "Reduce Cache Size",
+  "currentCacheUsedStr": "Current cache total used: {size}.\\n",
+  "@currentCacheUsedStr": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "cacheLimitWarning": "If limit is set to {limit} GB, system will automatically clear about {excess} of oldest unplayed music to free up space.",
+  "@cacheLimitWarning": {
+    "placeholders": {
+      "limit": {
+        "type": "String"
+      },
+      "excess": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmClear": "Confirm Clear",
+  "serverManagement": "Server Management",
+  "connectedToServer": "Connected to {url} ({username})",
+  "@connectedToServer": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      },
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "noSubsonicServerConfigured": "Subsonic server not configured yet",
+  "appSlogan": "Minimalist modern B&W Subsonic music player",
+  "errorCannotConnectServer": "Error: Cannot connect to server",
+  "startSyncingArtists": "Start syncing artists...",
+  "startSyncingAlbums": "Start syncing albums...",
+  "syncedAlbumsCount": "Synced {count} albums",
+  "@syncedAlbumsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "preparingToDownloadCovers": "Preparing to download covers...",
+  "downloadingCoversProgress": "Downloading covers... ({downloaded}/{total})",
+  "@downloadingCoversProgress": {
+    "placeholders": {
+      "downloaded": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "syncingFavorites": "Syncing favorites...",
+  "syncingPlaylists": "Syncing playlists...",
+  "syncingOfflineAlbums": "Syncing offline albums data...",
+  "syncingOfflineAlbumsProgress": "Syncing offline albums data... ({fetched}/{total})",
+  "@syncingOfflineAlbumsProgress": {
+    "placeholders": {
+      "fetched": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "syncCompleteAlbumsLoaded": "Sync complete! Loaded {count} albums.",
+  "@syncCompleteAlbumsLoaded": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "syncFailed": "Sync failed: {error}",
+  "@syncFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noAlbumsFound": "No albums found",
+  "loadAlbumsFailed": "Load albums failed: {error}",
+  "@loadAlbumsFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noArtistsFound": "No artists found",
+  "loadArtistsFailed": "Load artists failed: {error}",
+  "@loadArtistsFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noOfflineAlbumsYet": "No offline albums yet",
+  "totalSortedAlbumsCount": "Total {count} albums",
+  "@totalSortedAlbumsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "noOfflineSongsYet": "No offline songs yet",
+  "totalSortedSongsCount": "Total {count} songs",
+  "@totalSortedSongsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "deletedAllOfflineMusic": "Deleted all manually offline music",
+  "confirm": "Confirm",
+  "finalConfirm": "Final Confirm",
+  "deleteAll": "Delete All",
+  "favoriteCategories": "Favorite Categories",
+  "favoriteSinglesAndPersonalFavorites": "Favorite singles and personal favorites",
+  "songsCountOnly": "{count} Songs",
+  "@songsCountOnly": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "favoritedMusicAlbums": "Favorited music albums",
+  "albumsCountOnly": "{count} Albums",
+  "@albumsCountOnly": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "customMusicPlaylists": "Custom music playlists",
+  "playlistsCountOnly": "{count} Playlists",
+  "@playlistsCountOnly": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "offlineMusicAndCache": "Offline music and cache",
+  "validDownloadsCount": "{count} Songs",
+  "@validDownloadsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings": "App Settings",
+  "settings": "Settings",
+  "personalMusicCollection": "Personal Music Collection",
+  "songsCountFull": "{count} Songs",
+  "@songsCountFull": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "albumsCountVarFull": "{count} Albums",
+  "@albumsCountVarFull": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "shuffleFavoriteSongs": "Shuffle Favorite Songs",
+  "noPlaylistsCurrently": "No playlists currently",
+  "totalPlaylistsCount": "{count} Playlists in total",
+  "@totalPlaylistsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "songsCountAndDuration": "{songCount} songs • {durationMinutes} min",
+  "@songsCountAndDuration": {
+    "placeholders": {
+      "songCount": {
+        "type": "String"
+      },
+      "durationMinutes": {
+        "type": "String"
+      }
+    }
+  },
+  "songListComingSoon": "Song list coming soon",
+  "navPlaylists": "Playlists"
+}

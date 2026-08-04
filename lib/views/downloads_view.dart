@@ -1,3 +1,4 @@
+import 'package:zenify/l10n/app_localizations.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
@@ -103,6 +104,7 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
     final downloadsAsync = ref.watch(downloadedTracksProvider);
@@ -153,14 +155,14 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
                           labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, letterSpacing: 0.2),
                           unselectedLabelColor: colorScheme.foreground.withValues(alpha: 0.5),
                           unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
-                          tabs: const [
+                          tabs: [
                             Tab(
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(LucideIcons.disc, size: 16),
-                                  SizedBox(width: 6),
-                                  Text('專輯'),
+                                  const Icon(LucideIcons.disc, size: 16),
+                                  const SizedBox(width: 6),
+                                  Text(l10n.navAlbums),
                                 ],
                               ),
                             ),
@@ -170,7 +172,7 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
                                 children: [
                                   Icon(LucideIcons.music, size: 16),
                                   SizedBox(width: 6),
-                                  Text('歌曲'),
+                                  Text(l10n.songs),
                                 ],
                               ),
                             ),
@@ -212,7 +214,7 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
         },
         loading: () => Center(child: CircularProgressIndicator(color: colorScheme.foreground)),
         error: (err, stack) => Center(
-          child: Text('加載失敗: $err', style: TextStyle(color: colorScheme.destructive)),
+          child: Text(l10n.loadFailed(err.toString()), style: TextStyle(color: colorScheme.destructive)),
         ),
       ),
     );
@@ -224,6 +226,7 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
     required ShadColorScheme colorScheme,
     required dynamic api,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     final sortOption = ref.watch(albumSortProvider);
 
     // Group tracks by albumId
@@ -244,7 +247,7 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
 
       return {
         'id': e.key == 'unknown' ? null : e.key,
-        'title': firstTrack.album ?? '未知專輯',
+        'title': firstTrack.album ?? l10n.unknownAlbum,
         'artist': firstTrack.artist,
         'artistId': null, // We don't save artistId in DownloadedTrack
         'coverArt': firstTrack.coverArt,
@@ -258,7 +261,7 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
     if (sortedAlbums.isEmpty) {
       return Center(
         child: Text(
-          '尚無已離線的專輯',
+          l10n.noOfflineAlbumsYet,
           style: TextStyle(color: colorScheme.mutedForeground),
         ),
       );
@@ -276,7 +279,7 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      '共 ${sortedAlbums.length} 張專輯',
+                      l10n.totalSortedAlbumsCount(sortedAlbums.length.toString()),
                       style: TextStyle(
                         color: colorScheme.foreground,
                         fontSize: 13,
@@ -315,13 +318,14 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
     required ShadColorScheme colorScheme,
     required dynamic api,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     final sortOption = ref.watch(songSortProvider);
     final sortedTracks = _sortSongs(manualTracks, sortOption);
 
     if (sortedTracks.isEmpty) {
       return Center(
         child: Text(
-          '尚無已離線的歌曲',
+          l10n.noOfflineSongsYet,
           style: TextStyle(color: colorScheme.mutedForeground),
         ),
       );
@@ -339,7 +343,7 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      '共 ${sortedTracks.length} 首歌曲',
+                      l10n.totalSortedSongsCount(sortedTracks.length.toString()),
                       style: TextStyle(
                         color: colorScheme.foreground,
                         fontSize: 13,
@@ -455,7 +459,7 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
                                     await ref.read(downloadServiceProvider).deleteDownload(track.songId);
                                     ref.invalidate(downloadedTracksProvider);
                                   },
-                                  tooltip: '刪除',
+                                  tooltip: l10n.delete,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
@@ -519,9 +523,10 @@ class _DeleteAllButtonState extends ConsumerState<_DeleteAllButton> {
       });
       
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('已刪除所有手動離線的音樂', style: TextStyle(color: Colors.white)),
+            content: Text(l10n.deletedAllOfflineMusic, style: const TextStyle(color: Colors.white)),
             backgroundColor: ShadTheme.of(context).colorScheme.primary,
           ),
         );
@@ -546,6 +551,7 @@ class _DeleteAllButtonState extends ConsumerState<_DeleteAllButton> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
     
@@ -556,20 +562,20 @@ class _DeleteAllButtonState extends ConsumerState<_DeleteAllButton> {
     
     switch (_clickCount) {
       case 1:
-        buttonText = '確認';
+        buttonText = l10n.confirm;
         buttonColor = colorScheme.destructive;
         textColor = colorScheme.destructiveForeground;
         borderColor = Colors.transparent;
         break;
       case 2:
-        buttonText = '最終確認';
+        buttonText = l10n.finalConfirm;
         buttonColor = colorScheme.destructive;
         textColor = colorScheme.destructiveForeground;
         borderColor = Colors.transparent;
         break;
       case 0:
       default:
-        buttonText = '刪除全部';
+        buttonText = l10n.deleteAll;
         buttonColor = Colors.transparent;
         textColor = colorScheme.mutedForeground;
         borderColor = colorScheme.border;

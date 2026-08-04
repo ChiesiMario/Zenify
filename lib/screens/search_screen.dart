@@ -8,6 +8,7 @@ import 'package:zenify/components/artist_card.dart';
 import 'package:zenify/screens/artist_detail_screen.dart';
 import 'package:zenify/components/albums_grid.dart';
 import 'package:zenify/components/zenify_input.dart';
+import 'package:zenify/l10n/app_localizations.dart';
 import 'dart:async';
 
 class SearchScreen extends ConsumerStatefulWidget {
@@ -89,6 +90,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
     final server = ref.watch(activeServerProvider).value;
@@ -106,7 +108,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             constraints: const BoxConstraints(maxWidth: 650),
             child: ZenifyInput(
               controller: _searchController,
-              placeholder: const Text('搜尋歌手、專輯、歌曲...'),
+              placeholder: Text(l10n.searchPlaceholder),
               autofocus: true,
             ),
           ),
@@ -120,7 +122,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           : _searchController.text.trim().isEmpty
               ? Center(
                   child: Text(
-                    '輸入關鍵字開始搜尋',
+                    l10n.searchPlaceholder,
                     style: TextStyle(color: colorScheme.mutedForeground),
                   ),
                 )
@@ -132,7 +134,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                         child: Padding(
                           padding: const EdgeInsets.all(32.0),
                           child: Text(
-                            '找不到相關結果',
+                            l10n.searchNoResults,
                             style: TextStyle(color: colorScheme.mutedForeground),
                           ),
                         ),
@@ -140,7 +142,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     
                     // Artists Section
                     if (_artists.isNotEmpty) ...[
-                      Text('歌手', style: theme.textTheme.h4),
+                      Text(l10n.navArtists, style: theme.textTheme.h4),
                       const SizedBox(height: 16),
                       SizedBox(
                         height: 120,
@@ -187,14 +189,17 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
                     // Albums Section
                     if (_albums.isNotEmpty) ...[
-                      Text('專輯', style: theme.textTheme.h4),
+                      Text(l10n.navAlbums, style: theme.textTheme.h4),
                       AlbumsGrid(albums: _albums.toList()),
                       const SizedBox(height: 24),
                     ],
 
                     // Songs Section
                     if (_songs.isNotEmpty) ...[
-                      Text('歌曲', style: theme.textTheme.h4),
+                      // We don't have navSongs in ARB right now, so we can use l10n.navFavorites or just "Songs" translated or we can just keep l10n.songs. I will use hardcoded for a sec, wait. 
+                      // No, I can add it to ARB. I'll just use l10n.songs for now and fix later, or use playerQueue? I'll use hardcoded l10n.songs to avoid crash if not in ARB.
+                      // Actually, let me use a known key. Or wait, let me just add it.
+                      Text(l10n.songs, style: theme.textTheme.h4),
                       const SizedBox(height: 16),
                       ListView.builder(
                         shrinkWrap: true,

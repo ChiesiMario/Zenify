@@ -1,0 +1,518 @@
+{
+  "@@locale": "zh_TW",
+  "settingsTitle": "系統設定與偏好",
+  "themeAppearance": "主題外觀",
+  "themeLight": "淺色模式",
+  "themeDark": "深色模式",
+  "themeSystem": "自動 (系統)",
+  "storageAndCache": "儲存與快取",
+  "accountAndServer": "帳號與伺服器",
+  "aboutZenify": "關於 ZENIFY",
+  "languageSetting": "語言 (Language)",
+  "languageSystem": "跟隨系統",
+  "languageEnglish": "English",
+  "languageTraditionalChinese": "繁體中文",
+  "languageSimplifiedChinese": "简体中文",
+  "navAlbums": "專輯",
+  "navArtists": "藝術家",
+  "navFavorites": "最愛",
+  "navSearch": "搜尋",
+  "homeConnectionTesting": "連線測試中...",
+  "homeOffline": "Offline.",
+  "homeSyncing": "同步中...",
+  "homeSyncNow": "立即同步",
+  "homeStatsTitle": "本地資料統計",
+  "homeStatsAlbums": "專輯數量",
+  "homeStatsArtists": "藝術家數量",
+  "homeStatsCovers": "已下載封面",
+  "homeSortDefault": "預設排序",
+  "homeSortNameAsc": "名稱 (A-Z)",
+  "homeSortNameDesc": "名稱 (Z-A)",
+  "homeSortYearDesc": "年份 (新到舊)",
+  "homeSortYearAsc": "年份 (舊到新)",
+  "homeSortRandom": "隨機排列",
+  "homeSortAlbumCountDesc": "專輯數量 (多到少)",
+  "homeSortRecentDownload": "最近下載",
+  "homeTestConnectionFailed": "連線測試失敗，伺服器仍處於離線狀態",
+  "homeTestConnectionSuccess": "連線成功！已恢復為正常模式",
+  "homeAudioPlayerDisposed": "音訊播放器已釋放，可以安全 Shift+R",
+  "searchPlaceholder": "搜尋歌曲、專輯或藝術家...",
+  "searchHistory": "近期搜尋",
+  "searchNoResults": "找不到相關結果",
+  "searchHistoryClear": "清除所有",
+  "searchSearching": "搜尋中...",
+  "playerPlay": "播放",
+  "playerPause": "暫停",
+  "playerNext": "下一首",
+  "playerPrevious": "上一首",
+  "playerLyrics": "歌詞",
+  "playerQueue": "播放清單",
+  "playerShuffle": "隨機播放",
+  "playerRepeat": "循環播放",
+  "playerRepeatOne": "單曲循環",
+  "playerRepeatOff": "關閉循環",
+  "playerSpeed": "速度",
+  "playerQuality": "音質",
+  "playerNoLyrics": "暫無歌詞",
+  "playerAudioCacheError": "音訊快取錯誤",
+  "playerVolume": "音量",
+  "unknownSong": "未知歌曲",
+  "unknownArtist": "未知藝術家",
+  "unknownAlbum": "未知專輯",
+  "noSongPlaying": "無播放中的歌曲",
+  "songInfo": "歌曲資訊",
+  "addToFavorites": "加入最愛",
+  "removeFromFavorites": "取消最愛",
+  "playQueue": "播放隊列",
+  "serverOffline": "服務器已離線",
+  "exportMusicFile": "匯出音樂檔案",
+  "downloadStarted": "開始下載...",
+  "downloadComplete": "下載完成！",
+  "downloadFailed": "下載失敗",
+  "noCacheOrServer": "無法連接伺服器，且無本機快取",
+  "songDetails": "歌曲詳細資訊",
+  "songTitle": "標題",
+  "songArtist": "藝術家",
+  "songAlbum": "專輯",
+  "songYear": "年份",
+  "songDuration": "時長",
+  "songFormat": "格式",
+  "songBitrate": "位元率",
+  "songFileSize": "檔案大小",
+  "showHomeScreen": "顯示主畫面",
+  "exitApp": "退出程式",
+  "unknownYear": "未知年份",
+  "unfavorited": "已取消收藏",
+  "favorited": "已加入收藏",
+  "favoriteFailed": "收藏失敗：{error}",
+  "@favoriteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "queueSongCount": "{count} 首歌曲",
+  "@queueSongCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "removeFromQueue": "從隊列移除",
+  "albumInfoNotFound": "找不到專輯資訊",
+  "cannotGetLocalImage": "無法取得本地圖片檔案",
+  "imageExportedSuccessfully": "圖片已成功匯出",
+  "exportFailed": "匯出失敗：{error}",
+  "@exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "operationFailed": "操作失敗：{error}",
+  "@operationFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "songCount": "{count} 首歌",
+  "@songCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "loadFailed": "加載失敗: {error}",
+  "@loadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "offlineOperationFailed": "離線操作失敗，可能歌曲無法下載或伺服器錯誤",
+  "offlineStatus": "已離線",
+  "offline": "離線",
+  "savedToOfflineMusic": "已儲存至離線音樂",
+  "offlineAllAlbumSongs": "離線本專輯所有歌曲",
+  "songCountWidget": "{count} 首",
+  "@songCountWidget": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "qqMusic": "QQ 音樂",
+  "neteaseMusic": "網易雲音樂",
+  "searchInOtherPlatforms": "在其他串流平台搜尋",
+  "cannotLoadArtistData": "無法載入藝術家資料",
+  "albumCountVar": "{count} 張專輯",
+  "@albumCountVar": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "songCountVar": "{count} 首歌",
+  "@songCountVar": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "about": "關於",
+  "popularSongs": "熱門歌曲",
+  "showMore": "顯示更多",
+  "loadFailedErr": "載入失敗: {error}",
+  "@loadFailedErr": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "readMore": "閱讀更多",
+  "collapse": "收起",
+  "serverNotConnectedHint": "未連接伺服器，請先在右上角新增",
+  "noFavoriteAlbums": "目前沒有任何喜愛的專輯",
+  "favoriteAlbumsTitle": "收藏的專輯",
+  "totalAlbumsCount": "共 {count} 張專輯",
+  "@totalAlbumsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "shufflePlayAnAlbum": "隨機播放一張專輯",
+  "loadFavoritesFailed": "加載喜愛項目失敗: {error}",
+  "@loadFavoritesFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "loadServerStatusFailed": "加載伺服器狀態失敗",
+  "noFavoriteSongs": "目前沒有任何喜愛的歌曲",
+  "offlineSyncEnabled": "已開啟離線同步",
+  "totalSongsCountWidget": "共 {count} 首歌曲",
+  "@totalSongsCountWidget": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "offlineFavoriteSongs": "離線最愛歌曲",
+  "songCountWidgetShort": "{count} 首",
+  "@songCountWidgetShort": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "playAll": "播放全部",
+  "startPlayingFavoriteSongs": "開始播放最愛歌曲",
+  "unknown": "未知",
+  "downloadError": "下載時發生錯誤：{error}",
+  "@downloadError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "songs": "歌曲",
+  "cannotLoadPlaylist": "無法載入播放清單",
+  "playlistSongCount": "{count} 首歌曲",
+  "@playlistSongCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistIsEmpty": "播放清單是空的",
+  "savedServers": "已儲存的伺服器",
+  "deleteServer": "刪除伺服器",
+  "confirmDeleteServer": "確定要刪除這個伺服器嗎？此操作無法還原。",
+  "cancel": "取消",
+  "confirmDelete": "確認刪除",
+  "serverConnectionOrAuthFailed": "無法連線至伺服器或驗證失敗，請檢查設定。",
+  "connectionError": "連線發生錯誤。",
+  "editServer": "編輯伺服器",
+  "addServer": "新增伺服器",
+  "enterServerInfo": "請輸入 Navidrome / Subsonic 伺服器資訊",
+  "serverUrlExample": "URL (例如: http://192.168.1.100:4533)",
+  "username": "帳號",
+  "password": "密碼",
+  "delete": "刪除",
+  "saveChanges": "儲存變更",
+  "save": "儲存",
+  "checkServer": "檢查伺服器",
+  "cannotConnectCheckSettings": "無法連線至該伺服器，請檢查網路或伺服器設定。",
+  "serverConnectionError": "伺服器連線發生錯誤。",
+  "addNavidromeOrSubsonic": "新增 Navidrome 或 Subsonic 連線",
+  "noServerConfigured": "未設定伺服器",
+  "themeDescription": "切換深色模式、淺色模式或跟隨系統設定",
+  "selectTheme": "選擇主題",
+  "playbackCacheManagement": "播放快取管理",
+  "cacheUsed": "已使用快取: {size} ({count} 首歌曲)",
+  "@cacheUsed": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      },
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "clearCache": "清除快取",
+  "offlineMusicCacheLocation": "離線音樂與快取儲存位置",
+  "loading": "載入中...",
+  "selectThisDirectory": "選擇此目錄",
+  "preparingToMoveFiles": "準備搬移檔案...",
+  "movingFiles": "搬移檔案中",
+  "movedFilesProgress": "已搬移 {current} / {total} 個檔案",
+  "@movedFilesProgress": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "updatingDatabase": "更新資料庫中...",
+  "errorOccurred": "發生錯誤: {error}",
+  "@errorOccurred": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "changeDirectory": "變更目錄",
+  "noLimit": "無上限",
+  "cacheSizeLimit": "快取容量上限",
+  "reduceCacheSize": "縮減快取容量",
+  "currentCacheUsedStr": "目前的快取總共使用了 {size}。\\n",
+  "@currentCacheUsedStr": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "cacheLimitWarning": "如果將上限設定為 {limit} GB，系統將會自動清除約 {excess} 最久未聽過的音樂來釋放空間。",
+  "@cacheLimitWarning": {
+    "placeholders": {
+      "limit": {
+        "type": "String"
+      },
+      "excess": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmClear": "確定清除",
+  "serverManagement": "伺服器管理",
+  "connectedToServer": "已連線至 {url} ({username})",
+  "@connectedToServer": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      },
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "noSubsonicServerConfigured": "尚未設定 Subsonic 伺服器",
+  "appSlogan": "極簡現代黑白風 Subsonic 音樂播放器",
+  "errorCannotConnectServer": "錯誤：無法連線伺服器",
+  "startSyncingArtists": "開始同步藝術家...",
+  "startSyncingAlbums": "開始同步專輯...",
+  "syncedAlbumsCount": "已同步 {count} 張專輯",
+  "@syncedAlbumsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "preparingToDownloadCovers": "準備下載封面圖片...",
+  "downloadingCoversProgress": "下載封面圖片中... ({downloaded}/{total})",
+  "@downloadingCoversProgress": {
+    "placeholders": {
+      "downloaded": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "syncingFavorites": "同步最愛項目...",
+  "syncingPlaylists": "同步播放清單...",
+  "syncingOfflineAlbums": "同步離線專輯資料中...",
+  "syncingOfflineAlbumsProgress": "同步離線專輯資料中... ({fetched}/{total})",
+  "@syncingOfflineAlbumsProgress": {
+    "placeholders": {
+      "fetched": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "syncCompleteAlbumsLoaded": "同步完成！共載入 {count} 張專輯。",
+  "@syncCompleteAlbumsLoaded": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "syncFailed": "同步失敗：{error}",
+  "@syncFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noAlbumsFound": "沒有找到任何專輯",
+  "loadAlbumsFailed": "加載專輯失敗: {error}",
+  "@loadAlbumsFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noArtistsFound": "沒有找到藝術家",
+  "loadArtistsFailed": "加載藝術家失敗: {error}",
+  "@loadArtistsFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noOfflineAlbumsYet": "尚無已離線的專輯",
+  "totalSortedAlbumsCount": "共 {count} 張專輯",
+  "@totalSortedAlbumsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "noOfflineSongsYet": "尚無已離線的歌曲",
+  "totalSortedSongsCount": "共 {count} 首歌曲",
+  "@totalSortedSongsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "deletedAllOfflineMusic": "已刪除所有手動離線的音樂",
+  "confirm": "確認",
+  "finalConfirm": "最終確認",
+  "deleteAll": "刪除全部",
+  "favoriteCategories": "珍藏分類",
+  "favoriteSinglesAndPersonalFavorites": "喜愛單曲與個人最愛",
+  "songsCountOnly": "{count} 首",
+  "@songsCountOnly": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "favoritedMusicAlbums": "已收藏的音樂專輯",
+  "albumsCountOnly": "{count} 張",
+  "@albumsCountOnly": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "customMusicPlaylists": "自訂音樂歌單",
+  "playlistsCountOnly": "{count} 個",
+  "@playlistsCountOnly": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "offlineMusicAndCache": "離線音樂與快取",
+  "validDownloadsCount": "{count} 首",
+  "@validDownloadsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings": "應用程式設定",
+  "settings": "設定",
+  "personalMusicCollection": "個人音樂珍藏",
+  "songsCountFull": "{count} 首歌曲",
+  "@songsCountFull": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "albumsCountVarFull": "{count} 張專輯",
+  "@albumsCountVarFull": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "shuffleFavoriteSongs": "隨機播放最愛歌曲",
+  "noPlaylistsCurrently": "目前沒有播放清單",
+  "totalPlaylistsCount": "共 {count} 個歌單",
+  "@totalPlaylistsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "songsCountAndDuration": "{songCount} 首歌曲 • {durationMinutes} 分鐘",
+  "@songsCountAndDuration": {
+    "placeholders": {
+      "songCount": {
+        "type": "String"
+      },
+      "durationMinutes": {
+        "type": "String"
+      }
+    }
+  },
+  "songListComingSoon": "歌曲清單即將推出",
+  "navPlaylists": "播放清單"
+}

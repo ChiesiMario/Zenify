@@ -10,6 +10,7 @@ import 'package:zenify/providers/download_provider.dart';
 import 'package:zenify/providers/network_provider.dart';
 import 'package:zenify/models/album_detail_cache.dart';
 export 'package:zenify/providers/network_provider.dart';
+export 'package:zenify/providers/locale_provider.dart';
 
 final databaseProvider = Provider<DatabaseService>((ref) {
   return DatabaseService();

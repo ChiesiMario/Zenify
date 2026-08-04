@@ -1,3 +1,4 @@
+import 'package:zenify/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
@@ -9,6 +10,7 @@ class AlbumView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final activeServer = ref.watch(activeServerProvider);
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
@@ -17,7 +19,7 @@ class AlbumView extends ConsumerWidget {
       data: (server) {
         if (server == null) {
           return Center(
-            child: Text('未連接伺服器，請先在右上角新增', style: TextStyle(color: colorScheme.mutedForeground)),
+            child: Text(l10n.serverNotConnectedHint, style: TextStyle(color: colorScheme.mutedForeground)),
           );
         }
 
@@ -25,7 +27,7 @@ class AlbumView extends ConsumerWidget {
         return albumsAsync.when(
           data: (albums) {
             if (albums.isEmpty) {
-              return Center(child: Text('沒有找到任何專輯', style: TextStyle(color: colorScheme.mutedForeground)));
+              return Center(child: Text(l10n.noAlbumsFound, style: TextStyle(color: colorScheme.mutedForeground)));
             }
 
             return AlbumsGrid(
@@ -37,11 +39,11 @@ class AlbumView extends ConsumerWidget {
             );
           },
           loading: () => Center(child: CircularProgressIndicator(color: colorScheme.foreground)),
-          error: (err, stack) => Center(child: Text('加載專輯失敗: $err', style: TextStyle(color: colorScheme.destructive))),
+          error: (err, stack) => Center(child: Text(l10n.loadAlbumsFailed(err.toString()), style: TextStyle(color: colorScheme.destructive))),
         );
       },
       loading: () => Center(child: CircularProgressIndicator(color: colorScheme.foreground)),
-      error: (err, stack) => Center(child: Text('加載伺服器狀態失敗', style: TextStyle(color: colorScheme.destructive))),
+      error: (err, stack) => Center(child: Text(l10n.loadServerStatusFailed, style: TextStyle(color: colorScheme.destructive))),
     );
   }
 }

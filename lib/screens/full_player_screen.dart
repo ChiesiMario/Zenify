@@ -4,6 +4,8 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/providers/audio_provider.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/components/local_cover_image.dart';
+import 'package:zenify/l10n/app_localizations.dart';
+
 import 'package:zenify/components/zenify_toast.dart';
 import 'package:zenify/components/play_queue_sheet.dart';
 import 'package:zenify/screens/album_detail_screen.dart';
@@ -24,6 +26,7 @@ class FullPlayerScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final audioState = ref.watch(audioProvider);
     final audioNotifier = ref.read(audioProvider.notifier);
     final api = ref.watch(subsonicApiProvider);
@@ -37,7 +40,7 @@ class FullPlayerScreen extends ConsumerWidget {
     if (currentSong == null) {
       return Container(
         color: colorScheme.background,
-        child: const Center(child: Text('無播放中的歌曲')),
+        child: Center(child: Text(l10n.noSongPlaying)),
       );
     }
 
@@ -95,12 +98,12 @@ class FullPlayerScreen extends ConsumerWidget {
                       children: [
                         _TopUtilityButton(
                           icon: LucideIcons.info,
-                          tooltip: '歌曲資訊',
+                          tooltip: l10n.songInfo,
                           onPressed: () => _showSongInfoDialog(context, currentSong, colorScheme, ref),
                         ),
                         _TopUtilityButton(
                           icon: isFavorite ? Icons.favorite : LucideIcons.heart,
-                          tooltip: isFavorite ? '取消最愛' : '加入最愛',
+                          tooltip: isFavorite ? l10n.removeFromFavorites : l10n.addToFavorites,
                           iconColor: isFavorite ? const Color(0xFFEF4444) : null,
                           isDisabled: networkState.isOffline,
                           onPressed: () async {
@@ -116,7 +119,7 @@ class FullPlayerScreen extends ConsumerWidget {
                         ),
                         _TopUtilityButton(
                           icon: LucideIcons.listMusic,
-                          tooltip: '播放佇列',
+                          tooltip: l10n.playQueue,
                           onPressed: () {
                             showModalBottomSheet(
                               context: context,
@@ -204,7 +207,7 @@ class FullPlayerScreen extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Text(
-                                currentSong['title'] ?? '未知歌曲',
+                                currentSong['title'] ?? l10n.unknownSong,
                                 style: TextStyle(
                                   color: colorScheme.foreground,
                                   fontSize: 26,
@@ -224,7 +227,7 @@ class FullPlayerScreen extends ConsumerWidget {
                                 children: [
                                   Flexible(
                                     child: _HoverableLink(
-                                      text: currentSong['artist'] ?? '未知藝術家',
+                                      text: currentSong['artist'] ?? l10n.unknownArtist,
                                       isDisabled: networkState.isOffline,
                                       style: TextStyle(
                                         color: colorScheme.mutedForeground,
@@ -240,7 +243,7 @@ class FullPlayerScreen extends ConsumerWidget {
                                           ref.read(navigationRequestProvider.notifier).state = NavigationRequest(
                                             type: 'artist',
                                             id: artistId.toString(),
-                                            name: currentSong['artist'] ?? '未知藝術家',
+                                            name: currentSong['artist'] ?? l10n.unknownArtist,
                                           );
                                         }
                                       },
@@ -258,7 +261,7 @@ class FullPlayerScreen extends ConsumerWidget {
                                   ),
                                   Flexible(
                                     child: _HoverableLink(
-                                      text: currentSong['album'] ?? '未知專輯',
+                                      text: currentSong['album'] ?? l10n.unknownAlbum,
                                       style: TextStyle(
                                         color: colorScheme.mutedForeground,
                                         fontSize: 14,
@@ -273,7 +276,7 @@ class FullPlayerScreen extends ConsumerWidget {
                                           ref.read(navigationRequestProvider.notifier).state = NavigationRequest(
                                             type: 'album',
                                             id: albumId.toString(),
-                                            name: currentSong['album'] ?? '未知專輯',
+                                            name: currentSong['album'] ?? l10n.unknownAlbum,
                                           );
                                         }
                                       },
@@ -395,13 +398,14 @@ class _HoverableLinkState extends State<_HoverableLink> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return MouseRegion(
         onEnter: (_) => setState(() => _isHovered = true),
         onExit: (_) => setState(() => _isHovered = false),
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
           onTap: widget.isDisabled ? () {
-            ZenifyToast.showError(context, '服務器已離線');
+            ZenifyToast.showError(context, l10n.serverOffline);
           } : widget.onTap,
           child: Text(
             widget.text,
@@ -575,6 +579,7 @@ class _TopUtilityButtonState extends State<_TopUtilityButton> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colorScheme = ShadTheme.of(context).colorScheme;
     final bool isDisabled = widget.isDisabled || widget.onPressed == null;
 
@@ -589,7 +594,7 @@ class _TopUtilityButtonState extends State<_TopUtilityButton> {
           onTapDown: (_) { if (!isDisabled) setState(() => _isPressed = true); },
           onTapUp: (_) {
             if (isDisabled) {
-              ZenifyToast.showError(context, '服務器已離線');
+              ZenifyToast.showError(context, l10n.serverOffline);
             } else if (widget.onPressed != null) {
               setState(() => _isPressed = false);
               widget.onPressed!();
@@ -620,10 +625,11 @@ class _TopUtilityButtonState extends State<_TopUtilityButton> {
 }
 
 void _showSongInfoDialog(BuildContext context, Map<String, dynamic> song, ShadColorScheme colorScheme, WidgetRef ref) {
-  final title = song['title'] ?? '未知歌曲';
-  final artist = song['artist'] ?? '未知藝術家';
-  final album = song['album'] ?? '未知專輯';
-  final year = song['year']?.toString() ?? '未知';
+  final l10n = AppLocalizations.of(context)!;
+  final title = song['title'] ?? l10n.unknownSong;
+  final artist = song['artist'] ?? l10n.unknownArtist;
+  final album = song['album'] ?? l10n.unknownAlbum;
+  final year = song['year']?.toString() ?? l10n.unknown;
   final bitRate = song['bitRate'] != null ? '${song['bitRate']} kbps' : null;
   final suffix = song['suffix']?.toString().toUpperCase() ?? song['contentType']?.toString().split('/').last.toUpperCase();
   final durationSec = song['duration'] as int?;
@@ -660,7 +666,7 @@ void _showSongInfoDialog(BuildContext context, Map<String, dynamic> song, ShadCo
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '歌曲詳細資訊',
+                        l10n.songDetails,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -676,14 +682,14 @@ void _showSongInfoDialog(BuildContext context, Map<String, dynamic> song, ShadCo
                     ],
                   ),
                   const SizedBox(height: 16),
-                  _buildInfoRow('標題', title, colorScheme),
-                  _buildInfoRow('藝術家', artist, colorScheme),
-                  _buildInfoRow('專輯', album, colorScheme),
-                  _buildInfoRow('年份', year, colorScheme),
-                  if (durationStr != null) _buildInfoRow('時長', durationStr, colorScheme),
-                  if (suffix != null) _buildInfoRow('格式', suffix, colorScheme),
-                  if (bitRate != null) _buildInfoRow('位元率', bitRate, colorScheme),
-                  if (fileSizeMb != null) _buildInfoRow('檔案大小', fileSizeMb, colorScheme),
+                  _buildInfoRow(l10n.songTitle, title, colorScheme),
+                  _buildInfoRow(l10n.songArtist, artist, colorScheme),
+                  _buildInfoRow(l10n.songAlbum, album, colorScheme),
+                  _buildInfoRow(l10n.songYear, year, colorScheme),
+                  if (durationStr != null) _buildInfoRow(l10n.songDuration, durationStr, colorScheme),
+                  if (suffix != null) _buildInfoRow(l10n.songFormat, suffix, colorScheme),
+                  if (bitRate != null) _buildInfoRow(l10n.songBitrate, bitRate, colorScheme),
+                  if (fileSizeMb != null) _buildInfoRow(l10n.songFileSize, fileSizeMb, colorScheme),
                   const SizedBox(height: 20),
                   SizedBox(
                     width: double.infinity,
@@ -704,7 +710,7 @@ void _showSongInfoDialog(BuildContext context, Map<String, dynamic> song, ShadCo
                           if (location == null) return; // User canceled
                           
                           setState(() => isDownloading = true);
-                          ZenifyToast.showSuccess(context, '開始下載...');
+                          ZenifyToast.showSuccess(context, l10n.downloadStarted);
                           
                           final db = ref.read(databaseProvider);
                           final downloadedTrack = await db.getDownloadedTrack(songId);
@@ -715,7 +721,7 @@ void _showSongInfoDialog(BuildContext context, Map<String, dynamic> song, ShadCo
                               // 從本機快取複製
                               await localFile.copy(location.path);
                               if (context.mounted) {
-                                ZenifyToast.showSuccess(context, '下載完成！');
+                                ZenifyToast.showSuccess(context, l10n.downloadComplete);
                               }
                               return;
                             }
@@ -723,7 +729,7 @@ void _showSongInfoDialog(BuildContext context, Map<String, dynamic> song, ShadCo
                           
                           if (api == null) {
                             if (context.mounted) {
-                              ZenifyToast.showError(context, '無法連接伺服器，且無本機快取');
+                              ZenifyToast.showError(context, l10n.noCacheOrServer);
                             }
                             return;
                           }
@@ -736,16 +742,16 @@ void _showSongInfoDialog(BuildContext context, Map<String, dynamic> song, ShadCo
                             final file = File(location.path);
                             await file.writeAsBytes(response.bodyBytes);
                             if (context.mounted) {
-                              ZenifyToast.showSuccess(context, '下載完成！');
+                              ZenifyToast.showSuccess(context, l10n.downloadComplete);
                             }
                           } else {
                             if (context.mounted) {
-                              ZenifyToast.showError(context, '下載失敗：HTTP ${response.statusCode}');
+                              ZenifyToast.showError(context, l10n.downloadFailed + '：HTTP ${response.statusCode}');
                             }
                           }
                         } catch (e) {
                           if (context.mounted) {
-                            ZenifyToast.showError(context, '下載時發生錯誤：$e');
+                            ZenifyToast.showError(context, l10n.downloadError(e.toString()));
                           }
                         } finally {
                           if (context.mounted) {
@@ -759,7 +765,7 @@ void _showSongInfoDialog(BuildContext context, Map<String, dynamic> song, ShadCo
                               height: 16, 
                               child: CircularProgressIndicator(strokeWidth: 2, color: colorScheme.primaryForeground)
                             )
-                          : const Text('匯出音樂檔案'),
+                          : Text(l10n.exportMusicFile),
                     ),
                   ),
                 ],
@@ -802,4 +808,4 @@ Widget _buildInfoRow(String label, String value, ShadColorScheme colorScheme) {
       ],
     ),
   );
-}
+}

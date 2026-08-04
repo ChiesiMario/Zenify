@@ -1,3 +1,4 @@
+import 'package:zenify/l10n/app_localizations.dart';
 import 'dart:ui';
 import 'dart:async';
 import 'dart:io';
@@ -28,6 +29,7 @@ class AlbumDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
     final albumAsync = ref.watch(albumDetailProvider(albumId));
@@ -46,7 +48,7 @@ class AlbumDetailScreen extends ConsumerWidget {
       body: albumAsync.when(
         data: (album) {
           if (album == null) {
-            return Center(child: Text('找不到專輯資訊', style: TextStyle(color: colorScheme.mutedForeground)));
+            return Center(child: Text(l10n.albumInfoNotFound, style: TextStyle(color: colorScheme.mutedForeground)));
           }
 
           final coverUrl = api != null && album['coverArt'] != null
@@ -230,7 +232,7 @@ class AlbumDetailScreen extends ConsumerWidget {
                                                                               sourceFile = File(thumbPath);
                                                                             }
                                                                             if (!sourceFile.existsSync()) {
-                                                                              ZenifyToast.showError(context, '無法取得本地圖片檔案');
+                                                                              ZenifyToast.showError(context, l10n.cannotGetLocalImage);
                                                                               return;
                                                                             }
                                                                             final saveLocation = await getSaveLocation(
@@ -242,9 +244,9 @@ class AlbumDetailScreen extends ConsumerWidget {
                                                                             if (saveLocation != null) {
                                                                               try {
                                                                                 await sourceFile.copy(saveLocation.path);
-                                                                                if (context.mounted) ZenifyToast.showSuccess(context, '圖片已成功匯出');
+                                                                                if (context.mounted) ZenifyToast.showSuccess(context, l10n.imageExportedSuccessfully);
                                                                               } catch (e) {
-                                                                                if (context.mounted) ZenifyToast.showError(context, '匯出失敗：$e');
+                                                                                if (context.mounted) ZenifyToast.showError(context, l10n.exportFailed(e.toString()));
                                                                               }
                                                                             }
                                                                                    }
@@ -300,7 +302,7 @@ class AlbumDetailScreen extends ConsumerWidget {
                                                   child: GestureDetector(
                                                     onTap: networkState.isOffline
                                                       ? () {
-                                                          ZenifyToast.showError(context, '服務器已離線');
+                                                          ZenifyToast.showError(context, l10n.serverOffline);
                                                         }
                                                       : (isUpdatingStar ? null : () async {
                                                           setState(() => isUpdatingStar = true);
@@ -313,17 +315,17 @@ class AlbumDetailScreen extends ConsumerWidget {
                                                                 isStarred = false;
                                                                 album.remove('starred');
                                                               });
-                                                              if (context.mounted) ZenifyToast.showSuccess(context, '已取消收藏');
+                                                              if (context.mounted) ZenifyToast.showSuccess(context, l10n.unfavorited);
                                                             } else {
                                                               await api.star(albumId: albumId);
                                                               setState(() {
                                                                 isStarred = true;
                                                                 album['starred'] = DateTime.now().toIso8601String();
                                                               });
-                                                              if (context.mounted) ZenifyToast.showSuccess(context, '已加入收藏');
+                                                              if (context.mounted) ZenifyToast.showSuccess(context, l10n.favorited);
                                                             }
                                                           } catch (e) {
-                                                            if (context.mounted) ZenifyToast.showError(context, '操作失敗：$e');
+                                                            if (context.mounted) ZenifyToast.showError(context, l10n.operationFailed(e.toString()));
                                                           } finally {
                                                             if (context.mounted) setState(() => isUpdatingStar = false);
                                                           }
@@ -377,7 +379,7 @@ class AlbumDetailScreen extends ConsumerWidget {
                           const SizedBox(height: 16),
                           // Typography
                           Text(
-                            album['name'] ?? '未知專輯',
+                            album['name'] ?? l10n.unknownAlbum,
                             style: TextStyle(
                               color: colorScheme.foreground,
                               fontSize: 24,
@@ -401,7 +403,7 @@ class AlbumDetailScreen extends ConsumerWidget {
                                       onExit: (_) => setState(() => isHovered = false),
                                       child: GestureDetector(
                                         onTap: networkState.isOffline ? () {
-                                          ZenifyToast.showError(context, '服務器已離線');
+                                          ZenifyToast.showError(context, l10n.serverOffline);
                                         } : () {
                                           final artistId = album['artistId'];
                                           if (artistId != null) {
@@ -410,14 +412,14 @@ class AlbumDetailScreen extends ConsumerWidget {
                                                 settings: RouteSettings(name: album['artist']),
                                                 builder: (context) => ArtistDetailScreen(
                                                   artistId: artistId, 
-                                                  artistName: album['artist'] ?? '未知藝術家',
+                                                  artistName: album['artist'] ?? l10n.unknownArtist,
                                                 ),
                                               ),
                                             );
                                           }
                                         },
                                         child: Text(
-                                          album['artist'] ?? '未知藝術家',
+                                          album['artist'] ?? l10n.unknownArtist,
                                           style: TextStyle(
                                             color: colorScheme.mutedForeground,
                                             fontSize: 13,
@@ -439,7 +441,7 @@ class AlbumDetailScreen extends ConsumerWidget {
                               final parts = <String>[];
                               if (album['genre'] != null) parts.add(album['genre'].toString());
                               if (album['year'] != null) parts.add(album['year'].toString());
-                              parts.add('${songList.length} 首歌');
+                              parts.add(l10n.songCount(songList.length.toString()));
                               
                               final List<InlineSpan> spans = [];
                               for (int i = 0; i < parts.length; i++) {
@@ -478,12 +480,12 @@ class AlbumDetailScreen extends ConsumerWidget {
                                       ref.read(audioProvider.notifier).playQueue(playableSongs, 0);
                                     }
                                   },
-                                  child: const Row(
+                                  child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(LucideIcons.play, size: 20),
-                                      SizedBox(width: 8),
-                                      Text('播放', style: TextStyle(fontSize: 16)),
+                                      const Icon(LucideIcons.play, size: 20),
+                                      const SizedBox(width: 8),
+                                      Text(l10n.playerPlay, style: const TextStyle(fontSize: 16)),
                                     ],
                                   ),
                                 ),
@@ -501,12 +503,12 @@ class AlbumDetailScreen extends ConsumerWidget {
                                       ref.read(audioProvider.notifier).playQueue(shuffledList, 0);
                                     }
                                   },
-                                  child: const Row(
+                                  child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(LucideIcons.shuffle, size: 20),
-                                      SizedBox(width: 8),
-                                      Text('隨機播放', style: TextStyle(fontSize: 16)),
+                                      const Icon(LucideIcons.shuffle, size: 20),
+                                      const SizedBox(width: 8),
+                                      Text(l10n.playerShuffle, style: const TextStyle(fontSize: 16)),
                                     ],
                                   ),
                                 ),
@@ -600,7 +602,7 @@ class AlbumDetailScreen extends ConsumerWidget {
                                           ),
                                         ),
                                         title: Text(
-                                          song['title'] ?? '未知歌曲',
+                                          song['title'] ?? l10n.unknownSong,
                                           style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.w600, fontSize: 14),
                                         ),
                                         subtitle: song['artist'] != album['artist']
@@ -638,7 +640,7 @@ class AlbumDetailScreen extends ConsumerWidget {
                                                         size: 16,
                                                       ),
                                                       onPressed: networkState.isOffline ? () {
-                                                        ZenifyToast.showError(context, '服務器已離線');
+                                                        ZenifyToast.showError(context, l10n.serverOffline);
                                                       } : () async {
                                                         if (songId == null || api == null) return;
                                                         if (isFavorite) {
@@ -648,7 +650,7 @@ class AlbumDetailScreen extends ConsumerWidget {
                                                         }
                                                         ref.invalidate(favoritesProvider);
                                                       },
-                                                      tooltip: isFavorite ? '取消最愛' : '加入最愛',
+                                                      tooltip: isFavorite ? l10n.removeFromFavorites : l10n.addToFavorites,
                                                     ),
                                                   ),
                                                 );
@@ -719,7 +721,7 @@ class AlbumDetailScreen extends ConsumerWidget {
             );
         },
         loading: () => Center(child: CircularProgressIndicator(color: colorScheme.foreground)),
-        error: (err, stack) => Center(child: Text('加載失敗: $err', style: TextStyle(color: colorScheme.destructive))),
+        error: (err, stack) => Center(child: Text(l10n.loadFailed(err.toString()), style: TextStyle(color: colorScheme.destructive))),
       ),
     );
   }
@@ -762,7 +764,7 @@ class _AlbumOfflineBentoCardState extends ConsumerState<_AlbumOfflineBentoCard> 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('離線操作失敗，可能歌曲無法下載或伺服器錯誤'),
+            content: Text(AppLocalizations.of(context)!.offlineOperationFailed),
             backgroundColor: ShadTheme.of(context).colorScheme.destructive,
           ),
         );
@@ -774,6 +776,7 @@ class _AlbumOfflineBentoCardState extends ConsumerState<_AlbumOfflineBentoCard> 
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
     final downloadedTracksAsync = ref.watch(downloadedTracksProvider);
@@ -786,8 +789,8 @@ class _AlbumOfflineBentoCardState extends ConsumerState<_AlbumOfflineBentoCard> 
     final prefsState = ref.watch(offlinePreferenceProvider).valueOrNull;
     final effectiveOfflined = prefsState?.albumPreferences[widget.albumId] ?? false;
 
-    final String titleStr = effectiveOfflined ? '已離線' : '離線';
-    final String subtitleStr = effectiveOfflined ? '已儲存至離線音樂' : '離線本專輯所有歌曲';
+    final String titleStr = effectiveOfflined ? l10n.offlineStatus : l10n.offline;
+    final String subtitleStr = effectiveOfflined ? l10n.savedToOfflineMusic : l10n.offlineAllAlbumSongs;
 
     int totalBytes = 0;
     for (final song in widget.songList) {
@@ -877,7 +880,7 @@ class _AlbumOfflineBentoCardState extends ConsumerState<_AlbumOfflineBentoCard> 
                     child: Text.rich(
                       TextSpan(
                         children: [
-                          TextSpan(text: '${widget.songList.length} 首'),
+                          TextSpan(text: l10n.songCountWidget(widget.songList.length.toString())),
                           if (sizeFormatted.isNotEmpty) ...[
                             const TextSpan(
                               text: ' • ',
@@ -992,6 +995,7 @@ class _StreamingPlatformsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -1003,8 +1007,8 @@ class _StreamingPlatformsRow extends StatelessWidget {
       {'id': 'tidal', 'name': 'Tidal', 'icon': LucideIcons.radio},
       {'id': 'amazon', 'name': 'Amazon Music', 'icon': LucideIcons.shoppingBag},
       {'id': 'deezer', 'name': 'Deezer', 'icon': LucideIcons.sliders},
-      {'id': 'qq', 'name': 'QQ 音樂', 'icon': LucideIcons.disc},
-      {'id': 'netease', 'name': '網易雲音樂', 'icon': LucideIcons.flame},
+      {'id': 'qq', 'name': l10n.qqMusic, 'icon': LucideIcons.disc},
+      {'id': 'netease', 'name': l10n.neteaseMusic, 'icon': LucideIcons.flame},
       {'id': 'kkbox', 'name': 'KKBOX', 'icon': LucideIcons.box},
       {'id': 'bandcamp', 'name': 'Bandcamp', 'icon': LucideIcons.tag},
       {'id': 'soundcloud', 'name': 'SoundCloud', 'icon': LucideIcons.cloud},
@@ -1016,7 +1020,7 @@ class _StreamingPlatformsRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '在其他串流平台搜尋',
+          l10n.searchInOtherPlatforms,
           style: TextStyle(
             color: colorScheme.mutedForeground,
             fontSize: 12,
@@ -1060,6 +1064,7 @@ class _PlatformPillButtonState extends State<_PlatformPillButton> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
 

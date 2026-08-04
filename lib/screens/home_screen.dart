@@ -20,6 +20,8 @@ import 'package:zenify/services/sync_service.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/audio_provider.dart';
 import 'package:zenify/providers/sort_providers.dart';
+import 'package:zenify/l10n/app_localizations.dart';
+
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -74,10 +76,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       return !_canPop;
     } else if (_currentIndex == 2) {
       return _canPop && (
-        _currentSubTitle == '歌曲' ||
-        _currentSubTitle == '專輯' ||
-        _currentSubTitle == '播放清單' ||
-        _currentSubTitle == '已離線'
+        _currentSubTitle == AppLocalizations.of(context)!.songs ||
+        _currentSubTitle == AppLocalizations.of(context)!.navAlbums ||
+        _currentSubTitle == AppLocalizations.of(context)!.navPlaylists ||
+        _currentSubTitle == AppLocalizations.of(context)!.offlineStatus
       );
     }
     return false;
@@ -112,7 +114,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.initState();
     _observers = List.generate(3, (index) => _TabObserver(_updateCanPop));
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(syncProvider.notifier).startSync();
+      ref.read(syncProvider.notifier).startSync(AppLocalizations.of(context)!);
     });
   }
 
@@ -160,6 +162,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
     final syncState = ref.watch(syncProvider);
@@ -278,9 +281,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   _isTestingConnection = false;
                                 });
                                 if (!success) {
-                                  ZenifyToast.showError(context, '連線測試失敗，伺服器仍處於離線狀態');
+                                  ZenifyToast.showError(context, l10n.homeTestConnectionFailed);
                                 } else {
-                                  ZenifyToast.showSuccess(context, '連線成功！已恢復為正常模式');
+                                  ZenifyToast.showSuccess(context, l10n.homeTestConnectionSuccess);
                                 }
                               }
                             } : null,
@@ -300,7 +303,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 ],
                                 Text(
                                   networkState.isOffline 
-                                      ? (_isTestingConnection ? '連線測試中...' : 'Offline.') 
+                                      ? (_isTestingConnection ? l10n.homeConnectionTesting : l10n.homeOffline) 
                                       : 'Zenify.',
                                   style: TextStyle(
                                     fontWeight: FontWeight.w900,
@@ -334,7 +337,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   onPressed: networkState.isOffline ? null : () {
                     _navigatorKeys[_currentIndex].currentState?.push(
                       MaterialPageRoute(
-                        settings: const RouteSettings(name: '搜尋'),
+                        settings: RouteSettings(name: AppLocalizations.of(context)!.navSearch),
                         builder: (context) => const SearchScreen(),
                       ),
                     );
@@ -362,7 +365,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     onPressed: () {
                       ref.read(audioProvider.notifier).disposePlayer();
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('AudioPlayer disposed! Safe to Shift+R now.')),
+                        SnackBar(content: Text(l10n.homeAudioPlayerDisposed)),
                       );
                     },
                   ),
@@ -434,9 +437,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          _buildNavItem(0, LucideIcons.disc, '專輯', colorScheme),
-                          _buildNavItem(1, LucideIcons.users, '藝術家', colorScheme, isDisabled: networkState.isOffline),
-                          _buildNavItem(2, LucideIcons.heart, '最愛', colorScheme),
+                          _buildNavItem(0, LucideIcons.disc, l10n.navAlbums, colorScheme),
+                          _buildNavItem(1, LucideIcons.users, l10n.navArtists, colorScheme, isDisabled: networkState.isOffline),
+                          _buildNavItem(2, LucideIcons.heart, l10n.navFavorites, colorScheme),
                         ],
                       ),
                     ),
@@ -502,6 +505,7 @@ class SyncPopoverContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
     final syncState = ref.watch(syncProvider);
@@ -514,23 +518,23 @@ class SyncPopoverContent extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('本地資料統計', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: colorScheme.popoverForeground)),
+          Text(l10n.homeStatsTitle, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: colorScheme.popoverForeground)),
           const SizedBox(height: 16),
           
           statsAsync.when(
             data: (stats) {
               return Column(
                 children: [
-                  _buildStatRow('專輯數量', '${stats['albums']}', colorScheme),
+                  _buildStatRow(l10n.homeStatsAlbums, '${stats['albums']}', colorScheme),
                   const SizedBox(height: 8),
-                  _buildStatRow('藝術家數量', '${stats['artists']}', colorScheme),
+                  _buildStatRow(l10n.homeStatsArtists, '${stats['artists']}', colorScheme),
                   const SizedBox(height: 8),
-                  _buildStatRow('已下載封面', '${stats['covers']}', colorScheme),
+                  _buildStatRow(l10n.homeStatsCovers, '${stats['covers']}', colorScheme),
                 ],
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (err, stack) => Text('讀取失敗', style: TextStyle(color: colorScheme.destructive)),
+            error: (err, stack) => Text('Error', style: TextStyle(color: colorScheme.destructive)),
           ),
 
           const SizedBox(height: 16),
@@ -538,7 +542,7 @@ class SyncPopoverContent extends ConsumerWidget {
           const SizedBox(height: 16),
 
           if (syncState.isSyncing) ...[
-            Text('同步中...', style: TextStyle(color: colorScheme.popoverForeground, fontWeight: FontWeight.w500)),
+            Text(l10n.homeSyncing, style: TextStyle(color: colorScheme.popoverForeground, fontWeight: FontWeight.w500)),
             const SizedBox(height: 8),
             LinearProgressIndicator(value: syncState.progress, backgroundColor: colorScheme.muted, color: colorScheme.primary),
             const SizedBox(height: 4),
@@ -552,9 +556,9 @@ class SyncPopoverContent extends ConsumerWidget {
               onPressed: syncState.isSyncing 
                 ? null 
                 : () {
-                    ref.read(syncProvider.notifier).startSync();
+                    ref.read(syncProvider.notifier).startSync(l10n);
                   },
-              child: const Text('立即同步'),
+              child: Text(l10n.homeSyncNow),
             ),
           ),
         ],
@@ -587,20 +591,21 @@ class SortPopoverContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
 
-    if (currentIndex == 0 || (currentIndex == 2 && subTitle == '專輯')) {
+    if (currentIndex == 0 || (currentIndex == 2 && subTitle == AppLocalizations.of(context)!.navAlbums)) {
       final currentSort = ref.watch(albumSortProvider);
       return _buildMenu<AlbumSortOption>(
         context, ref, colorScheme, currentSort,
         [
-          (AlbumSortOption.defaultOrder, '預設排序'),
-          (AlbumSortOption.nameAsc, '名稱 (A-Z)'),
-          (AlbumSortOption.nameDesc, '名稱 (Z-A)'),
-          (AlbumSortOption.yearDesc, '年份 (新到舊)'),
-          (AlbumSortOption.yearAsc, '年份 (舊到新)'),
-          (AlbumSortOption.random, '隨機排列'),
+          (AlbumSortOption.defaultOrder, l10n.homeSortDefault),
+          (AlbumSortOption.nameAsc, l10n.homeSortNameAsc),
+          (AlbumSortOption.nameDesc, l10n.homeSortNameDesc),
+          (AlbumSortOption.yearDesc, l10n.homeSortYearDesc),
+          (AlbumSortOption.yearAsc, l10n.homeSortYearAsc),
+          (AlbumSortOption.random, l10n.homeSortRandom),
         ]
       );
     } else if (currentIndex == 1) {
@@ -608,25 +613,25 @@ class SortPopoverContent extends ConsumerWidget {
       return _buildMenu<ArtistSortOption>(
         context, ref, colorScheme, currentSort,
         [
-          (ArtistSortOption.defaultOrder, '預設排序'),
-          (ArtistSortOption.nameAsc, '名稱 (A-Z)'),
-          (ArtistSortOption.nameDesc, '名稱 (Z-A)'),
-          (ArtistSortOption.albumCountDesc, '專輯數量 (多到少)'),
-          (ArtistSortOption.random, '隨機排列'),
+          (ArtistSortOption.defaultOrder, l10n.homeSortDefault),
+          (ArtistSortOption.nameAsc, l10n.homeSortNameAsc),
+          (ArtistSortOption.nameDesc, l10n.homeSortNameDesc),
+          (ArtistSortOption.albumCountDesc, l10n.homeSortAlbumCountDesc),
+          (ArtistSortOption.random, l10n.homeSortRandom),
         ]
       );
     } else if (currentIndex == 2) {
-      if (subTitle == '已離線') {
+      if (subTitle == l10n.offlineStatus) {
         final tabIndex = ref.watch(downloadsTabProvider);
         if (tabIndex == 0) {
           final currentSort = ref.watch(albumSortProvider);
           return _buildMenu<AlbumSortOption>(
             context, ref, colorScheme, currentSort,
             [
-              (AlbumSortOption.defaultOrder, '預設排序'),
-              (AlbumSortOption.nameAsc, '名稱 (A-Z)'),
-              (AlbumSortOption.nameDesc, '名稱 (Z-A)'),
-              (AlbumSortOption.random, '隨機排列'),
+              (AlbumSortOption.defaultOrder, l10n.homeSortDefault),
+              (AlbumSortOption.nameAsc, l10n.homeSortNameAsc),
+              (AlbumSortOption.nameDesc, l10n.homeSortNameDesc),
+              (AlbumSortOption.random, l10n.homeSortRandom),
             ]
           );
         } else {
@@ -634,10 +639,10 @@ class SortPopoverContent extends ConsumerWidget {
           return _buildMenu<SongSortOption>(
             context, ref, colorScheme, currentSort,
             [
-              (SongSortOption.defaultOrder, '最近下載'),
-              (SongSortOption.nameAsc, '名稱 (A-Z)'),
-              (SongSortOption.nameDesc, '名稱 (Z-A)'),
-              (SongSortOption.random, '隨機排列'),
+              (SongSortOption.defaultOrder, l10n.homeSortRecentDownload),
+              (SongSortOption.nameAsc, l10n.homeSortNameAsc),
+              (SongSortOption.nameDesc, l10n.homeSortNameDesc),
+              (SongSortOption.random, l10n.homeSortRandom),
             ]
           );
         }
@@ -647,10 +652,10 @@ class SortPopoverContent extends ConsumerWidget {
         return _buildMenu<AlbumSortOption>(
           context, ref, colorScheme, currentSort,
           [
-            (AlbumSortOption.defaultOrder, '預設排序'),
-            (AlbumSortOption.nameAsc, '名稱 (A-Z)'),
-            (AlbumSortOption.nameDesc, '名稱 (Z-A)'),
-            (AlbumSortOption.random, '隨機排列'),
+            (AlbumSortOption.defaultOrder, l10n.homeSortDefault),
+            (AlbumSortOption.nameAsc, l10n.homeSortNameAsc),
+            (AlbumSortOption.nameDesc, l10n.homeSortNameDesc),
+            (AlbumSortOption.random, l10n.homeSortRandom),
           ]
         );
       }
@@ -794,6 +799,7 @@ class _NowPlayingTabIconState extends ConsumerState<NowPlayingTabIcon> with Sing
   Widget build(BuildContext context) {
     final audioState = ref.watch(audioProvider);
     final currentSong = audioState.currentSong;
+    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
     
@@ -906,7 +912,7 @@ class _NavItemButtonState extends State<_NavItemButton> {
         },
         onTapUp: (_) {
           if (widget.isDisabled) {
-            ZenifyToast.showError(context, '服務器已離線');
+            ZenifyToast.showError(context, AppLocalizations.of(context)!.serverOffline);
             return;
           }
           setState(() => _isPressed = false);

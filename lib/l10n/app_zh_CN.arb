@@ -1,0 +1,518 @@
+{
+  "@@locale": "zh_CN",
+  "settingsTitle": "系统设置与偏好",
+  "themeAppearance": "主题外观",
+  "themeLight": "浅色模式",
+  "themeDark": "深色模式",
+  "themeSystem": "自动 (系统)",
+  "storageAndCache": "存储与缓存",
+  "accountAndServer": "账号与服务器",
+  "aboutZenify": "关于 ZENIFY",
+  "languageSetting": "语言 (Language)",
+  "languageSystem": "跟随系统",
+  "languageEnglish": "English",
+  "languageTraditionalChinese": "繁体中文",
+  "languageSimplifiedChinese": "简体中文",
+  "navAlbums": "专辑",
+  "navArtists": "艺术家",
+  "navFavorites": "最爱",
+  "navSearch": "搜索",
+  "homeConnectionTesting": "连接测试中...",
+  "homeOffline": "Offline.",
+  "homeSyncing": "同步中...",
+  "homeSyncNow": "立即同步",
+  "homeStatsTitle": "本地数据统计",
+  "homeStatsAlbums": "专辑数量",
+  "homeStatsArtists": "艺术家数量",
+  "homeStatsCovers": "已下载封面",
+  "homeSortDefault": "默认排序",
+  "homeSortNameAsc": "名称 (A-Z)",
+  "homeSortNameDesc": "名称 (Z-A)",
+  "homeSortYearDesc": "年份 (新到旧)",
+  "homeSortYearAsc": "年份 (旧到新)",
+  "homeSortRandom": "随机排列",
+  "homeSortAlbumCountDesc": "专辑数量 (多到少)",
+  "homeSortRecentDownload": "最近下载",
+  "homeTestConnectionFailed": "连接测试失败，服务器仍处于离线状态",
+  "homeTestConnectionSuccess": "连接成功！已恢复为正常模式",
+  "homeAudioPlayerDisposed": "音频播放器已释放，可以安全 Shift+R",
+  "searchPlaceholder": "搜索歌曲、专辑或艺术家...",
+  "searchHistory": "近期搜索",
+  "searchNoResults": "找不到相关结果",
+  "searchHistoryClear": "清除所有",
+  "searchSearching": "搜索中...",
+  "playerPlay": "播放",
+  "playerPause": "暂停",
+  "playerNext": "下一首",
+  "playerPrevious": "上一首",
+  "playerLyrics": "歌词",
+  "playerQueue": "播放列表",
+  "playerShuffle": "随机播放",
+  "playerRepeat": "循环播放",
+  "playerRepeatOne": "单曲循环",
+  "playerRepeatOff": "关闭循环",
+  "playerSpeed": "速度",
+  "playerQuality": "音质",
+  "playerNoLyrics": "暂无歌词",
+  "playerAudioCacheError": "音频缓存错误",
+  "playerVolume": "音量",
+  "unknownSong": "未知歌曲",
+  "unknownArtist": "未知艺术家",
+  "unknownAlbum": "未知专辑",
+  "noSongPlaying": "无播放中的歌曲",
+  "songInfo": "歌曲信息",
+  "addToFavorites": "加入最爱",
+  "removeFromFavorites": "取消最爱",
+  "playQueue": "播放队列",
+  "serverOffline": "服务器已离线",
+  "exportMusicFile": "导出音乐文件",
+  "downloadStarted": "开始下载...",
+  "downloadComplete": "下载完成！",
+  "downloadFailed": "下载失败",
+  "noCacheOrServer": "无法连接服务器，且无本地缓存",
+  "songDetails": "歌曲详细信息",
+  "songTitle": "标题",
+  "songArtist": "艺术家",
+  "songAlbum": "专辑",
+  "songYear": "年份",
+  "songDuration": "时长",
+  "songFormat": "格式",
+  "songBitrate": "比特率",
+  "songFileSize": "文件大小",
+  "showHomeScreen": "显示主屏幕",
+  "exitApp": "退出程序",
+  "unknownYear": "未知年份",
+  "unfavorited": "已取消收藏",
+  "favorited": "已加入收藏",
+  "favoriteFailed": "收藏失败：{error}",
+  "@favoriteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "queueSongCount": "{count} 首歌曲",
+  "@queueSongCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "removeFromQueue": "从队列移除",
+  "albumInfoNotFound": "找不到专辑信息",
+  "cannotGetLocalImage": "无法获取本地图片文件",
+  "imageExportedSuccessfully": "图片已成功导出",
+  "exportFailed": "导出失败：{error}",
+  "@exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "operationFailed": "操作失败：{error}",
+  "@operationFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "songCount": "{count} 首歌",
+  "@songCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "loadFailed": "加载失败: {error}",
+  "@loadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "offlineOperationFailed": "离线操作失败，可能歌曲无法下载或服务器错误",
+  "offlineStatus": "已离线",
+  "offline": "离线",
+  "savedToOfflineMusic": "已保存至离线音乐",
+  "offlineAllAlbumSongs": "离线本专辑所有歌曲",
+  "songCountWidget": "{count} 首",
+  "@songCountWidget": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "qqMusic": "QQ 音乐",
+  "neteaseMusic": "网易云音乐",
+  "searchInOtherPlatforms": "在其他流媒体平台搜索",
+  "cannotLoadArtistData": "无法加载艺术家数据",
+  "albumCountVar": "{count} 张专辑",
+  "@albumCountVar": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "songCountVar": "{count} 首歌",
+  "@songCountVar": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "about": "关于",
+  "popularSongs": "热门歌曲",
+  "showMore": "显示更多",
+  "loadFailedErr": "加载失败: {error}",
+  "@loadFailedErr": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "readMore": "阅读更多",
+  "collapse": "收起",
+  "serverNotConnectedHint": "未连接服务器，请先在右上角新增",
+  "noFavoriteAlbums": "目前没有任何喜爱的专辑",
+  "favoriteAlbumsTitle": "收藏的专辑",
+  "totalAlbumsCount": "共 {count} 张专辑",
+  "@totalAlbumsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "shufflePlayAnAlbum": "随机播放一张专辑",
+  "loadFavoritesFailed": "加载喜爱项目失败: {error}",
+  "@loadFavoritesFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "loadServerStatusFailed": "加载服务器状态失败",
+  "noFavoriteSongs": "目前没有任何喜爱的歌曲",
+  "offlineSyncEnabled": "已开启离线同步",
+  "totalSongsCountWidget": "共 {count} 首歌曲",
+  "@totalSongsCountWidget": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "offlineFavoriteSongs": "离线最爱歌曲",
+  "songCountWidgetShort": "{count} 首",
+  "@songCountWidgetShort": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "playAll": "播放全部",
+  "startPlayingFavoriteSongs": "开始播放最爱歌曲",
+  "unknown": "未知",
+  "downloadError": "下载时发生错误：{error}",
+  "@downloadError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "songs": "歌曲",
+  "cannotLoadPlaylist": "无法加载播放列表",
+  "playlistSongCount": "{count} 首歌曲",
+  "@playlistSongCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistIsEmpty": "播放列表是空的",
+  "savedServers": "已保存的服务器",
+  "deleteServer": "删除服务器",
+  "confirmDeleteServer": "确定要删除这个服务器吗？此操作无法还原。",
+  "cancel": "取消",
+  "confirmDelete": "确认删除",
+  "serverConnectionOrAuthFailed": "无法连接至服务器或验证失败，请检查设置。",
+  "connectionError": "连接发生错误。",
+  "editServer": "编辑服务器",
+  "addServer": "新增服务器",
+  "enterServerInfo": "请输入 Navidrome / Subsonic 服务器信息",
+  "serverUrlExample": "URL (例如: http://192.168.1.100:4533)",
+  "username": "账号",
+  "password": "密码",
+  "delete": "删除",
+  "saveChanges": "保存更改",
+  "save": "保存",
+  "checkServer": "检查服务器",
+  "cannotConnectCheckSettings": "无法连接至该服务器，请检查网络或服务器设置。",
+  "serverConnectionError": "服务器连接发生错误。",
+  "addNavidromeOrSubsonic": "新增 Navidrome 或 Subsonic 连接",
+  "noServerConfigured": "未设置服务器",
+  "themeDescription": "切换深色模式、浅色模式或跟随系统设置",
+  "selectTheme": "选择主题",
+  "playbackCacheManagement": "播放缓存管理",
+  "cacheUsed": "已使用缓存: {size} ({count} 首歌曲)",
+  "@cacheUsed": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      },
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "clearCache": "清除缓存",
+  "offlineMusicCacheLocation": "离线音乐与缓存存储位置",
+  "loading": "加载中...",
+  "selectThisDirectory": "选择此目录",
+  "preparingToMoveFiles": "准备搬移文件...",
+  "movingFiles": "搬移文件中",
+  "movedFilesProgress": "已搬移 {current} / {total} 个文件",
+  "@movedFilesProgress": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "updatingDatabase": "更新数据库中...",
+  "errorOccurred": "发生错误: {error}",
+  "@errorOccurred": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "changeDirectory": "更改目录",
+  "noLimit": "无上限",
+  "cacheSizeLimit": "缓存容量上限",
+  "reduceCacheSize": "缩减缓存容量",
+  "currentCacheUsedStr": "目前的缓存总共使用了 {size}。\\n",
+  "@currentCacheUsedStr": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "cacheLimitWarning": "如果将上限设置为 {limit} GB，系统将会自动清除约 {excess} 最久未听过的音乐来释放空间。",
+  "@cacheLimitWarning": {
+    "placeholders": {
+      "limit": {
+        "type": "String"
+      },
+      "excess": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmClear": "确定清除",
+  "serverManagement": "服务器管理",
+  "connectedToServer": "已连接至 {url} ({username})",
+  "@connectedToServer": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      },
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "noSubsonicServerConfigured": "尚未设置 Subsonic 服务器",
+  "appSlogan": "极简现代黑白风 Subsonic 音乐播放器",
+  "errorCannotConnectServer": "错误：无法连接服务器",
+  "startSyncingArtists": "开始同步艺术家...",
+  "startSyncingAlbums": "开始同步专辑...",
+  "syncedAlbumsCount": "已同步 {count} 张专辑",
+  "@syncedAlbumsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "preparingToDownloadCovers": "准备下载封面图片...",
+  "downloadingCoversProgress": "下载封面图片中... ({downloaded}/{total})",
+  "@downloadingCoversProgress": {
+    "placeholders": {
+      "downloaded": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "syncingFavorites": "同步最爱项目...",
+  "syncingPlaylists": "同步播放列表...",
+  "syncingOfflineAlbums": "同步离线专辑数据中...",
+  "syncingOfflineAlbumsProgress": "同步离线专辑数据中... ({fetched}/{total})",
+  "@syncingOfflineAlbumsProgress": {
+    "placeholders": {
+      "fetched": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "syncCompleteAlbumsLoaded": "同步完成！共载入 {count} 张专辑。",
+  "@syncCompleteAlbumsLoaded": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "syncFailed": "同步失败：{error}",
+  "@syncFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noAlbumsFound": "没有找到任何专辑",
+  "loadAlbumsFailed": "加载专辑失败: {error}",
+  "@loadAlbumsFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noArtistsFound": "没有找到艺术家",
+  "loadArtistsFailed": "加载艺术家失败: {error}",
+  "@loadArtistsFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noOfflineAlbumsYet": "尚无已离线的专辑",
+  "totalSortedAlbumsCount": "共 {count} 张专辑",
+  "@totalSortedAlbumsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "noOfflineSongsYet": "尚无已离线的歌曲",
+  "totalSortedSongsCount": "共 {count} 首歌曲",
+  "@totalSortedSongsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "deletedAllOfflineMusic": "已删除所有手动离线的音乐",
+  "confirm": "确认",
+  "finalConfirm": "最终确认",
+  "deleteAll": "删除全部",
+  "favoriteCategories": "收藏分类",
+  "favoriteSinglesAndPersonalFavorites": "喜爱单曲与个人最爱",
+  "songsCountOnly": "{count} 首",
+  "@songsCountOnly": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "favoritedMusicAlbums": "已收藏的音乐专辑",
+  "albumsCountOnly": "{count} 张",
+  "@albumsCountOnly": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "customMusicPlaylists": "自定音乐歌单",
+  "playlistsCountOnly": "{count} 个",
+  "@playlistsCountOnly": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "offlineMusicAndCache": "离线音乐与缓存",
+  "validDownloadsCount": "{count} 首",
+  "@validDownloadsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "appSettings": "应用程序设置",
+  "settings": "设置",
+  "personalMusicCollection": "个人音乐收藏",
+  "songsCountFull": "{count} 首歌曲",
+  "@songsCountFull": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "albumsCountVarFull": "{count} 张专辑",
+  "@albumsCountVarFull": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "shuffleFavoriteSongs": "随机播放最爱歌曲",
+  "noPlaylistsCurrently": "目前没有播放列表",
+  "totalPlaylistsCount": "共 {count} 个歌单",
+  "@totalPlaylistsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "songsCountAndDuration": "{songCount} 首歌曲 • {durationMinutes} 分钟",
+  "@songsCountAndDuration": {
+    "placeholders": {
+      "songCount": {
+        "type": "String"
+      },
+      "durationMinutes": {
+        "type": "String"
+      }
+    }
+  },
+  "songListComingSoon": "歌曲清单即将推出",
+  "navPlaylists": "播放列表"
+}

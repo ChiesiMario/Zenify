@@ -1,3 +1,4 @@
+import 'package:zenify/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zenify/components/artist_card.dart';
@@ -20,6 +21,7 @@ class ArtistsGrid extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final server = ref.watch(activeServerProvider).value;
     final api = ref.watch(subsonicApiProvider);
     final networkState = ref.watch(networkProvider);
@@ -86,7 +88,7 @@ class ArtistsGrid extends ConsumerWidget {
           itemCount: artists.length,
           itemBuilder: (context, index) {
             final artist = artists[index];
-            final name = artist['name'] ?? '未知藝術家';
+            final name = artist['name'] ?? l10n.unknownArtist;
             final artistId = artist['id'];
             final coverArtId = artist['coverArt'] ?? artistId;
             final fallbackUrl = api != null && coverArtId != null 

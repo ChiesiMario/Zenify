@@ -11,6 +11,8 @@ import 'package:file_selector/file_selector.dart';
 import 'package:zenify/services/path_service.dart';
 import 'package:zenify/screens/server_management_screen.dart';
 import 'package:zenify/providers/audio_provider.dart';
+import 'package:zenify/l10n/app_localizations.dart';
+import 'package:zenify/providers/locale_provider.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -43,19 +45,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return '${mb.toStringAsFixed(1)} MB';
   }
 
-  String _getThemeName(ThemeMode mode) {
+  String _getThemeName(ThemeMode mode, AppLocalizations l10n) {
     switch (mode) {
       case ThemeMode.light:
-        return '淺色模式';
+        return l10n.themeLight;
       case ThemeMode.dark:
-        return '深色模式';
+        return l10n.themeDark;
       case ThemeMode.system:
-        return '系統自動';
+        return l10n.themeSystem;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
     final themeMode = ref.watch(themeModeProvider);
@@ -99,38 +102,75 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     _buildHeroBanner(
                       context,
                       colorScheme,
-                      _getThemeName(themeMode),
+                      l10n.settingsTitle,
+                      _getThemeName(themeMode, l10n),
                       formattedCacheSize,
-                      server != null ? '${server.username}@${server.url}' : '未設定伺服器',
+                      server != null ? '${server.username}@${server.url}' : l10n.noServerConfigured,
                     ),
                     const SizedBox(height: 24),
 
                     // 2. 外觀 SECTION
-                    _buildSectionHeader('外觀與體驗', colorScheme),
+                    _buildSectionHeader(l10n.themeAppearance, colorScheme),
                     const SizedBox(height: 12),
                     _VercelSettingTile(
-                      title: '主題外觀',
-                      subtitle: '切換深色模式、淺色模式或跟隨系統設定',
+                      title: l10n.languageSetting,
+                      subtitle: '',
+                      icon: LucideIcons.languages,
+                      trailing: SizedBox(
+                        width: 180,
+                        child: ShadSelect<String>(
+                          placeholder: Text(l10n.languageSystem),
+                          initialValue: ref.watch(localeProvider)?.toString() ?? 'system',
+                          onChanged: (val) {
+                            if (val == 'system') {
+                              ref.read(localeProvider.notifier).setLocale(null);
+                            } else if (val == 'en') {
+                              ref.read(localeProvider.notifier).setLocale(const Locale('en'));
+                            } else if (val == 'zh_TW') {
+                              ref.read(localeProvider.notifier).setLocale(const Locale('zh', 'TW'));
+                            } else if (val == 'zh_CN') {
+                              ref.read(localeProvider.notifier).setLocale(const Locale('zh', 'CN'));
+                            }
+                          },
+                          options: [
+                            ShadOption(value: 'system', child: Text(l10n.languageSystem)),
+                            ShadOption(value: 'en', child: Text(l10n.languageEnglish)),
+                            ShadOption(value: 'zh_TW', child: Text(l10n.languageTraditionalChinese)),
+                            ShadOption(value: 'zh_CN', child: Text(l10n.languageSimplifiedChinese)),
+                          ],
+                          selectedOptionBuilder: (context, value) {
+                            if (value == 'en') return Text(l10n.languageEnglish);
+                            if (value == 'zh_TW') return Text(l10n.languageTraditionalChinese);
+                            if (value == 'zh_CN') return Text(l10n.languageSimplifiedChinese);
+                            return Text(l10n.languageSystem);
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _VercelSettingTile(
+                      title: l10n.themeAppearance,
+                      subtitle: l10n.themeDescription,
                       icon: themeMode == ThemeMode.dark
                           ? LucideIcons.moon
                           : (themeMode == ThemeMode.light ? LucideIcons.sun : LucideIcons.sunMoon),
                       trailing: SizedBox(
-                        width: 130,
+                        width: 180,
                         child: ShadSelect<ThemeMode>(
-                          placeholder: const Text('選擇主題'),
+                          placeholder: Text(l10n.selectTheme),
                           initialValue: themeMode,
                           onChanged: (mode) {
                             if (mode != null) {
                               ref.read(themeModeProvider.notifier).setThemeMode(mode);
                             }
                           },
-                          options: const [
-                            ShadOption(value: ThemeMode.system, child: Text('自動 (系統)')),
-                            ShadOption(value: ThemeMode.light, child: Text('淺色模式')),
-                            ShadOption(value: ThemeMode.dark, child: Text('深色模式')),
+                          options: [
+                            ShadOption(value: ThemeMode.system, child: Text(l10n.themeSystem)),
+                            ShadOption(value: ThemeMode.light, child: Text(l10n.themeLight)),
+                            ShadOption(value: ThemeMode.dark, child: Text(l10n.themeDark)),
                           ],
                           selectedOptionBuilder: (context, value) {
-                            return Text(_getThemeName(value));
+                            return Text(_getThemeName(value, l10n));
                           },
                         ),
                       ),
@@ -139,11 +179,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     const SizedBox(height: 32),
 
                     // 3. 儲存與快取 SECTION
-                    _buildSectionHeader('儲存與快取', colorScheme),
+                    _buildSectionHeader(l10n.storageAndCache, colorScheme),
                     const SizedBox(height: 12),
                     _VercelSettingTile(
-                      title: '播放快取管理',
-                      subtitle: '已使用快取: $formattedCacheSize (${cacheTracks.length} 首歌曲)',
+                      title: l10n.playbackCacheManagement,
+                      subtitle: l10n.cacheUsed(formattedCacheSize.toString(), cacheTracks.length.toString()),
                       icon: LucideIcons.hardDrive,
                       trailing: ShadButton.outline(
                         size: ShadButtonSize.sm,
@@ -158,7 +198,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             Icon(LucideIcons.trash2, size: 13, color: colorScheme.mutedForeground),
                             const SizedBox(width: 6),
                             Text(
-                              '清除快取',
+                              l10n.clearCache,
                               style: TextStyle(
                                 color: colorScheme.foreground,
                                 fontSize: 12,
@@ -171,21 +211,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                     const SizedBox(height: 12),
                     _VercelSettingTile(
-                      title: '離線音樂與快取儲存位置',
-                      subtitle: _currentDownloadRoot.isEmpty ? '載入中...' : _currentDownloadRoot,
+                      title: l10n.offlineMusicCacheLocation,
+                      subtitle: _currentDownloadRoot.isEmpty ? l10n.loading : _currentDownloadRoot,
                       icon: LucideIcons.folderClosed,
                       trailing: ShadButton.outline(
                         size: ShadButtonSize.sm,
                         onPressed: () async {
                           String? result;
                           try {
-                            result = await getDirectoryPath(confirmButtonText: '選擇此目錄');
+                            result = await getDirectoryPath(confirmButtonText: l10n.selectThisDirectory);
                           } catch (e) {
                             print('FileSelector error: $e');
                           }
                           if (result != null && context.mounted) {
                             final progressNotifier = ValueNotifier<double>(0);
-                            final textNotifier = ValueNotifier<String>('準備搬移檔案...');
+                            final textNotifier = ValueNotifier<String>(l10n.preparingToMoveFiles);
                             
                             showDialog(
                               context: context,
@@ -194,7 +234,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 return AlertDialog(
                                   backgroundColor: theme.colorScheme.card,
                                   title: Text(
-                                    '搬移檔案中', 
+                                    l10n.movingFiles, 
                                     style: TextStyle(color: theme.colorScheme.foreground, fontSize: 16, fontWeight: FontWeight.bold)
                                   ),
                                   content: SizedBox(
@@ -236,10 +276,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 result,
                                 onProgress: (current, total) {
                                   progressNotifier.value = current / total;
-                                  textNotifier.value = '已搬移 $current / $total 個檔案';
+                                  textNotifier.value = l10n.movedFilesProgress(current.toString(), total.toString());
                                 },
                               );
-                              textNotifier.value = '更新資料庫中...';
+                              textNotifier.value = l10n.updatingDatabase;
                               await db.updateAllDownloadPaths(_currentDownloadRoot, result);
                               await _loadDownloadRoot();
                               
@@ -249,7 +289,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               print('Change directory error: $e\n$stack');
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('發生錯誤: $e')),
+                                  SnackBar(content: Text(l10n.errorOccurred(e.toString()))),
                                 );
                               }
                             } finally {
@@ -260,7 +300,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           }
                         },
                         child: Text(
-                          '變更目錄',
+                          l10n.changeDirectory,
                           style: TextStyle(
                             color: colorScheme.foreground,
                             fontSize: 12,
@@ -275,10 +315,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         final cacheLimitFromProvider = ref.watch(cacheLimitProvider);
                         final cacheLimit = _draggingCacheLimit ?? cacheLimitFromProvider;
                         final isUnlimited = cacheLimit > 10.0;
-                        final displayValue = isUnlimited ? '無上限' : '${cacheLimit.toInt()} GB';
+                        final displayValue = isUnlimited ? l10n.noLimit : '${cacheLimit.toInt()} GB';
 
                         return _VercelSettingTile(
-                          title: '快取容量上限',
+                          title: l10n.cacheSizeLimit,
                           subtitle: displayValue,
                           icon: LucideIcons.hardDrive,
                           bottom: Padding(
@@ -352,7 +392,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                                       ),
                                                       const SizedBox(height: 24),
                                                       Text(
-                                                        '縮減快取容量',
+                                                        l10n.reduceCacheSize,
                                                         style: TextStyle(
                                                           color: theme.colorScheme.foreground,
                                                           fontSize: 18,
@@ -362,8 +402,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                                       ),
                                                       const SizedBox(height: 12),
                                                       Text(
-                                                        '目前的快取總共使用了 $currentStr。\n'
-                                                        '如果將上限設定為 ${val.toInt()} GB，系統將會自動清除約 $excessStr 最久未聽過的音樂來釋放空間。',
+                                                        l10n.currentCacheUsedStr(currentStr.toString()) +
+                                                        l10n.cacheLimitWarning(val.toInt().toString(), excessStr.toString()),
                                                         textAlign: TextAlign.center,
                                                         style: TextStyle(
                                                           color: theme.colorScheme.mutedForeground,
@@ -377,7 +417,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                                           Expanded(
                                                             child: ShadButton.outline(
                                                               onPressed: () => Navigator.pop(context, false),
-                                                              child: const Text('取消'),
+                                                              child: Text(l10n.cancel),
                                                             ),
                                                           ),
                                                           const SizedBox(width: 12),
@@ -386,7 +426,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                                               backgroundColor: theme.colorScheme.destructive,
                                                               hoverBackgroundColor: theme.colorScheme.destructive.withValues(alpha: 0.9),
                                                               onPressed: () => Navigator.pop(context, true),
-                                                              child: const Text('確定清除', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
+                                                              child: Text(l10n.confirmClear, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
                                                             ),
                                                           ),
                                                         ],
@@ -420,7 +460,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   ),
                                 ),
                                 const SizedBox(width: 12),
-                                Text('無上限', style: TextStyle(color: theme.colorScheme.mutedForeground, fontSize: 12)),
+                                Text(l10n.noLimit, style: TextStyle(color: theme.colorScheme.mutedForeground, fontSize: 12)),
                               ],
                             ),
                           ),
@@ -432,17 +472,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     const SizedBox(height: 32),
 
                     // 4. 帳號與伺服器 SECTION
-                    _buildSectionHeader('帳號與伺服器', colorScheme),
+                    _buildSectionHeader(l10n.accountAndServer, colorScheme),
                     const SizedBox(height: 12),
                     _VercelSettingTile(
-                      title: '伺服器管理',
-                      subtitle: server != null ? '已連線至 ${server.url} (${server.username})' : '尚未設定 Subsonic 伺服器',
+                      title: l10n.serverManagement,
+                      subtitle: server != null ? l10n.connectedToServer(server.url.toString(), server.username.toString()) : l10n.noSubsonicServerConfigured,
                       icon: LucideIcons.server,
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            settings: const RouteSettings(name: '伺服器管理'),
+                            settings: RouteSettings(name: l10n.serverManagement),
                             builder: (context) => const ServerManagementScreen(),
                           ),
                         );
@@ -453,7 +493,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     const SizedBox(height: 32),
 
                     // 5. 關於與版本 SECTION
-                    _buildSectionHeader('關於 ZENIFY', colorScheme),
+                    _buildSectionHeader(l10n.aboutZenify, colorScheme),
                     const SizedBox(height: 12),
                     Container(
                       padding: const EdgeInsets.all(20),
@@ -484,7 +524,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 Row(
                                   children: [
                                     Text(
-                                      'Zenify Player',
+                                      'Zenify',
                                       style: TextStyle(
                                         color: colorScheme.foreground,
                                         fontSize: 15,
@@ -516,7 +556,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                                  '極簡現代黑白風 Subsonic 音樂播放器',
+                                                  l10n.appSlogan,
                                   style: TextStyle(
                                     color: colorScheme.mutedForeground,
                                     fontSize: 13,
@@ -559,6 +599,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget _buildHeroBanner(
     BuildContext context,
     ShadColorScheme colorScheme,
+    String title,
     String themeName,
     String cacheSize,
     String serverName,
@@ -577,7 +618,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '系統設定與偏好',
+            title,
             style: TextStyle(
               color: colorScheme.foreground,
               fontSize: 26,

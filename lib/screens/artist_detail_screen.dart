@@ -1,3 +1,4 @@
+import 'package:zenify/l10n/app_localizations.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -36,6 +37,7 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
     final artistDetailAsync = ref.watch(artistDetailProvider(widget.artistId));
@@ -49,7 +51,7 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
         data: (artistData) {
           if (artistData == null) {
             return Center(
-              child: Text('無法載入藝術家資料', style: TextStyle(color: colorScheme.destructive)),
+              child: Text(l10n.cannotLoadArtistData, style: TextStyle(color: colorScheme.destructive)),
             );
           }
 
@@ -141,8 +143,8 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
                               }
                               
                               final parts = <String>[];
-                              parts.add('$albumCount 張專輯');
-                              if (songCount > 0) parts.add('$songCount 首歌');
+                              parts.add(l10n.albumCountVar(albumCount.toString()));
+                              if (songCount > 0) parts.add(l10n.songCountVar(songCount.toString()));
                               
                               final List<InlineSpan> spans = [];
                               for (int i = 0; i < parts.length; i++) {
@@ -187,7 +189,7 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
                         children: [
                           if (bio != null && bio.isNotEmpty) ...[
                             const SizedBox(height: 24),
-                            Text('關於', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colorScheme.foreground, letterSpacing: -0.5)),
+                            Text(l10n.about, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colorScheme.foreground, letterSpacing: -0.5)),
                             const SizedBox(height: 12),
                             GestureDetector(
                               onTap: () {
@@ -214,7 +216,7 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 Text(
-                                  '熱門歌曲',
+                                  l10n.popularSongs,
                                   style: TextStyle(
                                     fontSize: 22,
                                     fontWeight: FontWeight.bold,
@@ -231,12 +233,12 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
                                         final shuffled = List<dynamic>.from(topSongs)..shuffle();
                                         ref.read(audioProvider.notifier).playQueue(shuffled, 0);
                                       },
-                                      child: const Row(
+                                      child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Icon(LucideIcons.shuffle, size: 14),
-                                          SizedBox(width: 6),
-                                          Text('隨機播放'),
+                                          const Icon(LucideIcons.shuffle, size: 14),
+                                          const SizedBox(width: 6),
+                                          Text(l10n.playerShuffle),
                                         ],
                                       ),
                                     ),
@@ -246,12 +248,12 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
                                       onPressed: () {
                                         ref.read(audioProvider.notifier).playQueue(List<dynamic>.from(topSongs), 0);
                                       },
-                                      child: const Row(
+                                      child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Icon(LucideIcons.play, size: 14),
-                                          SizedBox(width: 6),
-                                          Text('播放', style: TextStyle(fontWeight: FontWeight.bold)),
+                                          const Icon(LucideIcons.play, size: 14),
+                                          const SizedBox(width: 6),
+                                          Text(l10n.playerPlay, style: const TextStyle(fontWeight: FontWeight.bold)),
                                         ],
                                       ),
                                     ),
@@ -275,7 +277,7 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
                                     itemCount: _showAllTopSongs ? topSongs.length : (topSongs.length > 5 ? 5 : topSongs.length),
                                     itemBuilder: (context, index) {
                                       final song = topSongs[index];
-                                      final title = song['title'] ?? '未知歌曲';
+                                      final title = song['title'] ?? l10n.unknownSong;
                                       final duration = _formatDuration(song['duration'] as int? ?? 0);
                                       final coverArtId = song['coverArt'] ?? song['albumId'];
                                       final fallbackUrl = api != null && coverArtId != null ? api.getCoverArtUrl(coverArtId, size: 250) : null;
@@ -359,7 +361,7 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
                                                             size: 16,
                                                           ),
                                                           onPressed: networkState.isOffline ? () {
-                                                            ZenifyToast.showError(context, '服務器已離線');
+                                                            ZenifyToast.showError(context, l10n.serverOffline);
                                                           } : () async {
                                                             if (songId == null || api == null) return;
                                                             if (isFavorite) {
@@ -369,7 +371,7 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
                                                             }
                                                             ref.invalidate(favoritesProvider);
                                                           },
-                                                          tooltip: isFavorite ? '取消最愛' : '加入最愛',
+                                                          tooltip: isFavorite ? l10n.removeFromFavorites : l10n.addToFavorites,
                                                         ),
                                                       ),
                                                     );
@@ -401,7 +403,7 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
                                           padding: const EdgeInsets.symmetric(vertical: 14),
                                           alignment: Alignment.center,
                                           child: Text(
-                                            '顯示更多',
+                                            l10n.showMore,
                                             style: TextStyle(
                                               color: colorScheme.foreground,
                                               fontWeight: FontWeight.w600,
@@ -456,7 +458,7 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
         },
         loading: () => Center(child: CircularProgressIndicator(color: colorScheme.foreground)),
         error: (err, stack) => Center(
-          child: Text('載入失敗: $err', style: TextStyle(color: colorScheme.destructive)),
+          child: Text(l10n.loadFailedErr(err.toString()), style: TextStyle(color: colorScheme.destructive)),
         ),
       ),
     );
@@ -478,7 +480,7 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
         ),
         const SizedBox(height: 6),
         Text(
-          maxLines != null ? '閱讀更多' : '收起',
+          maxLines != null ? AppLocalizations.of(context)!.readMore : AppLocalizations.of(context)!.collapse,
           style: TextStyle(
             color: colorScheme.foreground,
             fontWeight: FontWeight.w600,
@@ -568,6 +570,7 @@ class _StreamingPlatformsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -579,8 +582,8 @@ class _StreamingPlatformsRow extends StatelessWidget {
       {'id': 'tidal', 'name': 'Tidal', 'icon': LucideIcons.radio},
       {'id': 'amazon', 'name': 'Amazon Music', 'icon': LucideIcons.shoppingBag},
       {'id': 'deezer', 'name': 'Deezer', 'icon': LucideIcons.sliders},
-      {'id': 'qq', 'name': 'QQ 音樂', 'icon': LucideIcons.disc},
-      {'id': 'netease', 'name': '網易雲音樂', 'icon': LucideIcons.flame},
+      {'id': 'qq', 'name': l10n.qqMusic, 'icon': LucideIcons.disc},
+      {'id': 'netease', 'name': l10n.neteaseMusic, 'icon': LucideIcons.flame},
       {'id': 'kkbox', 'name': 'KKBOX', 'icon': LucideIcons.box},
       {'id': 'bandcamp', 'name': 'Bandcamp', 'icon': LucideIcons.tag},
       {'id': 'soundcloud', 'name': 'SoundCloud', 'icon': LucideIcons.cloud},
@@ -592,7 +595,7 @@ class _StreamingPlatformsRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '在其他串流平台搜尋',
+          l10n.searchInOtherPlatforms,
           style: TextStyle(
             color: colorScheme.mutedForeground,
             fontSize: 12,
@@ -636,6 +639,7 @@ class _PlatformPillButtonState extends State<_PlatformPillButton> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
 

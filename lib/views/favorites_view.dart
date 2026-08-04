@@ -1,3 +1,4 @@
+import 'package:zenify/l10n/app_localizations.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,6 +23,7 @@ class FavoritesView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -70,7 +72,7 @@ class FavoritesView extends ConsumerWidget {
                     const SizedBox(height: 24),
 
                     // 2. Section Header for Categories
-                    _buildSectionHeader('珍藏分類', colorScheme),
+                    _buildSectionHeader(l10n.favoriteCategories, colorScheme),
                     const SizedBox(height: 12),
 
                     // 2x2 Bento Box Grid
@@ -80,14 +82,14 @@ class FavoritesView extends ConsumerWidget {
                           children: [
                             Expanded(
                               child: _VercelBentoCard(
-                                title: '歌曲',
-                                subtitle: '喜愛單曲與個人最愛',
+                                title: l10n.songs,
+                                subtitle: l10n.favoriteSinglesAndPersonalFavorites,
                                 icon: LucideIcons.music,
-                                countBadge: '${songs.length} 首',
+                                countBadge: l10n.songsCountOnly(songs.length.toString()),
                                 onTap: () => Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    settings: const RouteSettings(name: '歌曲'),
+                                    settings: RouteSettings(name: l10n.songs),
                                     builder: (context) => const FavoriteSongsScreen(),
                                   ),
                                 ),
@@ -96,14 +98,14 @@ class FavoritesView extends ConsumerWidget {
                             const SizedBox(width: 12),
                             Expanded(
                               child: _VercelBentoCard(
-                                title: '專輯',
-                                subtitle: '已收藏的音樂專輯',
+                                title: l10n.navAlbums,
+                                subtitle: l10n.favoritedMusicAlbums,
                                 icon: LucideIcons.disc,
-                                countBadge: '${albums.length} 張',
+                                countBadge: l10n.albumsCountOnly(albums.length.toString()),
                                 onTap: () => Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    settings: const RouteSettings(name: '專輯'),
+                                    settings: RouteSettings(name: l10n.navAlbums),
                                     builder: (context) => const FavoriteAlbumsScreen(),
                                   ),
                                 ),
@@ -116,14 +118,14 @@ class FavoritesView extends ConsumerWidget {
                           children: [
                             Expanded(
                               child: _VercelBentoCard(
-                                title: '播放清單',
-                                subtitle: '自訂音樂歌單',
+                                title: l10n.navPlaylists,
+                                subtitle: l10n.customMusicPlaylists,
                                 icon: LucideIcons.listMusic,
-                                countBadge: '${playlists.length} 個',
+                                countBadge: l10n.playlistsCountOnly(playlists.length.toString()),
                                 onTap: () => Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    settings: const RouteSettings(name: '播放清單'),
+                                    settings: RouteSettings(name: l10n.navPlaylists),
                                     builder: (context) => const PlaylistsView(),
                                   ),
                                 ),
@@ -132,14 +134,14 @@ class FavoritesView extends ConsumerWidget {
                             const SizedBox(width: 12),
                             Expanded(
                               child: _VercelBentoCard(
-                                title: '已離線',
-                                subtitle: '離線音樂與快取',
+                                title: l10n.offlineStatus,
+                                subtitle: l10n.offlineMusicAndCache,
                                 icon: LucideIcons.downloadCloud,
-                                countBadge: '${validDownloads.length} 首',
+                                countBadge: l10n.validDownloadsCount(validDownloads.length.toString()),
                                 onTap: () => Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    settings: const RouteSettings(name: '已離線'),
+                                    settings: RouteSettings(name: l10n.offlineStatus),
                                     builder: (context) => const DownloadsView(),
                                   ),
                                 ),
@@ -159,13 +161,13 @@ class FavoritesView extends ConsumerWidget {
                         const SizedBox(height: 16),
                         ListTile(
                           leading: Icon(LucideIcons.settings, color: colorScheme.foreground, size: 20),
-                          title: Text('應用程式設定', style: TextStyle(color: colorScheme.foreground, fontSize: 14, fontWeight: FontWeight.w500)),
+                          title: Text(l10n.appSettings, style: TextStyle(color: colorScheme.foreground, fontSize: 14, fontWeight: FontWeight.w500)),
                           trailing: Icon(LucideIcons.chevronRight, color: colorScheme.mutedForeground, size: 16),
                           onTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                settings: const RouteSettings(name: '設定'),
+                                settings: RouteSettings(name: l10n.settings),
                                 builder: (context) => const SettingsScreen(),
                               ),
                             );
@@ -196,6 +198,7 @@ class FavoritesView extends ConsumerWidget {
     int albumsCount,
     String cacheSize,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -210,7 +213,7 @@ class FavoritesView extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '個人音樂珍藏',
+            l10n.personalMusicCollection,
             style: TextStyle(
               color: colorScheme.foreground,
               fontSize: 26,
@@ -222,14 +225,14 @@ class FavoritesView extends ConsumerWidget {
           Row(
             children: [
               Text(
-                '${songs.length} 首歌曲',
+                l10n.songsCountFull(songs.length.toString()),
                 style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13, fontWeight: FontWeight.w500),
               ),
               const SizedBox(width: 6),
               Text('•', style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12)),
               const SizedBox(width: 6),
               Text(
-                '$albumsCount 張專輯',
+                l10n.albumsCountVarFull(albumsCount.toString()),
                 style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13, fontWeight: FontWeight.w500),
               ),
               const SizedBox(width: 6),
@@ -250,12 +253,12 @@ class FavoritesView extends ConsumerWidget {
                 ref.read(audioProvider.notifier).playQueue(shuffled, 0);
               }
             },
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(LucideIcons.shuffle, size: 16),
-                SizedBox(width: 8),
-                Text('隨機播放最愛歌曲', style: TextStyle(fontWeight: FontWeight.w600)),
+                const Icon(LucideIcons.shuffle, size: 16),
+                const SizedBox(width: 8),
+                Text(l10n.shuffleFavoriteSongs, style: TextStyle(fontWeight: FontWeight.w600)),
               ],
             ),
           ),
@@ -301,6 +304,7 @@ class _VercelBentoCardState extends State<_VercelBentoCard> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
 

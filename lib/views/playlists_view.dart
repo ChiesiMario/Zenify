@@ -1,3 +1,4 @@
+import 'package:zenify/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:convert';
@@ -55,6 +56,7 @@ class PlaylistsView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
     final playlistsAsync = ref.watch(playlistsProvider);
@@ -67,7 +69,7 @@ class PlaylistsView extends ConsumerWidget {
           final playlists = _sortPlaylists(rawPlaylists, sortOption);
           if (playlists.isEmpty) {
             return Center(
-              child: Text('目前沒有播放清單', style: TextStyle(color: colorScheme.mutedForeground)),
+              child: Text(l10n.noPlaylistsCurrently, style: TextStyle(color: colorScheme.mutedForeground)),
             );
           }
 
@@ -96,7 +98,7 @@ class PlaylistsView extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  '播放清單',
+                                  l10n.navPlaylists,
                                   style: TextStyle(
                                     color: colorScheme.foreground,
                                     fontSize: 22,
@@ -106,7 +108,7 @@ class PlaylistsView extends ConsumerWidget {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '共 ${playlists.length} 個歌單',
+                                  l10n.totalPlaylistsCount(playlists.length.toString()),
                                   style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13),
                                 ),
                               ],
@@ -176,7 +178,7 @@ class PlaylistsView extends ConsumerWidget {
                                         ),
                                       ),
                                       subtitle: Text(
-                                        '$songCount 首歌曲 • $durationMinutes 分鐘',
+                                        l10n.songsCountAndDuration(songCount.toString(), durationMinutes.toString()),
                                         style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12),
                                       ),
                                       trailing: Icon(
@@ -213,7 +215,7 @@ class PlaylistsView extends ConsumerWidget {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(
-          child: Text('載入失敗: $err', style: TextStyle(color: colorScheme.destructive)),
+          child: Text(l10n.loadFailedErr(err.toString()), style: TextStyle(color: colorScheme.destructive)),
         ),
       ),
     );

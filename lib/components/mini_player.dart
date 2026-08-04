@@ -5,12 +5,15 @@ import 'package:zenify/providers/audio_provider.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/screens/full_player_screen.dart';
 import 'package:zenify/components/local_cover_image.dart';
+import 'package:zenify/l10n/app_localizations.dart';
+
 
 class MiniPlayer extends ConsumerWidget {
   const MiniPlayer({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final audioState = ref.watch(audioProvider);
     final audioNotifier = ref.read(audioProvider.notifier);
     final api = ref.watch(subsonicApiProvider);
@@ -93,13 +96,13 @@ class MiniPlayer extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    currentSong['title'] ?? '未知歌曲',
+                    currentSong['title'] ?? l10n.unknownSong,
                     style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.bold),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    currentSong['artist'] ?? '未知藝術家',
+                    currentSong['artist'] ?? l10n.unknownArtist,
                     style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

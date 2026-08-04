@@ -1,3 +1,4 @@
+import 'package:zenify/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
@@ -47,6 +48,7 @@ class FavoriteSongsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final activeServer = ref.watch(activeServerProvider);
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
@@ -58,7 +60,7 @@ class FavoriteSongsScreen extends ConsumerWidget {
         data: (server) {
           if (server == null) {
             return Center(
-              child: Text('未連接伺服器，請先在右上角新增', style: TextStyle(color: colorScheme.mutedForeground)),
+              child: Text(l10n.serverNotConnectedHint, style: TextStyle(color: colorScheme.mutedForeground)),
             );
           }
 
@@ -69,7 +71,7 @@ class FavoriteSongsScreen extends ConsumerWidget {
               final songs = _sortSongs(rawSongs, sortOption);
 
               if (songs.isEmpty) {
-                return Center(child: Text('目前沒有任何喜愛的歌曲', style: TextStyle(color: colorScheme.mutedForeground)));
+                return Center(child: Text(l10n.noFavoriteSongs, style: TextStyle(color: colorScheme.mutedForeground)));
               }
 
               return Center(
@@ -158,7 +160,7 @@ class FavoriteSongsScreen extends ConsumerWidget {
                                             ),
                                     ),
                                     title: Text(
-                                      song['title'] ?? '未知歌曲',
+                                      song['title'] ?? l10n.unknownSong,
                                       style: TextStyle(
                                         color: colorScheme.foreground,
                                         fontWeight: FontWeight.w600,
@@ -168,7 +170,7 @@ class FavoriteSongsScreen extends ConsumerWidget {
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                     subtitle: Text(
-                                      song['artist'] ?? '未知藝術家',
+                                      song['artist'] ?? l10n.unknownArtist,
                                       style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -203,11 +205,11 @@ class FavoriteSongsScreen extends ConsumerWidget {
               );
             },
             loading: () => Center(child: CircularProgressIndicator(color: colorScheme.foreground)),
-            error: (err, stack) => Center(child: Text('加載喜愛項目失敗: $err', style: TextStyle(color: colorScheme.destructive))),
+            error: (err, stack) => Center(child: Text(l10n.loadFavoritesFailed(err.toString()), style: TextStyle(color: colorScheme.destructive))),
           );
         },
         loading: () => Center(child: CircularProgressIndicator(color: colorScheme.foreground)),
-        error: (err, stack) => Center(child: Text('加載伺服器狀態失敗', style: TextStyle(color: colorScheme.destructive))),
+        error: (err, stack) => Center(child: Text(l10n.loadServerStatusFailed, style: TextStyle(color: colorScheme.destructive))),
       ),
     );
   }
@@ -226,6 +228,7 @@ class _FavoriteSongButtonState extends ConsumerState<_FavoriteSongButton> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
     final api = ref.watch(subsonicApiProvider);
@@ -247,7 +250,7 @@ class _FavoriteSongButtonState extends ConsumerState<_FavoriteSongButton> {
             size: 16,
           ),
           onPressed: networkState.isOffline ? () {
-            ZenifyToast.showError(context, '服務器已離線');
+            ZenifyToast.showError(context, l10n.serverOffline);
           } : () async {
             if (api == null) return;
             setState(() {
@@ -261,7 +264,7 @@ class _FavoriteSongButtonState extends ConsumerState<_FavoriteSongButton> {
             }
             // 特意不 invalidate favoritesProvider，讓歌曲保留在畫面上
           },
-          tooltip: _isFavorite ? '取消最愛' : '加入最愛',
+          tooltip: _isFavorite ? l10n.removeFromFavorites : l10n.addToFavorites,
         ),
       ),
     );
@@ -300,7 +303,7 @@ class _FavoriteHeroBannerState extends ConsumerState<_FavoriteHeroBanner> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('離線操作失敗，可能歌曲無法下載或伺服器錯誤'),
+            content: Text(AppLocalizations.of(context)!.offlineOperationFailed),
             backgroundColor: ShadTheme.of(context).colorScheme.destructive,
           ),
         );
@@ -312,6 +315,7 @@ class _FavoriteHeroBannerState extends ConsumerState<_FavoriteHeroBanner> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
     final downloadedTracksAsync = ref.watch(downloadedTracksProvider);
@@ -324,7 +328,7 @@ class _FavoriteHeroBannerState extends ConsumerState<_FavoriteHeroBanner> {
     final prefsState = ref.watch(offlinePreferenceProvider).valueOrNull;
     final effectiveOfflined = prefsState?.favoritesPreference ?? false;
 
-    final String statusStr = effectiveOfflined ? '已開啟離線同步' : '共 ${widget.songs.length} 首歌曲';
+    final String statusStr = effectiveOfflined ? l10n.offlineSyncEnabled : l10n.totalSongsCountWidget(widget.songs.length.toString());
 
     return Row(
       children: [
@@ -380,6 +384,7 @@ class _OfflineBentoCardState extends State<_OfflineBentoCard> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -424,7 +429,7 @@ class _OfflineBentoCardState extends State<_OfflineBentoCard> {
               Row(
                 children: [
                   Text(
-                    '離線最愛歌曲',
+                    l10n.offlineFavoriteSongs,
                     style: TextStyle(
                       color: colorScheme.foreground,
                       fontSize: 16,
@@ -444,7 +449,7 @@ class _OfflineBentoCardState extends State<_OfflineBentoCard> {
                       ),
                     ),
                     child: Text(
-                      '${widget.songCount} 首',
+                      l10n.songCountWidgetShort(widget.songCount.toString()),
                       style: TextStyle(
                         color: colorScheme.mutedForeground,
                         fontSize: 10,
@@ -492,6 +497,7 @@ class _PlayBentoCardState extends State<_PlayBentoCard> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -534,7 +540,7 @@ class _PlayBentoCardState extends State<_PlayBentoCard> {
             ),
             const SizedBox(height: 16),
             Text(
-              '播放全部',
+              l10n.playAll,
               style: TextStyle(
                 color: colorScheme.foreground,
                 fontSize: 16,
@@ -544,7 +550,7 @@ class _PlayBentoCardState extends State<_PlayBentoCard> {
             ),
             const SizedBox(height: 4),
             Text(
-              '開始播放最愛歌曲',
+              l10n.startPlayingFavoriteSongs,
               style: TextStyle(
                 color: colorScheme.mutedForeground,
                 fontSize: 12,
@@ -581,6 +587,7 @@ class _HoverablePlayIconButtonState extends State<_HoverablePlayIconButton> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
     

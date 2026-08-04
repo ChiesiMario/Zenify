@@ -1,3 +1,4 @@
+import 'package:zenify/l10n/app_localizations.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -49,6 +50,7 @@ class _PlayQueueSheetState extends ConsumerState<PlayQueueSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
     final audioState = ref.watch(audioProvider);
@@ -103,7 +105,7 @@ class _PlayQueueSheetState extends ConsumerState<PlayQueueSheet> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '播放隊列',
+                  l10n.playQueue,
                   style: TextStyle(
                     color: colorScheme.foreground,
                     fontSize: 22,
@@ -112,7 +114,7 @@ class _PlayQueueSheetState extends ConsumerState<PlayQueueSheet> {
                   ),
                 ),
                 Text(
-                  '${queue.length} 首歌曲',
+                  l10n.queueSongCount(queue.length.toString()),
                   style: TextStyle(
                     color: colorScheme.mutedForeground,
                     fontSize: 14,
@@ -238,6 +240,7 @@ class _QueueItemState extends State<_QueueItem> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.only(bottom: 6.0),
       child: MouseRegion(
@@ -335,7 +338,7 @@ class _QueueItemState extends State<_QueueItem> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          widget.song['title'] ?? '未知歌曲',
+                          widget.song['title'] ?? l10n.unknownSong,
                           style: TextStyle(
                             color: widget.isCurrent ? widget.colorScheme.primary : widget.colorScheme.foreground,
                             fontSize: 15,
@@ -346,7 +349,7 @@ class _QueueItemState extends State<_QueueItem> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          widget.song['artist'] ?? '未知藝術家',
+                          widget.song['artist'] ?? l10n.unknownArtist,
                           style: TextStyle(
                             color: widget.isCurrent 
                                 ? widget.colorScheme.primary.withOpacity(0.8) 
@@ -379,7 +382,7 @@ class _QueueItemState extends State<_QueueItem> {
                       onPressed: widget.onRemove,
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                      tooltip: '從隊列移除',
+                      tooltip: l10n.removeFromQueue,
                       hoverColor: widget.colorScheme.destructive.withOpacity(0.1),
                       highlightColor: widget.colorScheme.destructive.withOpacity(0.2),
                     ),

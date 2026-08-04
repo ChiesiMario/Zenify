@@ -1,3 +1,4 @@
+import 'package:zenify/l10n/app_localizations.dart';
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zenify/services/image_service.dart';
@@ -31,7 +32,7 @@ class SyncNotifier extends Notifier<SyncState> {
     return SyncState();
   }
 
-  Future<void> startSync() async {
+  Future<void> startSync(AppLocalizations l10n) async {
     if (state.isSyncing) return;
 
     final api = ref.read(subsonicApiProvider);
@@ -39,11 +40,11 @@ class SyncNotifier extends Notifier<SyncState> {
     final db = ref.read(databaseProvider);
 
     if (api == null || server == null) {
-      state = state.copyWith(isSyncing: false, message: '錯誤：無法連線伺服器');
+      state = state.copyWith(isSyncing: false, message: l10n.errorCannotConnectServer);
       return;
     }
 
-    state = state.copyWith(isSyncing: true, message: '開始同步藝術家...', progress: 0.1);
+    state = state.copyWith(isSyncing: true, message: l10n.startSyncingArtists, progress: 0.1);
 
     try {
       // 1. 同步藝術家
@@ -61,7 +62,7 @@ class SyncNotifier extends Notifier<SyncState> {
       await db.saveArtists(artists);
 
       // 2. 同步專輯
-      state = state.copyWith(message: '開始同步專輯...', progress: 0.3);
+      state = state.copyWith(message: l10n.startSyncingAlbums, progress: 0.3);
       
       List<Album> allAlbums = [];
       int offset = 0;
@@ -89,7 +90,7 @@ class SyncNotifier extends Notifier<SyncState> {
 
           offset += size;
           state = state.copyWith(
-            message: '已同步 ${allAlbums.length} 張專輯',
+            message: l10n.syncedAlbumsCount(allAlbums.length.toString()),
             progress: 0.3 + (0.6 * (allAlbums.length / (allAlbums.length + size))) // 粗略計算進度
           );
 
@@ -102,7 +103,7 @@ class SyncNotifier extends Notifier<SyncState> {
       await db.saveAlbums(allAlbums);
 
       // 3. 同步並下載封面圖片
-      state = state.copyWith(message: '準備下載封面圖片...', progress: 0.9);
+      state = state.copyWith(message: l10n.preparingToDownloadCovers, progress: 0.9);
       
       final Set<String> coverIds = {};
       for (var artist in artists) {
@@ -133,13 +134,13 @@ class SyncNotifier extends Notifier<SyncState> {
 
         downloaded += batch.length;
         state = state.copyWith(
-          message: '下載封面圖片中... ($downloaded/$totalCovers)',
+          message: l10n.downloadingCoversProgress(downloaded.toString(), totalCovers.toString()),
           progress: 0.9 + (0.1 * (downloaded / totalCovers)),
         );
       }
 
       // 4. 同步最愛 (Favorites)
-      state = state.copyWith(message: '同步最愛項目...', progress: 0.95);
+      state = state.copyWith(message: l10n.syncingFavorites, progress: 0.95);
       final starred = await api.getStarred();
       List<FavoriteItem> favItems = [];
       
@@ -162,7 +163,7 @@ class SyncNotifier extends Notifier<SyncState> {
       await db.saveFavorites(favItems);
 
       // 5. 同步播放清單 (Playlists)
-      state = state.copyWith(message: '同步播放清單...', progress: 0.97);
+      state = state.copyWith(message: l10n.syncingPlaylists, progress: 0.97);
       final playlists = await api.getPlaylists();
       List<PlaylistCache> playlistCaches = [];
       
@@ -191,7 +192,7 @@ class SyncNotifier extends Notifier<SyncState> {
       await db.savePlaylists(playlistCaches);
 
       // 6. 同步已離線歌曲的專輯資訊
-      state = state.copyWith(message: '同步離線專輯資料中...', progress: 0.98);
+      state = state.copyWith(message: l10n.syncingOfflineAlbums, progress: 0.98);
       
       final downloadedTracks = await db.getDownloadedTracks(server.id);
       final offlineAlbumIds = downloadedTracks
@@ -216,7 +217,7 @@ class SyncNotifier extends Notifier<SyncState> {
         }
         offlineAlbumsFetched++;
         state = state.copyWith(
-          message: '同步離線專輯資料中... ($offlineAlbumsFetched/$totalOfflineAlbums)',
+          message: l10n.syncingOfflineAlbumsProgress(offlineAlbumsFetched.toString(), totalOfflineAlbums.toString()),
           progress: 0.98 + (0.01 * (offlineAlbumsFetched / (totalOfflineAlbums > 0 ? totalOfflineAlbums : 1))),
         );
       }
@@ -227,9 +228,9 @@ class SyncNotifier extends Notifier<SyncState> {
       ref.invalidate(favoritesProvider);
       ref.invalidate(playlistsProvider);
 
-      state = state.copyWith(isSyncing: false, message: '同步完成！共載入 ${allAlbums.length} 張專輯。', progress: 1.0);
+      state = state.copyWith(isSyncing: false, message: l10n.syncCompleteAlbumsLoaded(allAlbums.length.toString()), progress: 1.0);
     } catch (e) {
-      state = state.copyWith(isSyncing: false, message: '同步失敗：$e', progress: 0.0);
+      state = state.copyWith(isSyncing: false, message: l10n.syncFailed(e.toString()), progress: 0.0);
     }
   }
 }

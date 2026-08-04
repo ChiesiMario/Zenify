@@ -1,3 +1,4 @@
+import 'package:zenify/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/components/local_cover_image.dart';
@@ -32,6 +33,7 @@ class _ArtistCardState extends State<ArtistCard> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -41,7 +43,7 @@ class _ArtistCardState extends State<ArtistCard> {
       onExit: (_) => setState(() => _isHovered = false),
       child: GestureDetector(
         onTap: widget.isDisabled ? () {
-          ZenifyToast.showError(context, '服務器已離線');
+          ZenifyToast.showError(context, l10n.serverOffline);
         } : widget.onTap,
         behavior: HitTestBehavior.opaque,
         child: Column(

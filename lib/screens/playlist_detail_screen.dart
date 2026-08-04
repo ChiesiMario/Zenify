@@ -1,3 +1,4 @@
+import 'package:zenify/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:convert';
@@ -48,6 +49,7 @@ class PlaylistDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
     final playlistAsync = ref.watch(playlistDetailProvider(playlistId));
@@ -59,7 +61,7 @@ class PlaylistDetailScreen extends ConsumerWidget {
       body: playlistAsync.when(
         data: (playlist) {
           if (playlist == null) {
-            return const Center(child: Text('無法載入播放清單'));
+            return Center(child: Text(l10n.cannotLoadPlaylist));
           }
 
           var entryNode = playlist['entry'];
@@ -90,14 +92,14 @@ class PlaylistDetailScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '${playlist['songCount'] ?? 0} 首歌曲',
+                        l10n.playlistSongCount((playlist['songCount'] ?? 0).toString()),
                         style: TextStyle(color: colorScheme.mutedForeground),
                       ),
                       const SizedBox(height: 24),
                       if (songs.isNotEmpty)
                         ShadButton(
                           width: double.infinity,
-                          child: const Text('播放全部'),
+                          child: Text(l10n.playAll),
                           onPressed: () {
                             ref.read(audioProvider.notifier).playQueue(songs, 0);
                           },
@@ -110,7 +112,7 @@ class PlaylistDetailScreen extends ConsumerWidget {
               if (songs.isEmpty)
                 SliverToBoxAdapter(
                   child: Center(
-                    child: Text('播放清單是空的', style: TextStyle(color: colorScheme.mutedForeground)),
+                    child: Text(l10n.playlistIsEmpty, style: TextStyle(color: colorScheme.mutedForeground)),
                   ),
                 )
               else
@@ -153,7 +155,7 @@ class PlaylistDetailScreen extends ConsumerWidget {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(
-          child: Text('載入失敗: $err', style: TextStyle(color: colorScheme.destructive)),
+          child: Text(l10n.loadFailedErr(err.toString()), style: TextStyle(color: colorScheme.destructive)),
         ),
       ),
     );
