@@ -6,7 +6,6 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:zenify/services/path_service.dart';
 
@@ -114,12 +113,10 @@ class ZenifyCachingAudioSource extends StreamAudioSource {
     this.uri, {
     this.headers,
     File? cacheFile,
-    dynamic tag,
-    String? userAgent,
+    super.tag,
+    this._userAgent,
   })  : cacheFile =
-            cacheFile != null ? Future.value(cacheFile) : _getCacheFile(uri),
-        _userAgent = userAgent,
-        super(tag: tag) {
+            cacheFile != null ? Future.value(cacheFile) : _getCacheFile(uri) {
     _init();
   }
 
@@ -140,7 +137,7 @@ class ZenifyCachingAudioSource extends StreamAudioSource {
       throw Exception("Cannot clear cache while download is in progress");
     }
     _response = null;
-    final file = await this.cacheFile;
+    final file = await cacheFile;
     if (await file.exists()) {
       await file.delete();
     }
@@ -285,7 +282,7 @@ class ZenifyCachingAudioSource extends StreamAudioSource {
 
         final rangeRequest = _HttpRangeRequest(start, end);
         _getUrl(httpClient, uri, headers: {
-          if (headers != null) ...headers!,
+          ...?headers,
           HttpHeaders.rangeHeader: rangeRequest.header,
         }).then((httpRequest) async {
           final response = await httpRequest.close();

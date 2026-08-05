@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 import 'package:zenify/models/server.dart';
@@ -89,14 +88,7 @@ class SubsonicApi {
       });
       final response = await http.get(uri);
       
-      // -- DEBUG LOGGING --
-      try {
-        final debugFile = File('C:\\Users\\Noah\\Desktop\\Zenify_Debug.txt');
-        await debugFile.writeAsString('--- getAlbumList ---\nURL: ${uri.toString()}\n${response.statusCode}\n${response.body}\n\n', mode: FileMode.append);
-      } catch (e) {
-        print('Debug write failed: $e');
-      }
-      // -- END DEBUG LOGGING --
+
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
@@ -176,16 +168,16 @@ class SubsonicApi {
         if (responseData['status'] == 'ok') {
           final starred = responseData['starred2'] ?? responseData['starred'] ?? {};
           
-          List<dynamic> _ensureList(dynamic data) {
+          List<dynamic> ensureList(dynamic data) {
             if (data == null) return [];
             if (data is List) return data;
             return [data];
           }
 
           return {
-            'artists': _ensureList(starred['artist']),
-            'albums': _ensureList(starred['album']),
-            'songs': _ensureList(starred['song']),
+            'artists': ensureList(starred['artist']),
+            'albums': ensureList(starred['album']),
+            'songs': ensureList(starred['song']),
           };
         } else {
           print('Subsonic API Error: ${responseData['error']}');
@@ -315,16 +307,16 @@ class SubsonicApi {
         if (responseData['status'] == 'ok') {
           final searchResult = responseData['searchResult3'] ?? {};
           
-          List<dynamic> _ensureList(dynamic data) {
+          List<dynamic> ensureList(dynamic data) {
             if (data == null) return [];
             if (data is List) return data;
             return [data];
           }
 
           return {
-            'artists': _ensureList(searchResult['artist']),
-            'albums': _ensureList(searchResult['album']),
-            'songs': _ensureList(searchResult['song']),
+            'artists': ensureList(searchResult['artist']),
+            'albums': ensureList(searchResult['album']),
+            'songs': ensureList(searchResult['song']),
           };
         }
       }

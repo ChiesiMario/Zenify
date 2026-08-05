@@ -12,7 +12,6 @@ import 'package:zenify/services/path_service.dart';
 import 'package:zenify/screens/server_management_screen.dart';
 import 'package:zenify/providers/audio_provider.dart';
 import 'package:zenify/l10n/app_localizations.dart';
-import 'package:zenify/providers/locale_provider.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});

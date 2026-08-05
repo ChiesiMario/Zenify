@@ -8,9 +8,7 @@ import 'package:zenify/components/local_cover_image.dart';
 import 'package:zenify/components/zenify_toast.dart';
 
 import 'package:zenify/providers/sort_providers.dart';
-import 'dart:io';
 import 'package:zenify/providers/download_provider.dart';
-import 'package:zenify/services/download_service.dart';
 import 'package:zenify/providers/offline_preference_provider.dart';
 
 class FavoriteSongsScreen extends ConsumerWidget {

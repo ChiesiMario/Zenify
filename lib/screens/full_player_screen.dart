@@ -8,12 +8,9 @@ import 'package:zenify/l10n/app_localizations.dart';
 
 import 'package:zenify/components/zenify_toast.dart';
 import 'package:zenify/components/play_queue_sheet.dart';
-import 'package:zenify/screens/album_detail_screen.dart';
-import 'package:zenify/screens/artist_detail_screen.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:file_selector/file_selector.dart';
-import 'package:zenify/api/subsonic_api.dart';
 
 class FullPlayerScreen extends ConsumerWidget {
   const FullPlayerScreen({super.key});
@@ -382,12 +379,11 @@ class _HoverableLink extends StatefulWidget {
   final bool isDisabled;
 
   const _HoverableLink({
-    Key? key,
     required this.text,
     required this.onTap,
     required this.style,
     this.isDisabled = false,
-  }) : super(key: key);
+  });
 
   @override
   State<_HoverableLink> createState() => _HoverableLinkState();
@@ -425,10 +421,9 @@ class _PrimaryPlayButton extends StatefulWidget {
   final VoidCallback onPressed;
 
   const _PrimaryPlayButton({
-    Key? key,
     required this.isPlaying,
     required this.onPressed,
-  }) : super(key: key);
+  });
 
   @override
   State<_PrimaryPlayButton> createState() => _PrimaryPlayButtonState();
@@ -491,12 +486,11 @@ class _SecondaryPlayerButton extends StatefulWidget {
   final bool isActive;
 
   const _SecondaryPlayerButton({
-    Key? key,
     required this.icon,
     required this.size,
     required this.onPressed,
     this.isActive = false,
-  }) : super(key: key);
+  });
 
   @override
   State<_SecondaryPlayerButton> createState() => _SecondaryPlayerButtonState();
@@ -561,13 +555,12 @@ class _TopUtilityButton extends StatefulWidget {
   final bool isDisabled;
 
   const _TopUtilityButton({
-    Key? key,
     required this.icon,
     required this.onPressed,
     required this.tooltip,
     this.iconColor,
     this.isDisabled = false,
-  }) : super(key: key);
+  });
 
   @override
   State<_TopUtilityButton> createState() => _TopUtilityButtonState();
@@ -652,7 +645,7 @@ void _showSongInfoDialog(BuildContext context, Map<String, dynamic> song, ShadCo
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
+                    color: Colors.black.withValues(alpha: 0.2),
                     blurRadius: 24,
                     offset: const Offset(0, 8),
                   ),
@@ -708,6 +701,7 @@ void _showSongInfoDialog(BuildContext context, Map<String, dynamic> song, ShadCo
                           );
                           
                           if (location == null) return; // User canceled
+                          if (!context.mounted) return;
                           
                           setState(() => isDownloading = true);
                           ZenifyToast.showSuccess(context, l10n.downloadStarted);
@@ -746,7 +740,7 @@ void _showSongInfoDialog(BuildContext context, Map<String, dynamic> song, ShadCo
                             }
                           } else {
                             if (context.mounted) {
-                              ZenifyToast.showError(context, l10n.downloadFailed + '：HTTP ${response.statusCode}');
+                              ZenifyToast.showError(context, '${l10n.downloadFailed}：HTTP ${response.statusCode}');
                             }
                           }
                         } catch (e) {

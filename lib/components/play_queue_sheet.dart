@@ -78,7 +78,7 @@ class _PlayQueueSheetState extends ConsumerState<PlayQueueSheet> {
             : null,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15),
+            color: Colors.black.withValues(alpha: 0.15),
             blurRadius: 30,
             offset: const Offset(0, 10),
           )
@@ -92,7 +92,7 @@ class _PlayQueueSheetState extends ConsumerState<PlayQueueSheet> {
             width: 48,
             height: 5,
             decoration: BoxDecoration(
-              color: colorScheme.mutedForeground.withOpacity(0.3),
+              color: colorScheme.mutedForeground.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(12),
             ),
           ),
@@ -250,8 +250,8 @@ class _QueueItemState extends State<_QueueItem> {
           duration: const Duration(milliseconds: 200),
           decoration: BoxDecoration(
             color: widget.isCurrent
-                ? widget.colorScheme.foreground.withOpacity(_isHovered ? 0.12 : 0.08)
-                : widget.colorScheme.foreground.withOpacity(_isHovered ? 0.05 : 0.0),
+                ? widget.colorScheme.foreground.withValues(alpha: _isHovered ? 0.12 : 0.08)
+                : widget.colorScheme.foreground.withValues(alpha: _isHovered ? 0.05 : 0.0),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Material(
@@ -261,7 +261,7 @@ class _QueueItemState extends State<_QueueItem> {
               hoverColor: Colors.transparent,
               highlightColor: Colors.transparent,
               focusColor: Colors.transparent,
-              splashColor: widget.colorScheme.foreground.withOpacity(0.08),
+              splashColor: widget.colorScheme.foreground.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
@@ -275,7 +275,7 @@ class _QueueItemState extends State<_QueueItem> {
                       child: Icon(
                         LucideIcons.gripVertical,
                         size: 16,
-                        color: widget.colorScheme.mutedForeground.withOpacity(_isHovered || widget.isCurrent ? 0.7 : 0.3),
+                        color: widget.colorScheme.mutedForeground.withValues(alpha: _isHovered || widget.isCurrent ? 0.7 : 0.3),
                       ),
                     ),
                   ),
@@ -289,7 +289,7 @@ class _QueueItemState extends State<_QueueItem> {
                       boxShadow: [
                         if (!widget.isCurrent)
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -317,7 +317,7 @@ class _QueueItemState extends State<_QueueItem> {
                         if (widget.isCurrent)
                           Positioned.fill(
                             child: Container(
-                              color: Colors.black.withOpacity(0.3),
+                              color: Colors.black.withValues(alpha: 0.3),
                               child: const Center(
                                 child: Icon(
                                   LucideIcons.barChart2,
@@ -352,7 +352,7 @@ class _QueueItemState extends State<_QueueItem> {
                           widget.song['artist'] ?? l10n.unknownArtist,
                           style: TextStyle(
                             color: widget.isCurrent 
-                                ? widget.colorScheme.primary.withOpacity(0.8) 
+                                ? widget.colorScheme.primary.withValues(alpha: 0.8) 
                                 : widget.colorScheme.mutedForeground,
                             fontSize: 13,
                           ),
@@ -383,8 +383,8 @@ class _QueueItemState extends State<_QueueItem> {
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                       tooltip: l10n.removeFromQueue,
-                      hoverColor: widget.colorScheme.destructive.withOpacity(0.1),
-                      highlightColor: widget.colorScheme.destructive.withOpacity(0.2),
+                      hoverColor: widget.colorScheme.destructive.withValues(alpha: 0.1),
+                      highlightColor: widget.colorScheme.destructive.withValues(alpha: 0.2),
                     ),
                   ),
                 ],

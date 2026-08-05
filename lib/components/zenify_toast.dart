@@ -63,12 +63,11 @@ class _ZenifyToastWidget extends StatefulWidget {
   final VoidCallback onDismiss;
 
   const _ZenifyToastWidget({
-    Key? key,
     required this.message,
     required this.isError,
     required this.colorScheme,
     required this.onDismiss,
-  }) : super(key: key);
+  });
 
   @override
   State<_ZenifyToastWidget> createState() => _ZenifyToastWidgetState();
@@ -125,7 +124,7 @@ class _ZenifyToastWidgetState extends State<_ZenifyToastWidget> with SingleTicke
                   decoration: BoxDecoration(
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.18),
+                        color: Colors.black.withValues(alpha: 0.18),
                         blurRadius: 24,
                         offset: const Offset(0, 8),
                       ),
@@ -138,10 +137,10 @@ class _ZenifyToastWidgetState extends State<_ZenifyToastWidget> with SingleTicke
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         decoration: BoxDecoration(
-                          color: (widget.isError ? colorScheme.foreground : colorScheme.primary).withOpacity(0.75),
+                          color: (widget.isError ? colorScheme.foreground : colorScheme.primary).withValues(alpha: 0.75),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: colorScheme.foreground.withOpacity(0.12),
+                            color: colorScheme.foreground.withValues(alpha: 0.12),
                             width: 1.0,
                           ),
                         ),

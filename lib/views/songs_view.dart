@@ -16,7 +16,7 @@ class SongsView extends ConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(LucideIcons.music, size: 64, color: colorScheme.mutedForeground.withOpacity(0.5)),
+          Icon(LucideIcons.music, size: 64, color: colorScheme.mutedForeground.withValues(alpha: 0.5)),
           const SizedBox(height: 16),
           Text(
             l10n.songListComingSoon,

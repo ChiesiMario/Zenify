@@ -6,7 +6,6 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/audio_provider.dart';
 import 'package:zenify/providers/download_provider.dart';
-import 'package:zenify/components/local_cover_image.dart';
 import 'package:zenify/screens/favorite_songs_screen.dart';
 import 'package:zenify/screens/favorite_albums_screen.dart';
 import 'package:zenify/views/playlists_view.dart';

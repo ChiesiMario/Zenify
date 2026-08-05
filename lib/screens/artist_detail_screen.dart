@@ -497,9 +497,8 @@ class _StreamingPlatformsRow extends StatelessWidget {
   final String artistName;
 
   const _StreamingPlatformsRow({
-    this.albumName,
     required this.artistName,
-  });
+  }) : albumName = null;
 
   Future<void> _openPlatformUrl(String platform) async {
     final query = (albumName != null && albumName!.isNotEmpty)

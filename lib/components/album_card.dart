@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/components/local_cover_image.dart';
 import 'package:zenify/components/zenify_toast.dart';
-import 'package:zenify/components/zenify_toast.dart';
 
 class AlbumCard extends StatefulWidget {
   final String title;

@@ -43,7 +43,7 @@ class DownloadService {
     try {
       final downloadDir = await PathService.getOfflineDir();
       final localPath = p.join(downloadDir.path, '$songId.mp3');
-      final streamUrl = await _api!.getStreamUrl(songId);
+      final streamUrl = _api.getStreamUrl(songId);
 
       final request = http.Request('GET', Uri.parse(streamUrl));
       final response = await http.Client().send(request);

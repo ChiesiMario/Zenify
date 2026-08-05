@@ -153,7 +153,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                             final artist = _artists[index];
                             final id = artist['id'];
                             final coverId = artist['coverArt'] ?? id;
-                            final fallbackUrl = api != null ? api.getCoverArtUrl(coverId, size: 250) : null;
+                            final fallbackUrl = api?.getCoverArtUrl(coverId, size: 250);
                             
                             return Padding(
                               padding: const EdgeInsets.only(right: 16.0),

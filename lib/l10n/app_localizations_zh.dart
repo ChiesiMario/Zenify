@@ -33,7 +33,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aboutZenify => '關於 ZENIFY';
 
   @override
-  String get languageSetting => '語言 (Language)';
+  String get languageSetting => '語言';
 
   @override
   String get languageSystem => '跟隨系統';
@@ -779,7 +779,7 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
   String get aboutZenify => '关于 ZENIFY';
 
   @override
-  String get languageSetting => '语言 (Language)';
+  String get languageSetting => '语言';
 
   @override
   String get languageSystem => '跟随系统';
@@ -1525,7 +1525,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get aboutZenify => '關於 ZENIFY';
 
   @override
-  String get languageSetting => '語言 (Language)';
+  String get languageSetting => '語言';
 
   @override
   String get languageSystem => '跟隨系統';

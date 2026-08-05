@@ -151,7 +151,7 @@ abstract class AppLocalizations {
   /// No description provided for @languageSetting.
   ///
   /// In zh_TW, this message translates to:
-  /// **'語言 (Language)'**
+  /// **'語言'**
   String get languageSetting;
 
   /// No description provided for @languageSystem.

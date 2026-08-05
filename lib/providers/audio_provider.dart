@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:zenify/models/downloaded_track.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/download_provider.dart';
@@ -181,7 +180,7 @@ class AudioNotifier extends Notifier<AudioState> {
 
   void _init() {
     _player.playerStateStream.listen((playerState) {
-      this.state = this.state.copyWith(
+      state = state.copyWith(
         isPlaying: playerState.playing,
         isBuffering: playerState.processingState == ProcessingState.buffering || playerState.processingState == ProcessingState.loading,
       );
@@ -196,14 +195,14 @@ class AudioNotifier extends Notifier<AudioState> {
           _playIndex(0);
         } else {
           _player.stop();
-          this.state = AudioState(); // 什麼都不做，清空播放狀態
+          state = AudioState(); // 什麼都不做，清空播放狀態
         }
       }
     });
 
     _player.durationStream.listen((dur) {
       if (dur != null) {
-        this.state = this.state.copyWith(duration: dur);
+        state = state.copyWith(duration: dur);
       }
     });
 
@@ -238,14 +237,14 @@ class AudioNotifier extends Notifier<AudioState> {
       }
     });
 
-    int _lastPositionSave = 0;
+    int lastPositionSave = 0;
     _player.positionStream.listen((pos) {
-      this.state = this.state.copyWith(position: pos);
+      state = state.copyWith(position: pos);
       
       final dur = state.duration;
       final now = DateTime.now().millisecondsSinceEpoch;
-      if (now - _lastPositionSave > 2000) {
-        _lastPositionSave = now;
+      if (now - lastPositionSave > 2000) {
+        lastPositionSave = now;
         ref.read(sharedPreferencesProvider).setInt('audio_position', pos.inMilliseconds);
       }
 
@@ -294,14 +293,14 @@ class AudioNotifier extends Notifier<AudioState> {
       
       final newQueue = [initialSong, ...remaining];
       
-      this.state = this.state.copyWith(
+      state = state.copyWith(
         queue: newQueue,
         originalQueue: playableSongs,
         isShuffled: true,
       );
       await _playIndex(0);
     } else {
-      this.state = this.state.copyWith(
+      state = state.copyWith(
         queue: playableSongs,
         originalQueue: playableSongs,
         isShuffled: false,
@@ -321,7 +320,7 @@ class AudioNotifier extends Notifier<AudioState> {
         if (server == null) return;
         api = SubsonicApi(server);
       }
-      this.state = this.state.copyWith(currentIndex: index);
+      state = state.copyWith(currentIndex: index);
       _saveQueueState();
       
       final song = state.queue[index];
@@ -534,7 +533,7 @@ class AudioNotifier extends Notifier<AudioState> {
       case AudioRepeatMode.all: nextMode = AudioRepeatMode.one; break;
       case AudioRepeatMode.one: nextMode = AudioRepeatMode.off; break;
     }
-    this.state = this.state.copyWith(repeatMode: nextMode);
+    state = state.copyWith(repeatMode: nextMode);
     ref.read(sharedPreferencesProvider).setInt('audio_repeat_mode', nextMode.index);
   }
 
@@ -548,7 +547,7 @@ class AudioNotifier extends Notifier<AudioState> {
       if (currentSong != null) {
         newIndex = original.indexWhere((s) => s['id'] == currentSong['id']);
       }
-      this.state = this.state.copyWith(
+      state = state.copyWith(
         isShuffled: false,
         queue: original,
         currentIndex: newIndex != -1 ? newIndex : 0,
@@ -572,7 +571,7 @@ class AudioNotifier extends Notifier<AudioState> {
       }
       newQueue.addAll(remaining);
 
-      this.state = this.state.copyWith(
+      state = state.copyWith(
         isShuffled: true,
         originalQueue: original,
         queue: newQueue,
@@ -600,7 +599,7 @@ class AudioNotifier extends Notifier<AudioState> {
       newCurrentIndex += 1;
     }
 
-    this.state = this.state.copyWith(
+    state = state.copyWith(
       queue: currentList,
       currentIndex: newCurrentIndex,
     );
@@ -627,7 +626,7 @@ class AudioNotifier extends Notifier<AudioState> {
       }
     }
 
-    this.state = this.state.copyWith(
+    state = state.copyWith(
       queue: currentList,
       currentIndex: newCurrentIndex,
     );

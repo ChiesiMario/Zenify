@@ -2,7 +2,6 @@ import 'package:zenify/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zenify/components/album_card.dart';
-import 'package:zenify/components/zenify_toast.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/audio_provider.dart';
 import 'package:zenify/screens/album_detail_screen.dart';

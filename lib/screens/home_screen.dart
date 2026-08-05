@@ -4,11 +4,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/screens/search_screen.dart';
-import 'package:zenify/screens/settings_screen.dart';
 import 'package:zenify/views/album_view.dart';
 import 'package:zenify/views/artists_view.dart';
 import 'package:zenify/views/favorites_view.dart';
-import 'package:zenify/components/mini_player.dart';
 import 'package:zenify/screens/full_player_screen.dart';
 import 'package:zenify/components/local_cover_image.dart';
 import 'package:zenify/screens/album_detail_screen.dart';
@@ -207,7 +205,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     alignment: Alignment.centerLeft,
                     children: <Widget>[
                       ...previousChildren,
-                      if (currentChild != null) currentChild,
+                      ?currentChild,
                     ],
                   );
                 },
@@ -276,7 +274,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               
                               final success = await ref.read(networkProvider.notifier).testConnectionManual();
                               
-                              if (mounted) {
+                              if (context.mounted) {
                                 setState(() {
                                   _isTestingConnection = false;
                                 });
@@ -333,7 +331,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                 IconButton(
-                  icon: Icon(LucideIcons.search, color: networkState.isOffline ? colorScheme.mutedForeground.withOpacity(0.5) : colorScheme.foreground, size: 20),
+                  icon: Icon(LucideIcons.search, color: networkState.isOffline ? colorScheme.mutedForeground.withValues(alpha: 0.5) : colorScheme.foreground, size: 20),
                   onPressed: networkState.isOffline ? null : () {
                     _navigatorKeys[_currentIndex].currentState?.push(
                       MaterialPageRoute(
@@ -352,7 +350,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   popover: (context) => const SyncPopoverContent(),
                   child: IconButton(
-                    icon: Icon(LucideIcons.refreshCw, color: networkState.isOffline ? colorScheme.mutedForeground.withOpacity(0.5) : (syncState.isSyncing ? colorScheme.primary : colorScheme.mutedForeground), size: 20),
+                    icon: Icon(LucideIcons.refreshCw, color: networkState.isOffline ? colorScheme.mutedForeground.withValues(alpha: 0.5) : (syncState.isSyncing ? colorScheme.primary : colorScheme.mutedForeground), size: 20),
                     onPressed: networkState.isOffline ? null : () {
                       _popoverController.toggle();
                     },
@@ -360,7 +358,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 if (kDebugMode)
                   IconButton(
-                    icon: Icon(LucideIcons.bug, color: Colors.red.withOpacity(0.5), size: 20),
+                    icon: Icon(LucideIcons.bug, color: Colors.red.withValues(alpha: 0.5), size: 20),
                     tooltip: 'Dispose AudioPlayer (for Shift+R)',
                     onPressed: () {
                       ref.read(audioProvider.notifier).disposePlayer();
@@ -415,7 +413,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.18),
+                      color: Colors.black.withValues(alpha: 0.18),
                       blurRadius: 24,
                       offset: const Offset(0, 8),
                     ),
@@ -427,10 +425,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: colorScheme.background.withOpacity(0.75),
+                        color: colorScheme.background.withValues(alpha: 0.75),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: colorScheme.foreground.withOpacity(0.12),
+                          color: colorScheme.foreground.withValues(alpha: 0.12),
                           width: 1.0,
                         ),
                       ),
@@ -465,7 +463,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.18),
+                        color: Colors.black.withValues(alpha: 0.18),
                         blurRadius: 24,
                         offset: const Offset(0, 8),
                       ),
@@ -477,10 +475,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: colorScheme.background.withOpacity(0.75),
+                          color: colorScheme.background.withValues(alpha: 0.75),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: colorScheme.foreground.withOpacity(0.12),
+                            color: colorScheme.foreground.withValues(alpha: 0.12),
                             width: 1.0,
                           ),
                         ),
@@ -736,8 +734,8 @@ class _SortOptionItemState<T> extends State<_SortOptionItem<T>> {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
           decoration: BoxDecoration(
             color: _isHovered
-                ? widget.colorScheme.foreground.withOpacity(0.06)
-                : (isSelected ? widget.colorScheme.muted.withOpacity(0.3) : Colors.transparent),
+                ? widget.colorScheme.foreground.withValues(alpha: 0.06)
+                : (isSelected ? widget.colorScheme.muted.withValues(alpha: 0.3) : Colors.transparent),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
@@ -857,7 +855,7 @@ class _NowPlayingTabIconState extends ConsumerState<NowPlayingTabIcon> with Sing
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: (audioState.isPlaying ? const Color(0xFF10B981) : const Color(0xFFEF4444)).withOpacity(0.4),
+                    color: (audioState.isPlaying ? const Color(0xFF10B981) : const Color(0xFFEF4444)).withValues(alpha: 0.4),
                     blurRadius: 2,
                     spreadRadius: 0,
                   ),

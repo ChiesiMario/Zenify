@@ -2,7 +2,6 @@ import 'package:zenify/l10n/app_localizations.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zenify/models/downloaded_track.dart';

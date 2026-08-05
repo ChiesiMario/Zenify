@@ -1,5 +1,4 @@
 import 'package:zenify/l10n/app_localizations.dart';
-import 'dart:ui';
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';

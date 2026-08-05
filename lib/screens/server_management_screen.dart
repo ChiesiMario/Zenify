@@ -73,7 +73,7 @@ class _ServerManagementScreenState extends ConsumerState<ServerManagementScreen>
                               },
                             ),
                           );
-                        }).toList(),
+                        }),
 
                         _buildAddServerTile(context, colorScheme),
                       ],
@@ -346,7 +346,7 @@ class _ServerEditDialogState extends ConsumerState<_ServerEditDialog> {
                     if (widget.server!.isActive) {
                       ref.invalidate(activeServerProvider);
                     }
-                    if (mounted) {
+                    if (context.mounted) {
                       Navigator.pop(context);
                     }
                   } else {
