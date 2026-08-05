@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zenify/components/artist_card.dart';
 import 'package:zenify/providers/app_providers.dart';
-import 'package:zenify/screens/artist_detail_screen.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zenify/router/app_router.dart';
 
 class ArtistsGrid extends ConsumerWidget {
   final List<dynamic> artists;
@@ -104,7 +104,7 @@ class ArtistsGrid extends ConsumerWidget {
               serverId: server?.id ?? 0,
               isDisabled: networkState.isOffline,
               onTap: () {
-                context.push('/artist/$artistId', extra: name);
+                context.pushBranch('artist/$artistId', extra: name);
               },
             );
           },

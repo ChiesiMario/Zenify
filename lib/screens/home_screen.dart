@@ -22,6 +22,7 @@ import 'package:zenify/l10n/app_localizations.dart';
 
 
 import 'package:go_router/go_router.dart';
+import 'package:zenify/router/app_router.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key, required this.navigationShell});
@@ -32,40 +33,24 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  bool _canPop = false;
   final _popoverController = ShadPopoverController();
   final _sortPopoverController = ShadPopoverController();
 
-  String _currentSubTitle = '';
   bool _isTestingConnection = false;
 
-  bool _shouldShowSortButton() {
+  bool _shouldShowSortButton(bool canPop, String currentSubTitle) {
     final currentIndex = widget.navigationShell.currentIndex;
     if (currentIndex == 0 || currentIndex == 1) {
-      return !_canPop;
+      return !canPop;
     } else if (currentIndex == 2) {
-      return _canPop && (
-        _currentSubTitle == AppLocalizations.of(context)!.songs ||
-        _currentSubTitle == AppLocalizations.of(context)!.navAlbums ||
-        _currentSubTitle == AppLocalizations.of(context)!.navPlaylists ||
-        _currentSubTitle == AppLocalizations.of(context)!.offlineStatus
+      return canPop && (
+        currentSubTitle == AppLocalizations.of(context)!.songs ||
+        currentSubTitle == AppLocalizations.of(context)!.navAlbums ||
+        currentSubTitle == AppLocalizations.of(context)!.navPlaylists ||
+        currentSubTitle == AppLocalizations.of(context)!.offlineStatus
       );
     }
     return false;
-  }
-
-  void _routerListener() {
-    if (mounted) {
-      final canPop = context.canPop();
-      // GoRouter state could provide a name, but we can also rely on extra or current route name
-      final currentRoute = GoRouterState.of(context).name ?? '';
-      if (_canPop != canPop || _currentSubTitle != currentRoute) {
-        setState(() {
-          _canPop = canPop;
-          _currentSubTitle = currentRoute;
-        });
-      }
-    }
   }
 
   @override
@@ -77,15 +62,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    GoRouter.of(context).routerDelegate.addListener(_routerListener);
-    _routerListener();
-  }
-
-  @override
   void dispose() {
-    GoRouter.of(context).routerDelegate.removeListener(_routerListener);
     _popoverController.dispose();
     _sortPopoverController.dispose();
     super.dispose();
@@ -120,12 +97,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final syncState = ref.watch(syncProvider);
     final networkState = ref.watch(networkProvider);
 
+    final routerState = GoRouterState.of(context);
+    final location = routerState.uri.path;
+    final isRoot = location == '/albums' || location == '/artists' || location == '/favorites' || location == '/settings' || location == '/servers';
+    final canPop = !isRoot;
+    
+    String currentSubTitle = '';
+    if (location.endsWith('/search')) {
+      currentSubTitle = l10n.navSearch;
+    } else if (routerState.extra is String) {
+      currentSubTitle = routerState.extra as String;
+    }
+
     ref.listen<NavigationRequest?>(navigationRequestProvider, (previous, next) {
       if (next != null) {
         if (next.type == 'album') {
-          context.push('/album/${next.id}');
+          context.pushBranch('album/${next.id}');
         } else if (next.type == 'artist') {
-          context.push('/artist/${next.id}', extra: next.name);
+          context.pushBranch('artist/${next.id}', extra: next.name);
         }
         Future.microtask(() => ref.read(navigationRequestProvider.notifier).state = null);
       }
@@ -175,9 +164,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   );
                 },
-                child: _canPop
+                child: canPop
                     ? Row(
-                        key: ValueKey('back_btn_$_currentSubTitle'),
+                        key: ValueKey('back_btn_$currentSubTitle'),
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
@@ -190,10 +179,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               },
                             ),
                           ),
-                          if (_currentSubTitle.isNotEmpty)
+                          if (currentSubTitle.isNotEmpty)
                             Flexible(
                               child: Text(
-                                _currentSubTitle,
+                                currentSubTitle,
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 18,
@@ -260,12 +249,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
               ),
               actions: [
-                if (_shouldShowSortButton())
+                if (_shouldShowSortButton(canPop, currentSubTitle))
                   ShadPopover(
                     controller: _sortPopoverController,
                     popover: (context) => SortPopoverContent(
                       currentIndex: widget.navigationShell.currentIndex,
-                      subTitle: _currentSubTitle,
+                      subTitle: currentSubTitle,
                       onClose: () => _sortPopoverController.hide(),
                     ),
                     child: IconButton(
@@ -278,7 +267,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 IconButton(
                   icon: Icon(LucideIcons.search, color: networkState.isOffline ? colorScheme.mutedForeground.withValues(alpha: 0.5) : colorScheme.foreground, size: 20),
                   onPressed: networkState.isOffline ? null : () {
-                    context.push('/search');
+                    context.pushBranch('search');
                   },
                 ),
                 ShadPopover(

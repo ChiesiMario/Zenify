@@ -48,6 +48,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get languageSimplifiedChinese => '简体中文';
 
   @override
+  String get languageDescription => '選擇您偏好的介面語言';
+
+  @override
   String get navAlbums => '專輯';
 
   @override
@@ -794,6 +797,9 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
   String get languageSimplifiedChinese => '简体中文';
 
   @override
+  String get languageDescription => '选择您偏好的界面语言';
+
+  @override
   String get navAlbums => '专辑';
 
   @override
@@ -1538,6 +1544,9 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get languageSimplifiedChinese => '简体中文';
+
+  @override
+  String get languageDescription => '選擇您偏好的介面語言';
 
   @override
   String get navAlbums => '專輯';

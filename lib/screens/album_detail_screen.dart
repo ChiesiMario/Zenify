@@ -866,33 +866,37 @@ class _AlbumOfflineBentoCardState extends ConsumerState<_AlbumOfflineBentoCard> 
                     ),
                   ),
                   const SizedBox(width: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: colorScheme.muted.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: colorScheme.border.withValues(alpha: 0.5),
-                        width: 0.5,
+                  Flexible(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: colorScheme.muted.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: colorScheme.border.withValues(alpha: 0.5),
+                          width: 0.5,
+                        ),
                       ),
-                    ),
-                    child: Text.rich(
-                      TextSpan(
-                        children: [
-                          TextSpan(text: l10n.songCountWidget(widget.songList.length.toString())),
-                          if (sizeFormatted.isNotEmpty) ...[
-                            const TextSpan(
-                              text: ' • ',
-                              style: TextStyle(fontFamily: 'NotoSansTC'),
-                            ),
-                            TextSpan(text: sizeFormatted),
+                      child: Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(text: l10n.songCountWidget(widget.songList.length.toString())),
+                            if (sizeFormatted.isNotEmpty) ...[
+                              const TextSpan(
+                                text: ' • ',
+                                style: TextStyle(fontFamily: 'NotoSansTC'),
+                              ),
+                              TextSpan(text: sizeFormatted),
+                            ],
                           ],
-                        ],
-                      ),
-                      style: TextStyle(
-                        color: colorScheme.mutedForeground,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: colorScheme.mutedForeground,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ),

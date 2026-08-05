@@ -48,6 +48,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get languageSimplifiedChinese => '简体中文';
 
   @override
+  String get languageDescription => 'Choose your preferred interface language';
+
+  @override
   String get navAlbums => 'Albums';
 
   @override

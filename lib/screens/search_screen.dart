@@ -11,6 +11,7 @@ import 'package:zenify/components/zenify_input.dart';
 import 'package:zenify/l10n/app_localizations.dart';
 import 'dart:async';
 import 'package:go_router/go_router.dart';
+import 'package:zenify/router/app_router.dart';
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
 
@@ -167,7 +168,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                   serverId: server?.id ?? 0,
                                   isDisabled: networkState.isOffline,
                                   onTap: () {
-                                    context.push('/artist/$id', extra: artist['name'] ?? 'Unknown');
+                                    context.pushBranch('artist/$id', extra: artist['name'] ?? 'Unknown');
                                   },
                                 ),
                               ),

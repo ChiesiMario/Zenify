@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/providers/app_providers.dart';
+import 'package:zenify/router/app_router.dart';
 import 'package:zenify/screens/playlist_detail_screen.dart';
 
 import 'package:zenify/providers/sort_providers.dart';
@@ -188,7 +189,7 @@ class PlaylistsView extends ConsumerWidget {
                                         color: colorScheme.mutedForeground,
                                       ),
                                       onTap: () {
-                                        context.push('/playlist/${playlist['id']}', extra: title);
+                                        context.pushBranch('playlist/${playlist['id']}', extra: title);
                                       },
                                     ),
                                   ),

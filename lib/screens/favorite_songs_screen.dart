@@ -426,13 +426,17 @@ class _OfflineBentoCardState extends State<_OfflineBentoCard> {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Text(
-                    l10n.offlineFavoriteSongs,
-                    style: TextStyle(
-                      color: colorScheme.foreground,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: -0.3,
+                  Flexible(
+                    child: Text(
+                      l10n.offlineFavoriteSongs,
+                      style: TextStyle(
+                        color: colorScheme.foreground,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -0.3,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   const SizedBox(width: 6),

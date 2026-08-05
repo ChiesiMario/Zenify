@@ -2,6 +2,7 @@ import 'package:zenify/l10n/app_localizations.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/components/zenify_input.dart';
@@ -27,6 +28,37 @@ class _ServerManagementScreenState extends ConsumerState<ServerManagementScreen>
 
     return Scaffold(
       backgroundColor: colorScheme.background,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: AppBar(
+          backgroundColor: colorScheme.background,
+          surfaceTintColor: Colors.transparent,
+          scrolledUnderElevation: 0,
+          elevation: 0,
+          titleSpacing: 0,
+          leading: Transform.translate(
+            offset: const Offset(-8.0, 0.0),
+            child: IconButton(
+              icon: Icon(LucideIcons.arrowLeft, color: colorScheme.foreground),
+              onPressed: () {
+                if (Navigator.of(context).canPop()) {
+                  Navigator.of(context).pop();
+                } else {
+                  context.go('/settings');
+                }
+              },
+            ),
+          ),
+          title: Text(
+            l10n.serverManagement,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              color: colorScheme.foreground,
+            ),
+          ),
+        ),
+      ),
       body: serversAsync.when(
         data: (servers) {
           return ListView(

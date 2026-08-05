@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:go_router/go_router.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/audio_provider.dart';
 import 'package:zenify/providers/download_provider.dart';
@@ -10,7 +11,8 @@ import 'package:zenify/screens/favorite_songs_screen.dart';
 import 'package:zenify/screens/favorite_albums_screen.dart';
 import 'package:zenify/views/playlists_view.dart';
 import 'package:zenify/views/downloads_view.dart';
-import 'package:zenify/screens/settings_screen.dart';
+import 'package:go_router/go_router.dart';
+import 'package:zenify/router/app_router.dart';
 
 class FavoritesView extends ConsumerWidget {
   const FavoritesView({super.key});
@@ -85,13 +87,7 @@ class FavoritesView extends ConsumerWidget {
                                 subtitle: l10n.favoriteSinglesAndPersonalFavorites,
                                 icon: LucideIcons.music,
                                 countBadge: l10n.songsCountOnly(songs.length.toString()),
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    settings: RouteSettings(name: l10n.songs),
-                                    builder: (context) => const FavoriteSongsScreen(),
-                                  ),
-                                ),
+                                onTap: () => context.pushBranch('songs', extra: l10n.songs),
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -101,13 +97,7 @@ class FavoritesView extends ConsumerWidget {
                                 subtitle: l10n.favoritedMusicAlbums,
                                 icon: LucideIcons.disc,
                                 countBadge: l10n.albumsCountOnly(albums.length.toString()),
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    settings: RouteSettings(name: l10n.navAlbums),
-                                    builder: (context) => const FavoriteAlbumsScreen(),
-                                  ),
-                                ),
+                                onTap: () => context.pushBranch('favorite_albums', extra: l10n.navAlbums),
                               ),
                             ),
                           ],
@@ -121,13 +111,7 @@ class FavoritesView extends ConsumerWidget {
                                 subtitle: l10n.customMusicPlaylists,
                                 icon: LucideIcons.listMusic,
                                 countBadge: l10n.playlistsCountOnly(playlists.length.toString()),
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    settings: RouteSettings(name: l10n.navPlaylists),
-                                    builder: (context) => const PlaylistsView(),
-                                  ),
-                                ),
+                                onTap: () => context.pushBranch('playlists', extra: l10n.navPlaylists),
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -137,13 +121,7 @@ class FavoritesView extends ConsumerWidget {
                                 subtitle: l10n.offlineMusicAndCache,
                                 icon: LucideIcons.downloadCloud,
                                 countBadge: l10n.validDownloadsCount(validDownloads.length.toString()),
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    settings: RouteSettings(name: l10n.offlineStatus),
-                                    builder: (context) => const DownloadsView(),
-                                  ),
-                                ),
+                                onTap: () => context.pushBranch('downloads', extra: l10n.offlineStatus),
                               ),
                             ),
                           ],
@@ -163,13 +141,7 @@ class FavoritesView extends ConsumerWidget {
                           title: Text(l10n.appSettings, style: TextStyle(color: colorScheme.foreground, fontSize: 14, fontWeight: FontWeight.w500)),
                           trailing: Icon(LucideIcons.chevronRight, color: colorScheme.mutedForeground, size: 16),
                           onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                settings: RouteSettings(name: l10n.settings),
-                                builder: (context) => const SettingsScreen(),
-                              ),
-                            );
+                            context.push('/settings');
                           },
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),

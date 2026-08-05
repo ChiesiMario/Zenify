@@ -178,6 +178,12 @@ abstract class AppLocalizations {
   /// **'简体中文'**
   String get languageSimplifiedChinese;
 
+  /// No description provided for @languageDescription.
+  ///
+  /// In zh_TW, this message translates to:
+  /// **'選擇您偏好的介面語言'**
+  String get languageDescription;
+
   /// No description provided for @navAlbums.
   ///
   /// In zh_TW, this message translates to:

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:go_router/go_router.dart';
 import 'package:zenify/models/downloaded_track.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/download_provider.dart';
@@ -86,8 +87,39 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     return Scaffold(
       backgroundColor: colorScheme.background,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: AppBar(
+          backgroundColor: colorScheme.background,
+          surfaceTintColor: Colors.transparent,
+          scrolledUnderElevation: 0,
+          elevation: 0,
+          titleSpacing: 0,
+          leading: Transform.translate(
+            offset: const Offset(-8.0, 0.0),
+            child: IconButton(
+              icon: Icon(LucideIcons.arrowLeft, color: colorScheme.foreground),
+              onPressed: () {
+                if (Navigator.of(context).canPop()) {
+                  Navigator.of(context).pop();
+                } else {
+                  context.go('/albums');
+                }
+              },
+            ),
+          ),
+          title: Text(
+            l10n.settingsTitle,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              color: colorScheme.foreground,
+            ),
+          ),
+        ),
+      ),
       body: ListView(
-        padding: const EdgeInsets.only(top: 24, bottom: 128),
+        padding: const EdgeInsets.only(top: 8, bottom: 128),
         children: [
           Center(
             child: ConstrainedBox(
@@ -113,7 +145,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     const SizedBox(height: 12),
                     _VercelSettingTile(
                       title: l10n.languageSetting,
-                      subtitle: '',
+                      subtitle: l10n.languageDescription,
                       icon: LucideIcons.languages,
                       trailing: SizedBox(
                         width: 180,
@@ -478,13 +510,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       subtitle: server != null ? l10n.connectedToServer(server.url.toString(), server.username.toString()) : l10n.noSubsonicServerConfigured,
                       icon: LucideIcons.server,
                       onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            settings: RouteSettings(name: l10n.serverManagement),
-                            builder: (context) => const ServerManagementScreen(),
-                          ),
-                        );
+                        context.push('/servers');
                       },
                       showArrow: true,
                     ),
@@ -701,107 +727,142 @@ class _VercelSettingTileState extends State<_VercelSettingTile> {
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return MouseRegion(
-      cursor: widget.onTap != null ? SystemMouseCursors.click : SystemMouseCursors.basic,
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          curve: Curves.easeOut,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          decoration: BoxDecoration(
-            color: colorScheme.card,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: (widget.onTap != null && _isHovered)
-                  ? colorScheme.foreground.withValues(alpha: 0.4)
-                  : colorScheme.border,
-              width: 1.0,
-            ),
-          ),
-          child: Column(
-            children: [
-              Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isSmallScreen = constraints.maxWidth < 450;
+        
+        return MouseRegion(
+          cursor: widget.onTap != null ? SystemMouseCursors.click : SystemMouseCursors.basic,
+          onEnter: (_) => setState(() => _isHovered = true),
+          onExit: (_) => setState(() => _isHovered = false),
+          child: GestureDetector(
+            onTap: widget.onTap,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              curve: Curves.easeOut,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              decoration: BoxDecoration(
+                color: colorScheme.card,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: (widget.onTap != null && _isHovered)
+                      ? colorScheme.foreground.withValues(alpha: 0.4)
+                      : colorScheme.border,
+                  width: 1.0,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Monochromatic Icon Container
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: (widget.onTap != null && _isHovered)
-                          ? colorScheme.foreground
-                          : colorScheme.muted.withValues(alpha: 0.4),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: (widget.onTap != null && _isHovered)
-                            ? colorScheme.foreground
-                            : colorScheme.border.withValues(alpha: 0.5),
-                        width: 1,
-                      ),
-                    ),
-                    child: Icon(
-                      widget.icon,
-                      size: 19,
-                      color: (widget.onTap != null && _isHovered)
-                          ? colorScheme.background
-                          : colorScheme.foreground,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  // Text Content
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.title,
-                          style: TextStyle(
-                            color: colorScheme.foreground,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: -0.3,
+                  Row(
+                    children: [
+                      // Monochromatic Icon Container
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: (widget.onTap != null && _isHovered)
+                              ? colorScheme.foreground
+                              : colorScheme.muted.withValues(alpha: 0.4),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: (widget.onTap != null && _isHovered)
+                                ? colorScheme.foreground
+                                : colorScheme.border.withValues(alpha: 0.5),
+                            width: 1,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          widget.subtitle,
-                          style: TextStyle(
-                            color: colorScheme.mutedForeground,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w400,
+                        child: Icon(
+                          widget.icon,
+                          size: 19,
+                          color: (widget.onTap != null && _isHovered)
+                              ? colorScheme.background
+                              : colorScheme.foreground,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      // Text Content
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.title,
+                              style: TextStyle(
+                                color: colorScheme.foreground,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.3,
+                              ),
+                            ),
+                            if (widget.subtitle.isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                widget.subtitle,
+                                style: TextStyle(
+                                  color: colorScheme.mutedForeground,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      if (!isSmallScreen && widget.trailing != null) widget.trailing!,
+                      if (!isSmallScreen && widget.showArrow) ...[
+                        const SizedBox(width: 8),
+                        AnimatedSlide(
+                          duration: const Duration(milliseconds: 150),
+                          offset: _isHovered ? const Offset(0.1, -0.1) : Offset.zero,
+                          child: Icon(
+                            LucideIcons.arrowUpRight,
+                            size: 18,
+                            color: _isHovered
+                                ? colorScheme.foreground
+                                : colorScheme.mutedForeground.withValues(alpha: 0.6),
                           ),
                         ),
                       ],
-                    ),
+                    ],
                   ),
-                  if (widget.trailing != null) widget.trailing!,
-                  if (widget.showArrow) ...[
-                    const SizedBox(width: 8),
-                    AnimatedSlide(
-                      duration: const Duration(milliseconds: 150),
-                      offset: _isHovered ? const Offset(0.1, -0.1) : Offset.zero,
-                      child: Icon(
-                        LucideIcons.arrowUpRight,
-                        size: 18,
-                        color: _isHovered
-                            ? colorScheme.foreground
-                            : colorScheme.mutedForeground.withValues(alpha: 0.6),
+                  if (isSmallScreen && (widget.trailing != null || widget.showArrow)) ...[
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (widget.trailing != null) widget.trailing!,
+                          if (widget.showArrow) ...[
+                            const SizedBox(width: 8),
+                            AnimatedSlide(
+                              duration: const Duration(milliseconds: 150),
+                              offset: _isHovered ? const Offset(0.1, -0.1) : Offset.zero,
+                              child: Icon(
+                                LucideIcons.arrowUpRight,
+                                size: 18,
+                                color: _isHovered
+                                    ? colorScheme.foreground
+                                    : colorScheme.mutedForeground.withValues(alpha: 0.6),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                   ],
+                  if (widget.bottom != null) ...[
+                    const SizedBox(height: 16),
+                    widget.bottom!,
+                  ],
                 ],
               ),
-              if (widget.bottom != null) ...[
-                const SizedBox(height: 16),
-                widget.bottom!,
-              ],
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

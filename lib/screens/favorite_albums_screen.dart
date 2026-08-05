@@ -76,14 +76,18 @@ class FavoriteAlbumsScreen extends ConsumerWidget {
                           children: [
                             // Hero Sub Banner
                             Container(
+                              width: double.infinity,
                               padding: const EdgeInsets.all(20),
                               decoration: BoxDecoration(
                                 color: colorScheme.card,
                                 borderRadius: BorderRadius.circular(14),
                                 border: Border.all(color: colorScheme.border, width: 1.0),
                               ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              child: Wrap(
+                                alignment: WrapAlignment.spaceBetween,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                spacing: 16,
+                                runSpacing: 16,
                                 children: [
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,

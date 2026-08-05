@@ -558,6 +558,7 @@ class _DeleteAllButtonState extends ConsumerState<_DeleteAllButton> {
     Color buttonColor;
     Color borderColor;
     Color textColor;
+    IconData buttonIcon;
     
     switch (_clickCount) {
       case 1:
@@ -565,12 +566,14 @@ class _DeleteAllButtonState extends ConsumerState<_DeleteAllButton> {
         buttonColor = colorScheme.destructive;
         textColor = colorScheme.destructiveForeground;
         borderColor = Colors.transparent;
+        buttonIcon = LucideIcons.check;
         break;
       case 2:
         buttonText = l10n.finalConfirm;
         buttonColor = colorScheme.destructive;
         textColor = colorScheme.destructiveForeground;
         borderColor = Colors.transparent;
+        buttonIcon = LucideIcons.alertTriangle;
         break;
       case 0:
       default:
@@ -578,13 +581,16 @@ class _DeleteAllButtonState extends ConsumerState<_DeleteAllButton> {
         buttonColor = Colors.transparent;
         textColor = colorScheme.mutedForeground;
         borderColor = colorScheme.border;
+        buttonIcon = LucideIcons.trash2;
         break;
     }
+    
+    final isSmallScreen = MediaQuery.sizeOf(context).width < 450;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       height: 36,
-      width: 90,
+      width: isSmallScreen ? 48 : null,
       child: ShadButton.outline(
         onPressed: _handleClick,
         backgroundColor: buttonColor,
@@ -593,7 +599,7 @@ class _DeleteAllButtonState extends ConsumerState<_DeleteAllButton> {
             : buttonColor,
         foregroundColor: textColor,
         hoverForegroundColor: textColor,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: isSmallScreen ? EdgeInsets.zero : const EdgeInsets.symmetric(horizontal: 16),
         decoration: ShadDecoration(
           border: ShadBorder.all(
             color: borderColor,
@@ -601,10 +607,12 @@ class _DeleteAllButtonState extends ConsumerState<_DeleteAllButton> {
             radius: const BorderRadius.all(Radius.circular(8)),
           ),
         ),
-        child: Text(
-          buttonText,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-        ),
+        child: isSmallScreen
+            ? Icon(buttonIcon, size: 16)
+            : Text(
+                buttonText,
+                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+              ),
       ),
     );
   }
