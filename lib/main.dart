@@ -10,10 +10,12 @@ import 'package:zenify/providers/theme_provider.dart';
 import 'package:zenify/screens/home_screen.dart';
 import 'package:zenify/components/custom_title_bar.dart';
 import 'package:zenify/services/image_service.dart';
+import 'package:zenify/router/app_router.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'package:zenify/services/background_sync_service.dart';
+import 'package:zenify/services/audio_cache_proxy.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:zenify/l10n/app_localizations.dart';
 import 'package:zenify/providers/locale_provider.dart';
@@ -93,6 +95,8 @@ void main() async {
       }
     });
   }
+
+  await AudioCacheProxy().start();
 
   runApp(
     ProviderScope(
@@ -176,51 +180,37 @@ class _ZenifyAppState extends ConsumerState<ZenifyApp> with WindowListener, Tray
   }
 
   @override
-  void onWindowResized() {
-    _saveWindowBounds();
-    if (kDebugMode) {
-      windowManager.getBounds().then((bounds) {
-        print('Window resized -> Width: ${bounds.width}, Height: ${bounds.height}');
-      });
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     final themeMode = ref.watch(themeModeProvider);
     final locale = ref.watch(localeProvider);
+    final goRouter = ref.watch(routerProvider);
 
-    return ShadApp(
+    return ShadApp.router(
       title: 'Zenify',
+      debugShowCheckedModeBanner: false,
+      themeMode: themeMode,
+      theme: ShadThemeData(
+        brightness: Brightness.light,
+        colorScheme: const ShadZincColorScheme.light(),
+      ),
+      darkTheme: ShadThemeData(
+        brightness: Brightness.dark,
+        colorScheme: const ShadZincColorScheme.dark(
+          background: Color(0xFF0A0A0A), // 更深邃的背景
+          card: Color(0xFF141414), // 略微提亮的卡片
+          border: Color(0xFF262626), // 柔和的邊框
+          muted: Color(0xFF1E1E1E), // 適合用於次要元素的背景
+        ),
+      ),
       locale: locale,
+      supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: AppLocalizations.supportedLocales,
-      themeMode: themeMode,
-      materialThemeBuilder: (context, theme) => theme.copyWith(
-        textTheme: theme.textTheme.apply(
-          fontFamily: 'NotoSansTC',
-          fontFamilyFallback: const ['Nunito', 'NotoSansSC', 'Microsoft JhengHei UI', 'Microsoft YaHei UI', 'Segoe UI', 'sans-serif'],
-        ),
-      ),
-      theme: ShadThemeData(
-        brightness: Brightness.light,
-        colorScheme: const ShadZincColorScheme.light(),
-        textTheme: ShadTextTheme(
-          family: 'NotoSansTC',
-        ),
-      ),
-      darkTheme: ShadThemeData(
-        brightness: Brightness.dark,
-        colorScheme: const ShadZincColorScheme.dark(),
-        textTheme: ShadTextTheme(
-          family: 'NotoSansTC',
-        ),
-      ),
+      routerConfig: goRouter,
       builder: (context, child) {
         final isDark = themeMode == ThemeMode.dark ||
             (themeMode == ThemeMode.system &&
@@ -239,22 +229,21 @@ class _ZenifyAppState extends ConsumerState<ZenifyApp> with WindowListener, Tray
                   padding: const EdgeInsets.only(top: 32.0),
                   child: child!,
                 ),
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                height: 32.0,
-                child: Material(
-                  type: MaterialType.transparency,
-                  child: CustomTitleBar(isDark: isDark),
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 32.0,
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: CustomTitleBar(isDark: isDark),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      );
-    },
-      home: const HomeScreen(),
+        );
+      },
     );
   }
 }

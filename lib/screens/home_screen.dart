@@ -21,58 +21,29 @@ import 'package:zenify/providers/sort_providers.dart';
 import 'package:zenify/l10n/app_localizations.dart';
 
 
+import 'package:go_router/go_router.dart';
+
 class HomeScreen extends ConsumerStatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, required this.navigationShell});
+  final StatefulNavigationShell navigationShell;
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _TabObserver extends NavigatorObserver {
-  final VoidCallback onNavigated;
-  _TabObserver(this.onNavigated);
-
-  @override
-  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) => onNavigated();
-  
-  @override
-  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) => onNavigated();
-  
-  @override
-  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) => onNavigated();
-  
-  @override
-  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) => onNavigated();
-}
-
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  int _currentIndex = 0;
   bool _canPop = false;
-  late final List<NavigatorObserver> _observers;
   final _popoverController = ShadPopoverController();
   final _sortPopoverController = ShadPopoverController();
-
-  final List<GlobalKey<NavigatorState>> _navigatorKeys = [
-    GlobalKey<NavigatorState>(),
-    GlobalKey<NavigatorState>(),
-    GlobalKey<NavigatorState>(),
-  ];
-
-  final List<Widget> _views = [
-    const AlbumView(),
-    const ArtistsView(),
-    const FavoritesView(),
-  ];
 
   String _currentSubTitle = '';
   bool _isTestingConnection = false;
 
   bool _shouldShowSortButton() {
-    if (_currentIndex == 0) {
+    final currentIndex = widget.navigationShell.currentIndex;
+    if (currentIndex == 0 || currentIndex == 1) {
       return !_canPop;
-    } else if (_currentIndex == 1) {
-      return !_canPop;
-    } else if (_currentIndex == 2) {
+    } else if (currentIndex == 2) {
       return _canPop && (
         _currentSubTitle == AppLocalizations.of(context)!.songs ||
         _currentSubTitle == AppLocalizations.of(context)!.navAlbums ||
@@ -83,61 +54,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return false;
   }
 
-  void _updateCanPop() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        final navigator = _navigatorKeys[_currentIndex].currentState;
-        final canPop = navigator?.canPop() ?? false;
-        String title = '';
-        if (canPop && navigator != null) {
-          navigator.popUntil((route) {
-            if (route.settings.name != null && route.settings.name!.isNotEmpty) {
-              title = route.settings.name!;
-            }
-            return true;
-          });
-        }
-        if (_canPop != canPop || _currentSubTitle != title) {
-          setState(() {
-            _canPop = canPop;
-            _currentSubTitle = title;
-          });
-        }
+  void _routerListener() {
+    if (mounted) {
+      final canPop = context.canPop();
+      // GoRouter state could provide a name, but we can also rely on extra or current route name
+      final currentRoute = GoRouterState.of(context).name ?? '';
+      if (_canPop != canPop || _currentSubTitle != currentRoute) {
+        setState(() {
+          _canPop = canPop;
+          _currentSubTitle = currentRoute;
+        });
       }
-    });
+    }
   }
 
   @override
   void initState() {
     super.initState();
-    _observers = List.generate(3, (index) => _TabObserver(_updateCanPop));
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(syncProvider.notifier).startSync(AppLocalizations.of(context)!);
     });
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    GoRouter.of(context).routerDelegate.addListener(_routerListener);
+    _routerListener();
+  }
+
+  @override
   void dispose() {
+    GoRouter.of(context).routerDelegate.removeListener(_routerListener);
     _popoverController.dispose();
     _sortPopoverController.dispose();
     super.dispose();
   }
 
-  Widget _buildTabNavigator(int index, Widget child) {
-    return Navigator(
-      key: _navigatorKeys[index],
-      observers: [_observers[index]],
-      onGenerateRoute: (settings) {
-        return MaterialPageRoute(
-          builder: (context) => child,
-          settings: settings,
-        );
-      },
-    );
-  }
 
   Widget _buildNavItem(int index, IconData icon, String label, ShadColorScheme colorScheme, {bool isDisabled = false}) {
-    final isSelected = _currentIndex == index;
+    final isSelected = widget.navigationShell.currentIndex == index;
     
     return Expanded(
       child: _NavItemButton(
@@ -147,12 +103,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         label: label,
         colorScheme: colorScheme,
         onTap: () {
-          if (_currentIndex == index) {
-            _navigatorKeys[index].currentState?.popUntil((route) => route.isFirst);
-          } else {
-            setState(() => _currentIndex = index);
-            _updateCanPop();
-          }
+          widget.navigationShell.goBranch(
+            index,
+            initialLocation: index == widget.navigationShell.currentIndex,
+          );
         },
       ),
     );
@@ -168,19 +122,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     ref.listen<NavigationRequest?>(navigationRequestProvider, (previous, next) {
       if (next != null) {
-        final navigator = _navigatorKeys[_currentIndex].currentState;
-        if (navigator != null) {
-          if (next.type == 'album') {
-            navigator.push(MaterialPageRoute(
-              settings: RouteSettings(name: next.name),
-              builder: (_) => AlbumDetailScreen(albumId: next.id),
-            ));
-          } else if (next.type == 'artist') {
-            navigator.push(MaterialPageRoute(
-              settings: RouteSettings(name: next.name),
-              builder: (_) => ArtistDetailScreen(artistId: next.id, artistName: next.name),
-            ));
-          }
+        if (next.type == 'album') {
+          context.push('/album/${next.id}');
+        } else if (next.type == 'artist') {
+          context.push('/artist/${next.id}', extra: next.name);
         }
         Future.microtask(() => ref.read(navigationRequestProvider.notifier).state = null);
       }
@@ -241,7 +186,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             child: IconButton(
                               icon: Icon(LucideIcons.arrowLeft, color: colorScheme.foreground),
                               onPressed: () {
-                                _navigatorKeys[_currentIndex].currentState?.maybePop();
+                                context.pop();
                               },
                             ),
                           ),
@@ -319,7 +264,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ShadPopover(
                     controller: _sortPopoverController,
                     popover: (context) => SortPopoverContent(
-                      currentIndex: _currentIndex,
+                      currentIndex: widget.navigationShell.currentIndex,
                       subTitle: _currentSubTitle,
                       onClose: () => _sortPopoverController.hide(),
                     ),
@@ -333,12 +278,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 IconButton(
                   icon: Icon(LucideIcons.search, color: networkState.isOffline ? colorScheme.mutedForeground.withValues(alpha: 0.5) : colorScheme.foreground, size: 20),
                   onPressed: networkState.isOffline ? null : () {
-                    _navigatorKeys[_currentIndex].currentState?.push(
-                      MaterialPageRoute(
-                        settings: RouteSettings(name: AppLocalizations.of(context)!.navSearch),
-                        builder: (context) => const SearchScreen(),
-                      ),
-                    );
+                    context.push('/search');
                   },
                 ),
                 ShadPopover(
@@ -370,34 +310,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ],
             ),
           ),
-      body: PopScope(
-        canPop: false,
-        onPopInvoked: (didPop) async {
-          if (didPop) return;
-          
-          final navigator = _navigatorKeys[_currentIndex].currentState;
-          bool handled = false;
-          if (navigator != null) {
-            handled = await navigator.maybePop();
-          }
-          
-          if (!handled) {
-            if (_currentIndex != 0) {
-              setState(() {
-                _currentIndex = 0;
-              });
-            } else {
-              SystemNavigator.pop();
-            }
-          }
-        },
-        child: IndexedStack(
-          index: _currentIndex,
-          children: _views.asMap().entries.map((entry) {
-            return _buildTabNavigator(entry.key, entry.value);
-          }).toList(),
-        ),
-      ),
+      body: widget.navigationShell,
       bottomNavigationBar: SafeArea(
         bottom: true,
         child: Padding(

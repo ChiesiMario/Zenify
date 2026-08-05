@@ -10,7 +10,7 @@ import 'package:zenify/components/albums_grid.dart';
 import 'package:zenify/components/zenify_input.dart';
 import 'package:zenify/l10n/app_localizations.dart';
 import 'dart:async';
-
+import 'package:go_router/go_router.dart';
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
 
@@ -167,16 +167,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                   serverId: server?.id ?? 0,
                                   isDisabled: networkState.isOffline,
                                   onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        settings: RouteSettings(name: artist['name'] ?? 'Unknown'),
-                                        builder: (context) => ArtistDetailScreen(
-                                          artistId: id,
-                                          artistName: artist['name'] ?? 'Unknown',
-                                        ),
-                                      ),
-                                    );
+                                    context.push('/artist/$id', extra: artist['name'] ?? 'Unknown');
                                   },
                                 ),
                               ),

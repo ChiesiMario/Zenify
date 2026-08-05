@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zenify/components/artist_card.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/screens/artist_detail_screen.dart';
+import 'package:go_router/go_router.dart';
 
 class ArtistsGrid extends ConsumerWidget {
   final List<dynamic> artists;
@@ -103,17 +104,7 @@ class ArtistsGrid extends ConsumerWidget {
               serverId: server?.id ?? 0,
               isDisabled: networkState.isOffline,
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    settings: RouteSettings(name: name),
-                    builder: (context) => ArtistDetailScreen(
-                      artistId: artistId,
-                      artistName: name,
-                      coverUrl: fallbackUrl,
-                    ),
-                  ),
-                );
+                context.push('/artist/$artistId', extra: name);
               },
             );
           },

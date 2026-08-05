@@ -7,6 +7,7 @@ import 'package:zenify/providers/audio_provider.dart';
 import 'package:zenify/screens/album_detail_screen.dart';
 import 'package:zenify/screens/artist_detail_screen.dart';
 import 'package:zenify/providers/download_provider.dart';
+import 'package:go_router/go_router.dart';
 
 class AlbumsGrid extends ConsumerWidget {
   final List<dynamic> albums;
@@ -158,13 +159,7 @@ class AlbumsGrid extends ConsumerWidget {
                 }
               },
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    settings: RouteSettings(name: title),
-                    builder: (context) => AlbumDetailScreen(albumId: album['id']),
-                  ),
-                );
+                context.push('/album/${album['id']}');
               },
               onPlayTap: () async {
                 final albumId = album['id'];
@@ -187,16 +182,7 @@ class AlbumsGrid extends ConsumerWidget {
               },
               onArtistTap: (!showYearInsteadOfArtist && artistId != null)
                   ? () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          settings: RouteSettings(name: artist),
-                          builder: (context) => ArtistDetailScreen(
-                            artistId: artistId,
-                            artistName: artist,
-                          ),
-                        ),
-                      );
+                      context.push('/artist/$artistId', extra: artist);
                     }
                   : null,
             );

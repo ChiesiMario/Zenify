@@ -8,7 +8,7 @@ import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/download_provider.dart';
 import 'package:zenify/providers/theme_provider.dart';
 import 'package:zenify/services/path_service.dart';
-import 'package:zenify/utils/zenify_caching_audio_source.dart';
+import 'package:zenify/services/audio_cache_proxy.dart';
 import 'package:zenify/api/subsonic_api.dart';
 import 'package:path/path.dart' as p;
 
@@ -352,15 +352,14 @@ class AudioNotifier extends Notifier<AudioState> {
         final cacheDir = await PathService.getOfflineDir();
         final localPath = p.join(cacheDir.path, '${song['id']}.mp3');
 
-        final zenifySource = ZenifyCachingAudioSource(
-          Uri.parse(url),
-          cacheFile: File(localPath),
+        final proxyUrl = AudioCacheProxy().getProxyUrl(url, song['id'].toString());
+        audioSource = AudioSource.uri(
+          Uri.parse(proxyUrl),
           tag: mediaItem,
         );
-        audioSource = zenifySource;
         _isCachingCurrentSong = true;
 
-        zenifySource.downloadProgressStream.listen((progress) async {
+        AudioCacheProxy().getDownloadProgress(song['id'].toString()).listen((progress) async {
           if (progress >= 1.0) {
              final db = ref.read(databaseProvider);
              final dt = await db.getDownloadedTrack(song['id'].toString());

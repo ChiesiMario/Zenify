@@ -2,6 +2,7 @@ import 'package:zenify/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:convert';
+import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/screens/playlist_detail_screen.dart';
@@ -187,16 +188,7 @@ class PlaylistsView extends ConsumerWidget {
                                         color: colorScheme.mutedForeground,
                                       ),
                                       onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            settings: RouteSettings(name: title),
-                                            builder: (context) => PlaylistDetailScreen(
-                                              playlistId: playlist['id'].toString(),
-                                              playlistName: title,
-                                            ),
-                                          ),
-                                        );
+                                        context.push('/playlist/${playlist['id']}', extra: title);
                                       },
                                     ),
                                   ),
