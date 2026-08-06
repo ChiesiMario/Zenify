@@ -32,18 +32,23 @@ const ArtistSchema = CollectionSchema(
       name: r'coverArt',
       type: IsarType.string,
     ),
-    r'name': PropertySchema(
+    r'hasOfflineTracks': PropertySchema(
       id: 3,
+      name: r'hasOfflineTracks',
+      type: IsarType.bool,
+    ),
+    r'name': PropertySchema(
+      id: 4,
       name: r'name',
       type: IsarType.string,
     ),
     r'rawData': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'rawData',
       type: IsarType.string,
     ),
     r'serverId': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'serverId',
       type: IsarType.long,
     )
@@ -67,6 +72,19 @@ const ArtistSchema = CollectionSchema(
         ),
         IndexPropertySchema(
           name: r'serverId',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    ),
+    r'hasOfflineTracks': IndexSchema(
+      id: 5370185147560524416,
+      name: r'hasOfflineTracks',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'hasOfflineTracks',
           type: IndexType.value,
           caseSensitive: false,
         )
@@ -113,9 +131,10 @@ void _artistSerialize(
   writer.writeLong(offsets[0], object.albumCount);
   writer.writeString(offsets[1], object.artistId);
   writer.writeString(offsets[2], object.coverArt);
-  writer.writeString(offsets[3], object.name);
-  writer.writeString(offsets[4], object.rawData);
-  writer.writeLong(offsets[5], object.serverId);
+  writer.writeBool(offsets[3], object.hasOfflineTracks);
+  writer.writeString(offsets[4], object.name);
+  writer.writeString(offsets[5], object.rawData);
+  writer.writeLong(offsets[6], object.serverId);
 }
 
 Artist _artistDeserialize(
@@ -128,10 +147,11 @@ Artist _artistDeserialize(
   object.albumCount = reader.readLongOrNull(offsets[0]);
   object.artistId = reader.readString(offsets[1]);
   object.coverArt = reader.readStringOrNull(offsets[2]);
+  object.hasOfflineTracks = reader.readBool(offsets[3]);
   object.id = id;
-  object.name = reader.readStringOrNull(offsets[3]);
-  object.rawData = reader.readString(offsets[4]);
-  object.serverId = reader.readLong(offsets[5]);
+  object.name = reader.readStringOrNull(offsets[4]);
+  object.rawData = reader.readString(offsets[5]);
+  object.serverId = reader.readLong(offsets[6]);
   return object;
 }
 
@@ -149,10 +169,12 @@ P _artistDeserializeProp<P>(
     case 2:
       return (reader.readStringOrNull(offset)) as P;
     case 3:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 4:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 5:
+      return (reader.readString(offset)) as P;
+    case 6:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -263,6 +285,14 @@ extension ArtistQueryWhereSort on QueryBuilder<Artist, Artist, QWhere> {
   QueryBuilder<Artist, Artist, QAfterWhere> anyId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+
+  QueryBuilder<Artist, Artist, QAfterWhere> anyHasOfflineTracks() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'hasOfflineTracks'),
+      );
     });
   }
 }
@@ -471,6 +501,51 @@ extension ArtistQueryWhere on QueryBuilder<Artist, Artist, QWhereClause> {
         upper: [artistId, upperServerId],
         includeUpper: includeUpper,
       ));
+    });
+  }
+
+  QueryBuilder<Artist, Artist, QAfterWhereClause> hasOfflineTracksEqualTo(
+      bool hasOfflineTracks) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'hasOfflineTracks',
+        value: [hasOfflineTracks],
+      ));
+    });
+  }
+
+  QueryBuilder<Artist, Artist, QAfterWhereClause> hasOfflineTracksNotEqualTo(
+      bool hasOfflineTracks) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'hasOfflineTracks',
+              lower: [],
+              upper: [hasOfflineTracks],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'hasOfflineTracks',
+              lower: [hasOfflineTracks],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'hasOfflineTracks',
+              lower: [hasOfflineTracks],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'hasOfflineTracks',
+              lower: [],
+              upper: [hasOfflineTracks],
+              includeUpper: false,
+            ));
+      }
     });
   }
 }
@@ -817,6 +892,16 @@ extension ArtistQueryFilter on QueryBuilder<Artist, Artist, QFilterCondition> {
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'coverArt',
         value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Artist, Artist, QAfterFilterCondition> hasOfflineTracksEqualTo(
+      bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'hasOfflineTracks',
+        value: value,
       ));
     });
   }
@@ -1243,6 +1328,18 @@ extension ArtistQuerySortBy on QueryBuilder<Artist, Artist, QSortBy> {
     });
   }
 
+  QueryBuilder<Artist, Artist, QAfterSortBy> sortByHasOfflineTracks() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hasOfflineTracks', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Artist, Artist, QAfterSortBy> sortByHasOfflineTracksDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hasOfflineTracks', Sort.desc);
+    });
+  }
+
   QueryBuilder<Artist, Artist, QAfterSortBy> sortByName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.asc);
@@ -1317,6 +1414,18 @@ extension ArtistQuerySortThenBy on QueryBuilder<Artist, Artist, QSortThenBy> {
     });
   }
 
+  QueryBuilder<Artist, Artist, QAfterSortBy> thenByHasOfflineTracks() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hasOfflineTracks', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Artist, Artist, QAfterSortBy> thenByHasOfflineTracksDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hasOfflineTracks', Sort.desc);
+    });
+  }
+
   QueryBuilder<Artist, Artist, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -1387,6 +1496,12 @@ extension ArtistQueryWhereDistinct on QueryBuilder<Artist, Artist, QDistinct> {
     });
   }
 
+  QueryBuilder<Artist, Artist, QDistinct> distinctByHasOfflineTracks() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'hasOfflineTracks');
+    });
+  }
+
   QueryBuilder<Artist, Artist, QDistinct> distinctByName(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -1430,6 +1545,12 @@ extension ArtistQueryProperty on QueryBuilder<Artist, Artist, QQueryProperty> {
   QueryBuilder<Artist, String?, QQueryOperations> coverArtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'coverArt');
+    });
+  }
+
+  QueryBuilder<Artist, bool, QQueryOperations> hasOfflineTracksProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'hasOfflineTracks');
     });
   }
 

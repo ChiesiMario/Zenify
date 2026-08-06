@@ -13,6 +13,9 @@ class ArtistsGrid extends ConsumerWidget {
   final bool shrinkWrap;
   final ScrollPhysics? physics;
   final EdgeInsetsGeometry padding;
+  final VoidCallback? onLoadMore;
+  final bool isLoadingMore;
+  final int? totalCount;
 
   const ArtistsGrid({
     super.key,
@@ -20,6 +23,9 @@ class ArtistsGrid extends ConsumerWidget {
     this.shrinkWrap = true,
     this.physics = const NeverScrollableScrollPhysics(),
     this.padding = EdgeInsets.zero,
+    this.onLoadMore,
+    this.isLoadingMore = false,
+    this.totalCount,
   });
 
   @override
@@ -76,7 +82,7 @@ class ArtistsGrid extends ConsumerWidget {
               )
             : resolvedBasePadding;
 
-        return Padding(
+        Widget grid = Padding(
           padding: const EdgeInsets.only(right: 2.0),
           child: GridView.builder(
           shrinkWrap: shrinkWrap,
@@ -88,8 +94,26 @@ class ArtistsGrid extends ConsumerWidget {
             mainAxisSpacing: 16,
             childAspectRatio: childAspectRatio,
           ),
-          itemCount: artists.length,
+          itemCount: totalCount ?? artists.length,
           itemBuilder: (context, index) {
+            if (index >= artists.length) {
+              if (onLoadMore != null && !isLoadingMore) {
+                Future.microtask(() => onLoadMore!());
+              }
+              // Placeholder
+              return Opacity(
+                opacity: 0.3,
+                child: ArtistCard(
+                  name: '...',
+                  artistId: '',
+                  coverArtId: null,
+                  fallbackCoverUrl: null,
+                  serverId: 0,
+                  isDisabled: true,
+                  onTap: () {},
+                ),
+              );
+            }
             final item = artists[index];
             late Map<String, dynamic> artist;
             if (item is Artist) {
@@ -118,6 +142,34 @@ class ArtistsGrid extends ConsumerWidget {
           },
         ),
       );
+
+      if (onLoadMore != null) {
+        grid = NotificationListener<ScrollNotification>(
+          onNotification: (scrollInfo) {
+            if (!isLoadingMore &&
+                scrollInfo.metrics.pixels >= scrollInfo.metrics.maxScrollExtent - 200) {
+              onLoadMore!();
+            }
+            return false;
+          },
+          child: grid,
+        );
+      }
+
+      if (isLoadingMore) {
+        grid = Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            shrinkWrap ? grid : Expanded(child: grid),
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          ],
+        );
+      }
+
+      return grid;
       },
     );
   }

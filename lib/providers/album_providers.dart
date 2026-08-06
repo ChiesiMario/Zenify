@@ -7,91 +7,104 @@ import 'package:zenify/providers/network_provider.dart';
 import 'package:zenify/models/album_detail_cache.dart';
 import 'package:zenify/models/album.dart';
 
-final albumsProvider = FutureProvider<List<Album>>((ref) async {
-  final server = await ref.watch(activeServerProvider.future);
-  if (server == null) return [];
-  
-  final db = ref.watch(databaseProvider);
-  final sortOption = ref.watch(albumSortProvider);
-  
-  final albums = await db.getAlbums(server.id);
-  
-  final downloadedTracksAsync = ref.watch(downloadedTracksProvider);
-  final downloadedTracks = downloadedTracksAsync.valueOrNull ?? [];
-  final offlineAlbumIds = downloadedTracks
-      .where((t) => t.isManualDownload && t.isComplete)
-      .map((t) => t.albumId)
-      .whereType<String>()
-      .toSet();
+class AlbumsPaginationState {
+  final List<Album> albums;
+  final bool isLoadingMore;
+  final bool hasMore;
+  final int totalCount;
 
-  final result = albums.toList(); // Copy list for sorting
-  
-  int compareOffline(Album a, Album b) {
-    final aOffline = offlineAlbumIds.contains(a.albumId) ? 1 : 0;
-    final bOffline = offlineAlbumIds.contains(b.albumId) ? 1 : 0;
-    return bOffline.compareTo(aOffline); // 1 (offline) before 0 (not offline)
+  AlbumsPaginationState({
+    required this.albums,
+    this.isLoadingMore = false,
+    this.hasMore = true,
+    required this.totalCount,
+  });
+
+  AlbumsPaginationState copyWith({
+    List<Album>? albums,
+    bool? isLoadingMore,
+    bool? hasMore,
+    int? totalCount,
+  }) {
+    return AlbumsPaginationState(
+      albums: albums ?? this.albums,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      hasMore: hasMore ?? this.hasMore,
+      totalCount: totalCount ?? this.totalCount,
+    );
+  }
+}
+
+class AlbumsPaginationNotifier extends AsyncNotifier<AlbumsPaginationState> {
+  static const int _limit = 50;
+  int _offset = 0;
+
+  @override
+  Future<AlbumsPaginationState> build() async {
+    _offset = 0;
+    
+    final server = await ref.watch(activeServerProvider.future);
+    if (server == null) {
+      return AlbumsPaginationState(albums: [], hasMore: false, totalCount: 0);
+    }
+    
+    final db = ref.watch(databaseProvider);
+    final totalCount = await db.getAlbumCount(server.id);
+    
+    final albums = await _fetchPage(0);
+    return AlbumsPaginationState(
+      albums: albums,
+      hasMore: albums.length == _limit,
+      totalCount: totalCount,
+    );
   }
 
-  final networkState = ref.watch(networkProvider);
-  final isOfflineMode = networkState.isOffline;
-
-  switch (sortOption) {
-    case AlbumSortOption.nameAsc:
-      result.sort((a, b) {
-        if (isOfflineMode) {
-          final offCmp = compareOffline(a, b);
-          if (offCmp != 0) return offCmp;
-        }
-        return (a.name ?? '').compareTo(b.name ?? '');
-      });
-      break;
-    case AlbumSortOption.nameDesc:
-      result.sort((a, b) {
-        if (isOfflineMode) {
-          final offCmp = compareOffline(a, b);
-          if (offCmp != 0) return offCmp;
-        }
-        return (b.name ?? '').compareTo(a.name ?? '');
-      });
-      break;
-    case AlbumSortOption.yearDesc:
-      result.sort((a, b) {
-        if (isOfflineMode) {
-          final offCmp = compareOffline(a, b);
-          if (offCmp != 0) return offCmp;
-        }
-        return (b.year ?? 0).compareTo(a.year ?? 0);
-      });
-      break;
-    case AlbumSortOption.yearAsc:
-      result.sort((a, b) {
-        if (isOfflineMode) {
-          final offCmp = compareOffline(a, b);
-          if (offCmp != 0) return offCmp;
-        }
-        return (a.year ?? 0).compareTo(b.year ?? 0);
-      });
-      break;
-    case AlbumSortOption.random:
-      result.shuffle();
-      if (isOfflineMode) {
-        result.sort(compareOffline); // Move non-offline to bottom
-      }
-      break;
-    case AlbumSortOption.defaultOrder:
-    default:
-      if (isOfflineMode) {
-        // We use stable sort by grouping
-        final offline = result.where((e) => offlineAlbumIds.contains(e.albumId)).toList();
-        final notOffline = result.where((e) => !offlineAlbumIds.contains(e.albumId)).toList();
-        result.clear();
-        result.addAll(offline);
-        result.addAll(notOffline);
-      }
-      break;
+  Future<List<Album>> _fetchPage(int offset) async {
+    final server = await ref.watch(activeServerProvider.future);
+    if (server == null) return [];
+    
+    final db = ref.watch(databaseProvider);
+    final sortOption = ref.watch(albumSortProvider);
+    final networkState = ref.watch(networkProvider);
+    final isOfflineMode = networkState.isOffline;
+    
+    final albums = await db.getAlbumsPaginated(
+      server.id,
+      offset: offset,
+      limit: _limit,
+      sort: sortOption,
+      offlineFirst: isOfflineMode,
+    );
+    
+    if (sortOption == AlbumSortOption.random) {
+       albums.shuffle();
+    }
+    return albums;
   }
-  
-  return result;
+
+  Future<void> loadMore() async {
+    if (state.isLoading || state.hasError) return;
+    final currentState = state.value;
+    if (currentState == null || currentState.isLoadingMore || !currentState.hasMore) return;
+    
+    state = AsyncValue.data(currentState.copyWith(isLoadingMore: true));
+    
+    try {
+      final newAlbums = await _fetchPage(_offset + _limit);
+      _offset += _limit;
+      state = AsyncValue.data(currentState.copyWith(
+        albums: [...currentState.albums, ...newAlbums],
+        hasMore: newAlbums.length == _limit,
+        isLoadingMore: false,
+      ));
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+}
+
+final albumsProvider = AsyncNotifierProvider<AlbumsPaginationNotifier, AlbumsPaginationState>(() {
+  return AlbumsPaginationNotifier();
 });
 
 final albumDetailProvider = FutureProvider.family<Map<String, dynamic>?, String>((ref, id) async {

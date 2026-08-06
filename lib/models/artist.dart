@@ -17,4 +17,7 @@ class Artist {
 
   // Save the raw JSON string so we can easily convert it back to dynamic map
   late String rawData;
+
+  @Index()
+  bool hasOfflineTracks = false;
 }

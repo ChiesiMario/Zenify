@@ -25,16 +25,21 @@ class ArtistsView extends ConsumerWidget {
 
         final artistsAsync = ref.watch(artistsProvider);
         return artistsAsync.when(
-          data: (artists) {
-            if (artists.isEmpty) {
+          data: (state) {
+            if (state.artists.isEmpty) {
               return Center(child: Text(l10n.noArtistsFound, style: TextStyle(color: colorScheme.mutedForeground)));
             }
 
             return ArtistsGrid(
-              artists: artists.toList(),
+              artists: state.artists,
               shrinkWrap: false,
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.only(left: 24, right: 24, top: 24, bottom: 128),
+              totalCount: state.totalCount,
+              isLoadingMore: state.isLoadingMore,
+              onLoadMore: () {
+                ref.read(artistsProvider.notifier).loadMore();
+              },
             );
           },
           loading: () => Center(child: CircularProgressIndicator(color: colorScheme.foreground)),

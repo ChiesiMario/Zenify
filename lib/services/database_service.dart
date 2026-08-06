@@ -5,6 +5,7 @@ import 'package:zenify/models/server.dart';
 import 'package:zenify/models/album.dart';
 import 'package:zenify/models/artist.dart';
 import 'package:zenify/models/downloaded_track.dart';
+import 'package:zenify/providers/sort_providers.dart';
 import 'package:zenify/models/favorite_item.dart';
 import 'package:zenify/models/playlist_cache.dart';
 import 'package:zenify/models/album_detail_cache.dart';
@@ -89,6 +90,46 @@ class DatabaseService {
     });
   }
 
+  /// Get albums paginated
+  Future<List<Album>> getAlbumsPaginated(
+    int serverId, {
+    required int offset,
+    required int limit,
+    required AlbumSortOption sort,
+    bool offlineFirst = false,
+  }) async {
+    final isar = await db;
+    final q = isar.albums.filter().serverIdEqualTo(serverId);
+    
+    if (offlineFirst) {
+      switch (sort) {
+        case AlbumSortOption.nameAsc:
+          return await q.sortByHasOfflineTracksDesc().thenByName().offset(offset).limit(limit).findAll();
+        case AlbumSortOption.nameDesc:
+          return await q.sortByHasOfflineTracksDesc().thenByNameDesc().offset(offset).limit(limit).findAll();
+        case AlbumSortOption.yearDesc:
+          return await q.sortByHasOfflineTracksDesc().thenByYearDesc().offset(offset).limit(limit).findAll();
+        case AlbumSortOption.yearAsc:
+          return await q.sortByHasOfflineTracksDesc().thenByYear().offset(offset).limit(limit).findAll();
+        default:
+          return await q.sortByHasOfflineTracksDesc().offset(offset).limit(limit).findAll();
+      }
+    } else {
+      switch (sort) {
+        case AlbumSortOption.nameAsc:
+          return await q.sortByName().offset(offset).limit(limit).findAll();
+        case AlbumSortOption.nameDesc:
+          return await q.sortByNameDesc().offset(offset).limit(limit).findAll();
+        case AlbumSortOption.yearDesc:
+          return await q.sortByYearDesc().offset(offset).limit(limit).findAll();
+        case AlbumSortOption.yearAsc:
+          return await q.sortByYear().offset(offset).limit(limit).findAll();
+        default:
+          return await q.offset(offset).limit(limit).findAll();
+      }
+    }
+  }
+
   /// Get all artists for a server
   Future<List<Artist>> getArtists(int serverId) async {
     final isar = await db;
@@ -101,6 +142,42 @@ class DatabaseService {
     await isar.writeTxn(() async {
       await isar.artists.putAll(artists);
     });
+  }
+
+  /// Get artists paginated
+  Future<List<Artist>> getArtistsPaginated(
+    int serverId, {
+    required int offset,
+    required int limit,
+    required ArtistSortOption sort,
+    bool offlineFirst = false,
+  }) async {
+    final isar = await db;
+    final q = isar.artists.filter().serverIdEqualTo(serverId);
+    
+    if (offlineFirst) {
+      switch (sort) {
+        case ArtistSortOption.nameAsc:
+          return await q.sortByHasOfflineTracksDesc().thenByName().offset(offset).limit(limit).findAll();
+        case ArtistSortOption.nameDesc:
+          return await q.sortByHasOfflineTracksDesc().thenByNameDesc().offset(offset).limit(limit).findAll();
+        case ArtistSortOption.albumCountDesc:
+          return await q.sortByHasOfflineTracksDesc().thenByAlbumCountDesc().offset(offset).limit(limit).findAll();
+        default:
+          return await q.sortByHasOfflineTracksDesc().offset(offset).limit(limit).findAll();
+      }
+    } else {
+      switch (sort) {
+        case ArtistSortOption.nameAsc:
+          return await q.sortByName().offset(offset).limit(limit).findAll();
+        case ArtistSortOption.nameDesc:
+          return await q.sortByNameDesc().offset(offset).limit(limit).findAll();
+        case ArtistSortOption.albumCountDesc:
+          return await q.sortByAlbumCountDesc().offset(offset).limit(limit).findAll();
+        default:
+          return await q.offset(offset).limit(limit).findAll();
+      }
+    }
   }
 
   /// Get total album count for a server

@@ -5,39 +5,105 @@ import 'package:zenify/providers/sort_providers.dart';
 import 'package:zenify/providers/network_provider.dart';
 import 'package:zenify/models/artist.dart';
 
-final artistsProvider = FutureProvider<List<Artist>>((ref) async {
-  final server = await ref.watch(activeServerProvider.future);
-  if (server == null) return [];
-  
-  final db = ref.watch(databaseProvider);
-  final sortOption = ref.watch(artistSortProvider);
-  
-  final artists = await db.getArtists(server.id);
-  
-  final result = artists.toList();
-  
-  switch (sortOption) {
-    case ArtistSortOption.nameAsc:
-      result.sort((a, b) => (a.name ?? '').compareTo(b.name ?? ''));
-      break;
-    case ArtistSortOption.nameDesc:
-      result.sort((a, b) => (b.name ?? '').compareTo(a.name ?? ''));
-      break;
-    case ArtistSortOption.albumCountDesc:
-      result.sort((a, b) => (b.albumCount ?? 0).compareTo(a.albumCount ?? 0));
-      break;
-    case ArtistSortOption.random:
-      result.shuffle();
-      break;
-    case ArtistSortOption.defaultOrder:
-    default:
-      // Leave as inserted order
-      break;
-  }
-  
-  return result;
-});
+class ArtistsPaginationState {
+  final List<Artist> artists;
+  final bool isLoadingMore;
+  final bool hasMore;
+  final int totalCount;
 
+  ArtistsPaginationState({
+    required this.artists,
+    this.isLoadingMore = false,
+    this.hasMore = true,
+    required this.totalCount,
+  });
+
+  ArtistsPaginationState copyWith({
+    List<Artist>? artists,
+    bool? isLoadingMore,
+    bool? hasMore,
+    int? totalCount,
+  }) {
+    return ArtistsPaginationState(
+      artists: artists ?? this.artists,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      hasMore: hasMore ?? this.hasMore,
+      totalCount: totalCount ?? this.totalCount,
+    );
+  }
+}
+
+class ArtistsPaginationNotifier extends AsyncNotifier<ArtistsPaginationState> {
+  static const int _limit = 50;
+  int _offset = 0;
+
+  @override
+  Future<ArtistsPaginationState> build() async {
+    _offset = 0;
+    
+    final server = await ref.watch(activeServerProvider.future);
+    if (server == null) {
+      return ArtistsPaginationState(artists: [], hasMore: false, totalCount: 0);
+    }
+    
+    final db = ref.watch(databaseProvider);
+    final totalCount = await db.getArtistCount(server.id);
+    
+    final artists = await _fetchPage(0);
+    return ArtistsPaginationState(
+      artists: artists,
+      hasMore: artists.length == _limit,
+      totalCount: totalCount,
+    );
+  }
+
+  Future<List<Artist>> _fetchPage(int offset) async {
+    final server = await ref.watch(activeServerProvider.future);
+    if (server == null) return [];
+    
+    final db = ref.watch(databaseProvider);
+    final sortOption = ref.watch(artistSortProvider);
+    final networkState = ref.watch(networkProvider);
+    final isOfflineMode = networkState.isOffline;
+    
+    final artists = await db.getArtistsPaginated(
+      server.id,
+      offset: offset,
+      limit: _limit,
+      sort: sortOption,
+      offlineFirst: isOfflineMode,
+    );
+    
+    if (sortOption == ArtistSortOption.random) {
+       artists.shuffle();
+    }
+    return artists;
+  }
+
+  Future<void> loadMore() async {
+    if (state.isLoading || state.hasError) return;
+    final currentState = state.value;
+    if (currentState == null || currentState.isLoadingMore || !currentState.hasMore) return;
+    
+    state = AsyncValue.data(currentState.copyWith(isLoadingMore: true));
+    
+    try {
+      final newArtists = await _fetchPage(_offset + _limit);
+      _offset += _limit;
+      state = AsyncValue.data(currentState.copyWith(
+        artists: [...currentState.artists, ...newArtists],
+        hasMore: newArtists.length == _limit,
+        isLoadingMore: false,
+      ));
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+}
+
+final artistsProvider = AsyncNotifierProvider<ArtistsPaginationNotifier, ArtistsPaginationState>(() {
+  return ArtistsPaginationNotifier();
+});
 final artistDetailProvider = FutureProvider.family<Map<String, dynamic>?, String>((ref, id) async {
   final networkState = ref.watch(networkProvider);
   if (networkState.isOffline) return null;

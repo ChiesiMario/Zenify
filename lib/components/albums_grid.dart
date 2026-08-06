@@ -20,6 +20,9 @@ class AlbumsGrid extends ConsumerWidget {
   final bool isHome;
   final bool showYearInsteadOfArtist;
   final bool hideOfflineIcon;
+  final VoidCallback? onLoadMore;
+  final bool isLoadingMore;
+  final int? totalCount;
 
   const AlbumsGrid({
     super.key,
@@ -30,6 +33,9 @@ class AlbumsGrid extends ConsumerWidget {
     this.isHome = false,
     this.showYearInsteadOfArtist = false,
     this.hideOfflineIcon = false,
+    this.onLoadMore,
+    this.isLoadingMore = false,
+    this.totalCount,
   });
 
   @override
@@ -111,7 +117,7 @@ class AlbumsGrid extends ConsumerWidget {
           finalPadding = resolvedBasePadding;
         }
 
-        return Padding(
+        Widget grid = Padding(
           padding: const EdgeInsets.only(right: 2.0),
           child: GridView.builder(
           shrinkWrap: shrinkWrap,
@@ -123,8 +129,26 @@ class AlbumsGrid extends ConsumerWidget {
             mainAxisSpacing: 16,
             childAspectRatio: childAspectRatio,
           ),
-          itemCount: albums.length,
+          itemCount: totalCount ?? albums.length,
           itemBuilder: (context, index) {
+            if (index >= albums.length) {
+              if (onLoadMore != null && !isLoadingMore) {
+                Future.microtask(() => onLoadMore!());
+              }
+              // Placeholder
+              return Opacity(
+                opacity: 0.3,
+                child: AlbumCard(
+                  title: '...',
+                  artist: '...',
+                  coverArtId: null,
+                  fallbackCoverUrl: null,
+                  serverId: 0,
+                  isDisabled: true,
+                  onTap: () {},
+                ),
+              );
+            }
             final item = albums[index];
             late Map<String, dynamic> album;
             if (item is Album) {
@@ -203,6 +227,34 @@ class AlbumsGrid extends ConsumerWidget {
           },
         ),
       );
+
+      if (onLoadMore != null) {
+        grid = NotificationListener<ScrollNotification>(
+          onNotification: (scrollInfo) {
+            if (!isLoadingMore &&
+                scrollInfo.metrics.pixels >= scrollInfo.metrics.maxScrollExtent - 200) {
+              onLoadMore!();
+            }
+            return false; // let it bubble up if needed
+          },
+          child: grid,
+        );
+      }
+
+      if (isLoadingMore) {
+        grid = Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            shrinkWrap ? grid : Expanded(child: grid),
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          ],
+        );
+      }
+
+      return grid;
       },
     );
   }

@@ -25,17 +25,22 @@ class AlbumView extends ConsumerWidget {
 
         final albumsAsync = ref.watch(albumsProvider);
         return albumsAsync.when(
-          data: (albums) {
-            if (albums.isEmpty) {
+          data: (state) {
+            if (state.albums.isEmpty) {
               return Center(child: Text(l10n.noAlbumsFound, style: TextStyle(color: colorScheme.mutedForeground)));
             }
 
             return AlbumsGrid(
-              albums: albums.toList(),
+              albums: state.albums,
               shrinkWrap: false,
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.only(left: 24, right: 24, top: 24, bottom: 128),
               isHome: true,
+              totalCount: state.totalCount,
+              isLoadingMore: state.isLoadingMore,
+              onLoadMore: () {
+                ref.read(albumsProvider.notifier).loadMore();
+              },
             );
           },
           loading: () => Center(child: CircularProgressIndicator(color: colorScheme.foreground)),

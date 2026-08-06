@@ -139,7 +139,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     alignment: Alignment.centerLeft,
                     children: <Widget>[
                       ...previousChildren,
-                      ?currentChild,
+                      if (currentChild != null) currentChild,
                     ],
                   );
                 },
