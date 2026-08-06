@@ -5,8 +5,9 @@ import 'package:zenify/providers/sort_providers.dart';
 import 'package:zenify/providers/download_provider.dart';
 import 'package:zenify/providers/network_provider.dart';
 import 'package:zenify/models/album_detail_cache.dart';
+import 'package:zenify/models/album.dart';
 
-final albumsProvider = FutureProvider<List<dynamic>>((ref) async {
+final albumsProvider = FutureProvider<List<Album>>((ref) async {
   final server = await ref.watch(activeServerProvider.future);
   if (server == null) return [];
   
@@ -23,15 +24,11 @@ final albumsProvider = FutureProvider<List<dynamic>>((ref) async {
       .whereType<String>()
       .toSet();
 
-  final result = albums.map((a) {
-    final map = jsonDecode(a.rawData) as Map<String, dynamic>;
-    map['isOfflineAlbum'] = offlineAlbumIds.contains(map['id'].toString());
-    return map;
-  }).toList();
+  final result = albums.toList(); // Copy list for sorting
   
-  int compareOffline(dynamic a, dynamic b) {
-    final aOffline = a['isOfflineAlbum'] == true ? 1 : 0;
-    final bOffline = b['isOfflineAlbum'] == true ? 1 : 0;
+  int compareOffline(Album a, Album b) {
+    final aOffline = offlineAlbumIds.contains(a.albumId) ? 1 : 0;
+    final bOffline = offlineAlbumIds.contains(b.albumId) ? 1 : 0;
     return bOffline.compareTo(aOffline); // 1 (offline) before 0 (not offline)
   }
 
@@ -45,7 +42,7 @@ final albumsProvider = FutureProvider<List<dynamic>>((ref) async {
           final offCmp = compareOffline(a, b);
           if (offCmp != 0) return offCmp;
         }
-        return (a['name']?.toString() ?? '').compareTo(b['name']?.toString() ?? '');
+        return (a.name ?? '').compareTo(b.name ?? '');
       });
       break;
     case AlbumSortOption.nameDesc:
@@ -54,7 +51,7 @@ final albumsProvider = FutureProvider<List<dynamic>>((ref) async {
           final offCmp = compareOffline(a, b);
           if (offCmp != 0) return offCmp;
         }
-        return (b['name']?.toString() ?? '').compareTo(a['name']?.toString() ?? '');
+        return (b.name ?? '').compareTo(a.name ?? '');
       });
       break;
     case AlbumSortOption.yearDesc:
@@ -63,7 +60,7 @@ final albumsProvider = FutureProvider<List<dynamic>>((ref) async {
           final offCmp = compareOffline(a, b);
           if (offCmp != 0) return offCmp;
         }
-        return (b['year'] as int? ?? 0).compareTo(a['year'] as int? ?? 0);
+        return (b.year ?? 0).compareTo(a.year ?? 0);
       });
       break;
     case AlbumSortOption.yearAsc:
@@ -72,7 +69,7 @@ final albumsProvider = FutureProvider<List<dynamic>>((ref) async {
           final offCmp = compareOffline(a, b);
           if (offCmp != 0) return offCmp;
         }
-        return (a['year'] as int? ?? 0).compareTo(b['year'] as int? ?? 0);
+        return (a.year ?? 0).compareTo(b.year ?? 0);
       });
       break;
     case AlbumSortOption.random:
@@ -85,8 +82,8 @@ final albumsProvider = FutureProvider<List<dynamic>>((ref) async {
     default:
       if (isOfflineMode) {
         // We use stable sort by grouping
-        final offline = result.where((e) => e['isOfflineAlbum'] == true).toList();
-        final notOffline = result.where((e) => e['isOfflineAlbum'] != true).toList();
+        final offline = result.where((e) => offlineAlbumIds.contains(e.albumId)).toList();
+        final notOffline = result.where((e) => !offlineAlbumIds.contains(e.albumId)).toList();
         result.clear();
         result.addAll(offline);
         result.addAll(notOffline);

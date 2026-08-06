@@ -59,6 +59,10 @@ class AlbumDetailScreen extends ConsumerWidget {
             songs = [songs];
           }
           final songList = songs as List<dynamic>? ?? [];
+          final albumIdStr = album['id']?.toString();
+          final isAlbumStarred = albumIdStr != null 
+              ? (ref.watch(favoriteStatusProvider.select((map) => map[albumIdStr])) ?? (album['starred'] != null))
+              : false;
 
           final Map<int, List<Map<String, dynamic>>> groupedSongs = {};
           for (int i = 0; i < songList.length; i++) {
@@ -91,12 +95,11 @@ class AlbumDetailScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           // Album Cover
-                          Builder(
+                              Builder(
                             builder: (context) {
                               bool isCoverHovered = false;
                               bool isEnlargeHovered = false;
                               bool isStarHovered = false;
-                              bool isStarred = album['starred'] != null;
                               bool isUpdatingStar = false;
                               return StatefulBuilder(
                                 builder: (context, setState) {
@@ -303,25 +306,16 @@ class AlbumDetailScreen extends ConsumerWidget {
                                                       ? () {
                                                           ZenifyToast.showError(context, l10n.serverOffline);
                                                         }
-                                                      : (isUpdatingStar ? null : () async {
+                                                        : (isUpdatingStar ? null : () async {
                                                           setState(() => isUpdatingStar = true);
                                                           try {
-                                                            final api = SubsonicApi(server!);
-                                                            final albumId = album['id']?.toString();
-                                                            if (isStarred) {
-                                                              await api.unstar(albumId: albumId);
-                                                              setState(() {
-                                                                isStarred = false;
-                                                                album.remove('starred');
-                                                              });
-                                                              if (context.mounted) ZenifyToast.showSuccess(context, l10n.unfavorited);
-                                                            } else {
-                                                              await api.star(albumId: albumId);
-                                                              setState(() {
-                                                                isStarred = true;
-                                                                album['starred'] = DateTime.now().toIso8601String();
-                                                              });
-                                                              if (context.mounted) ZenifyToast.showSuccess(context, l10n.favorited);
+                                                            if (api != null && albumIdStr != null) {
+                                                              await ref.read(favoriteStatusProvider.notifier).toggleStar(
+                                                                id: albumIdStr,
+                                                                isCurrentlyStarred: isAlbumStarred,
+                                                                api: api,
+                                                                isAlbum: true,
+                                                              );
                                                             }
                                                           } catch (e) {
                                                             if (context.mounted) ZenifyToast.showError(context, l10n.operationFailed(e.toString()));
@@ -354,8 +348,8 @@ class AlbumDetailScreen extends ConsumerWidget {
                                                                 ),
                                                               )
                                                             : Icon(
-                                                                isStarred ? Icons.favorite : Icons.favorite_border,
-                                                                color: isStarred 
+                                                                isAlbumStarred ? Icons.favorite : Icons.favorite_border,
+                                                                color: isAlbumStarred 
                                                                   ? Colors.red 
                                                                   : (isStarHovered ? Colors.white : Colors.black),
                                                                 size: 16,
@@ -617,11 +611,10 @@ class AlbumDetailScreen extends ConsumerWidget {
                                             const SizedBox(width: 4),
                                             Consumer(
                                               builder: (context, ref, child) {
-                                                final favoritesAsync = ref.watch(favoritesProvider);
                                                 final songId = song['id']?.toString();
-                                                final isFavorite = favoritesAsync.value?['songs']?.any(
-                                                  (s) => s['id']?.toString() == songId,
-                                                ) ?? (song['starred'] != null);
+                                                final isFavorite = songId != null 
+                                                    ? (ref.watch(favoriteStatusProvider.select((map) => map[songId])) ?? (song['starred'] != null))
+                                                    : false;
 
                                                 final mutedIconColor = colorScheme.mutedForeground.withValues(alpha: 0.3);
 
@@ -642,12 +635,12 @@ class AlbumDetailScreen extends ConsumerWidget {
                                                         ZenifyToast.showError(context, l10n.serverOffline);
                                                       } : () async {
                                                         if (songId == null || api == null) return;
-                                                        if (isFavorite) {
-                                                          await api.unstar(id: songId);
-                                                        } else {
-                                                          await api.star(id: songId);
-                                                        }
-                                                        ref.invalidate(favoritesProvider);
+                                                        await ref.read(favoriteStatusProvider.notifier).toggleStar(
+                                                          id: songId,
+                                                          isCurrentlyStarred: isFavorite,
+                                                          api: api,
+                                                          isAlbum: false,
+                                                        );
                                                       },
                                                       tooltip: isFavorite ? l10n.removeFromFavorites : l10n.addToFavorites,
                                                     ),

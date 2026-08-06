@@ -13,6 +13,7 @@ import 'package:zenify/services/path_service.dart';
 import 'package:zenify/screens/server_management_screen.dart';
 import 'package:zenify/providers/audio_provider.dart';
 import 'package:zenify/l10n/app_localizations.dart';
+import 'package:zenify/components/zenify_button.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -216,28 +217,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       title: l10n.playbackCacheManagement,
                       subtitle: l10n.cacheUsed(formattedCacheSize.toString(), cacheTracks.length.toString()),
                       icon: LucideIcons.hardDrive,
-                      trailing: ShadButton.outline(
-                        size: ShadButtonSize.sm,
-                        enabled: cacheTracks.isNotEmpty,
-                        onPressed: () async {
+                      trailing: ZenifyButton(
+                        variant: ZenifyButtonVariant.outline,
+                        onPressed: cacheTracks.isEmpty ? null : () async {
                           await ref.read(downloadServiceProvider).clearAllCaches();
                           ref.invalidate(downloadedTracksProvider);
                         },
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(LucideIcons.trash2, size: 13, color: colorScheme.mutedForeground),
-                            const SizedBox(width: 6),
-                            Text(
-                              l10n.clearCache,
-                              style: TextStyle(
-                                color: colorScheme.foreground,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
+                        text: l10n.clearCache,
+                        icon: Icon(LucideIcons.trash2, size: 13, color: colorScheme.mutedForeground),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -245,8 +232,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       title: l10n.offlineMusicCacheLocation,
                       subtitle: _currentDownloadRoot.isEmpty ? l10n.loading : _currentDownloadRoot,
                       icon: LucideIcons.folderClosed,
-                      trailing: ShadButton.outline(
-                        size: ShadButtonSize.sm,
+                      trailing: ZenifyButton(
+                        variant: ZenifyButtonVariant.outline,
                         onPressed: () async {
                           String? result;
                           try {
@@ -330,14 +317,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             }
                           }
                         },
-                        child: Text(
-                          l10n.changeDirectory,
-                          style: TextStyle(
-                            color: colorScheme.foreground,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                        text: l10n.changeDirectory,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -446,18 +426,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                                       Row(
                                                         children: [
                                                           Expanded(
-                                                            child: ShadButton.outline(
+                                                            child: ZenifyButton(
+                                                              variant: ZenifyButtonVariant.outline,
                                                               onPressed: () => Navigator.pop(context, false),
-                                                              child: Text(l10n.cancel),
+                                                              text: l10n.cancel,
                                                             ),
                                                           ),
                                                           const SizedBox(width: 12),
                                                           Expanded(
-                                                            child: ShadButton(
-                                                              backgroundColor: theme.colorScheme.destructive,
-                                                              hoverBackgroundColor: theme.colorScheme.destructive.withValues(alpha: 0.9),
+                                                            child: ZenifyButton(
+                                                              variant: ZenifyButtonVariant.destructive,
                                                               onPressed: () => Navigator.pop(context, true),
-                                                              child: Text(l10n.confirmClear, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
+                                                              text: l10n.confirmClear,
                                                             ),
                                                           ),
                                                         ],
@@ -592,21 +572,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             ),
                           ),
                           const SizedBox(width: 16),
-                          ShadButton.outline(
+                          ZenifyButton(
+                            variant: ZenifyButtonVariant.outline,
                             onPressed: () async {
                               final url = Uri.parse('https://github.com/ChiesiMario/Zenify');
                               if (await canLaunchUrl(url)) {
                                 await launchUrl(url);
                               }
                             },
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(LucideIcons.code, size: 16, color: colorScheme.foreground),
-                                const SizedBox(width: 6),
-                                const Text('GitHub'),
-                              ],
-                            ),
+                            text: 'GitHub',
+                            icon: Icon(LucideIcons.code, size: 16, color: colorScheme.foreground),
                           ),
                         ],
                       ),

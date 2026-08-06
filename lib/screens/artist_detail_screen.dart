@@ -339,11 +339,10 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
                                                 const SizedBox(width: 4),
                                                 Consumer(
                                                   builder: (context, ref, child) {
-                                                    final favoritesAsync = ref.watch(favoritesProvider);
-                                                    final songId = song['id']?.toString();
-                                                    final isFavorite = favoritesAsync.value?['songs']?.any(
-                                                      (s) => s['id']?.toString() == songId,
-                                                    ) ?? (song['starred'] != null);
+                                                    final songIdStr = song['id']?.toString();
+                                                    final isFavorite = songIdStr != null
+                                                        ? (ref.watch(favoriteStatusProvider.select((map) => map[songIdStr])) ?? (song['starred'] != null))
+                                                        : false;
 
                                                     final mutedIconColor = colorScheme.mutedForeground.withValues(alpha: 0.3);
 
@@ -363,13 +362,14 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
                                                           onPressed: networkState.isOffline ? () {
                                                             ZenifyToast.showError(context, l10n.serverOffline);
                                                           } : () async {
-                                                            if (songId == null || api == null) return;
-                                                            if (isFavorite) {
-                                                              await api.unstar(id: songId);
-                                                            } else {
-                                                              await api.star(id: songId);
-                                                            }
-                                                            ref.invalidate(favoritesProvider);
+                                                            final songIdStr = song['id']?.toString();
+                                                            if (songIdStr == null || api == null) return;
+                                                            await ref.read(favoriteStatusProvider.notifier).toggleStar(
+                                                              id: songIdStr,
+                                                              isCurrentlyStarred: isFavorite,
+                                                              api: api,
+                                                              isAlbum: false,
+                                                            );
                                                           },
                                                           tooltip: isFavorite ? l10n.removeFromFavorites : l10n.addToFavorites,
                                                         ),
@@ -421,7 +421,7 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
 
                           // 4. Albums
                           if (albums.isNotEmpty) ...[
-                            Text('專輯', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: colorScheme.foreground, letterSpacing: -0.5)),
+                            Text(l10n.navAlbums, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: colorScheme.foreground, letterSpacing: -0.5)),
                             const SizedBox(height: 16),
                             AlbumsGrid(
                               albums: albums.toList(),

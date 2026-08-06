@@ -421,8 +421,51 @@ class AudioNotifier extends Notifier<AudioState> {
       if (autoPlay) {
         _player.play();
       }
+      
+      _preloadNextSongs();
     } catch (e) {
       print('AudioPlayer Error in _playIndex: $e');
+    }
+  }
+
+  Future<void> _preloadNextSongs() async {
+    final networkState = ref.read(networkProvider);
+    if (networkState.isOffline) return;
+
+    final db = ref.read(databaseProvider);
+    final activeServer = await db.getActiveServer();
+    if (activeServer == null) return;
+    
+    int checkedCount = 0;
+    int nextIndex = state.currentIndex + 1;
+    
+    while (checkedCount < 2 && state.queue.isNotEmpty) {
+      if (nextIndex >= state.queue.length) {
+        if (state.repeatMode == AudioRepeatMode.all) {
+          nextIndex = 0;
+        } else {
+          break; // End of queue
+        }
+      }
+      
+      // Prevent infinite loop in very small queues
+      if (nextIndex == state.currentIndex) break;
+      
+      final song = state.queue[nextIndex];
+      final songId = song['id']?.toString();
+      
+      if (songId != null) {
+        final track = await db.getDownloadedTrack(songId);
+        if (track == null || !track.isComplete || !File(track.localPath).existsSync()) {
+          // Trigger download in background (cache mode)
+          ref.read(downloadServiceProvider).downloadSong(song, activeServer.id, isManual: false).catchError((e) {
+            print('Preload error for song $songId: $e');
+          });
+        }
+      }
+      
+      checkedCount++;
+      nextIndex++;
     }
   }
 

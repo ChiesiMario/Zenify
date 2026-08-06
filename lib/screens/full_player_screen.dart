@@ -83,10 +83,10 @@ class FullPlayerScreen extends ConsumerWidget {
               // 頂部列：左側為縮小淡化收起按鈕，中間為喜歡按鈕，右側為播放佇列按鈕
               Builder(
                 builder: (context) {
-                  final favoritesAsync = ref.watch(favoritesProvider);
-                  final isFavorite = favoritesAsync.value?['songs']?.any(
-                    (s) => s['id']?.toString() == currentSong['id']?.toString(),
-                  ) ?? (currentSong['starred'] != null);
+                  final songIdStr = currentSong['id']?.toString();
+                  final isFavorite = songIdStr != null
+                      ? (ref.watch(favoriteStatusProvider.select((map) => map[songIdStr])) ?? (currentSong['starred'] != null))
+                      : false;
 
                   return Padding(
                     padding: const EdgeInsets.fromLTRB(20, 10, 20, 4),
@@ -106,12 +106,12 @@ class FullPlayerScreen extends ConsumerWidget {
                           onPressed: () async {
                             final songId = currentSong['id']?.toString();
                             if (songId == null || api == null) return;
-                            if (isFavorite) {
-                              await api.unstar(id: songId);
-                            } else {
-                              await api.star(id: songId);
-                            }
-                            ref.invalidate(favoritesProvider);
+                            await ref.read(favoriteStatusProvider.notifier).toggleStar(
+                              id: songId,
+                              isCurrentlyStarred: isFavorite,
+                              api: api,
+                              isAlbum: false,
+                            );
                           },
                         ),
                         _TopUtilityButton(

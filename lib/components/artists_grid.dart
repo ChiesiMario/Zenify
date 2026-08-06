@@ -5,6 +5,8 @@ import 'package:zenify/components/artist_card.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zenify/router/app_router.dart';
+import 'dart:convert';
+import 'package:zenify/models/artist.dart';
 
 class ArtistsGrid extends ConsumerWidget {
   final List<dynamic> artists;
@@ -88,7 +90,13 @@ class ArtistsGrid extends ConsumerWidget {
           ),
           itemCount: artists.length,
           itemBuilder: (context, index) {
-            final artist = artists[index];
+            final item = artists[index];
+            late Map<String, dynamic> artist;
+            if (item is Artist) {
+              artist = jsonDecode(item.rawData) as Map<String, dynamic>;
+            } else {
+              artist = item as Map<String, dynamic>;
+            }
             final name = artist['name'] ?? l10n.unknownArtist;
             final artistId = artist['id'];
             final coverArtId = artist['coverArt'] ?? artistId;

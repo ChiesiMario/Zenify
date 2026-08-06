@@ -10,6 +10,8 @@ import 'package:zenify/models/server.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/api/subsonic_api.dart';
 import 'package:zenify/components/zenify_toast.dart';
+import 'package:zenify/components/zenify_button.dart';
+import 'package:zenify/components/zenify_toast.dart';
 
 class ServerManagementScreen extends ConsumerStatefulWidget {
   const ServerManagementScreen({super.key});
@@ -146,15 +148,14 @@ class _ServerManagementScreenState extends ConsumerState<ServerManagementScreen>
         content: Text(l10n.confirmDeleteServer, style: TextStyle(color: colorScheme.mutedForeground)),
         actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         actions: [
-          TextButton(
+          ZenifyButton(
+            text: l10n.cancel,
+            variant: ZenifyButtonVariant.ghost,
             onPressed: () => Navigator.pop(context),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            child: Text(l10n.cancel, style: TextStyle(color: colorScheme.mutedForeground, fontWeight: FontWeight.w600)),
           ),
-          ElevatedButton(
+          ZenifyButton(
+            text: l10n.confirmDelete,
+            variant: ZenifyButtonVariant.destructive,
             onPressed: () async {
               await ref.read(databaseProvider).deleteServer(server.id);
               ref.invalidate(serversListProvider);
@@ -165,14 +166,6 @@ class _ServerManagementScreenState extends ConsumerState<ServerManagementScreen>
                 Navigator.pop(context);
               }
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: colorScheme.destructive,
-              foregroundColor: colorScheme.destructiveForeground,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              elevation: 0,
-            ),
-            child: Text(l10n.confirmDelete, style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -370,7 +363,9 @@ class _ServerEditDialogState extends ConsumerState<_ServerEditDialog> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             if (_isEditing)
-              ShadButton.outline(
+              ZenifyButton(
+                variant: ZenifyButtonVariant.outline,
+                text: _isConfirmingDelete ? l10n.confirmDelete : l10n.delete,
                 onPressed: () async {
                   if (_isConfirmingDelete) {
                     await ref.read(databaseProvider).deleteServer(widget.server!.id);
@@ -387,30 +382,26 @@ class _ServerEditDialogState extends ConsumerState<_ServerEditDialog> {
                     });
                   }
                 },
-                child: Text(
-                  _isConfirmingDelete ? l10n.confirmDelete : l10n.delete,
-                  style: _isConfirmingDelete ? TextStyle(color: colorScheme.destructive) : null,
-                ),
               )
             else
               const SizedBox.shrink(),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                ShadButton.outline(
+                ZenifyButton(
+                  variant: ZenifyButtonVariant.ghost,
+                  text: l10n.cancel,
                   onPressed: () => Navigator.pop(context),
-                  child: Text(l10n.cancel),
                 ),
                 const SizedBox(width: 8),
-                ShadButton(
-                  onPressed: _isCheckingConnection || isInputEmpty
+                ZenifyButton(
+                  text: _isConnectionValid ? (_isEditing ? l10n.saveChanges : l10n.save) : l10n.checkServer,
+                  isLoading: _isCheckingConnection,
+                  onPressed: isInputEmpty
                       ? null
                       : _isConnectionValid
                           ? _saveServer
                           : _checkConnection,
-                  child: _isCheckingConnection 
-                      ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: colorScheme.primaryForeground))
-                      : Text(_isConnectionValid ? (_isEditing ? l10n.saveChanges : l10n.save) : l10n.checkServer),
                 ),
               ],
             ),

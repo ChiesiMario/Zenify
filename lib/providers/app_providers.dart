@@ -7,3 +7,4 @@ export 'artist_providers.dart';
 export 'favorite_providers.dart';
 export 'cache_providers.dart';
 export 'ui_providers.dart';
+export 'favorite_status_provider.dart';

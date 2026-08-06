@@ -13,9 +13,11 @@ class DownloadService {
   final double _cacheLimitGb;
   final Function(String, double)? onProgress;
 
+  static final Map<String, Future<void>> _activeDownloads = {};
+
   DownloadService(this._db, this._api, this._cacheLimitGb, {this.onProgress});
 
-  Future<void> downloadSong(dynamic song, int serverId) async {
+  Future<void> downloadSong(dynamic song, int serverId, {bool isManual = true}) async {
     if (_api == null) return;
     final songId = song['id'].toString();
 
@@ -23,7 +25,7 @@ class DownloadService {
     var track = await _db.getDownloadedTrack(songId);
     if (track != null && track.isComplete && File(track.localPath).existsSync()) {
       bool changed = false;
-      if (!track.isManualDownload) {
+      if (isManual && !track.isManualDownload) {
         track.isManualDownload = true;
         changed = true;
       }
@@ -40,10 +42,26 @@ class DownloadService {
       return;
     }
 
+    if (_activeDownloads.containsKey(songId)) {
+      await _activeDownloads[songId];
+      return;
+    }
+
+    final downloadFuture = _performDownload(song, songId, serverId, isManual);
+    _activeDownloads[songId] = downloadFuture;
+
+    try {
+      await downloadFuture;
+    } finally {
+      _activeDownloads.remove(songId);
+    }
+  }
+
+  Future<void> _performDownload(dynamic song, String songId, int serverId, bool isManual) async {
     try {
       final downloadDir = await PathService.getOfflineDir();
       final localPath = p.join(downloadDir.path, '$songId.mp3');
-      final streamUrl = _api.getStreamUrl(songId);
+      final streamUrl = _api!.getStreamUrl(songId);
 
       final request = http.Request('GET', Uri.parse(streamUrl));
       final response = await http.Client().send(request);
@@ -74,7 +92,7 @@ class DownloadService {
       }
       await sink.close();
 
-      track = DownloadedTrack()
+      var track = DownloadedTrack()
         ..songId = songId
         ..serverId = serverId
         ..title = song['title'] ?? 'Unknown'
@@ -88,7 +106,7 @@ class DownloadService {
         ..downloadedAt = DateTime.now()
         ..rawData = jsonEncode(song)
         ..isComplete = true
-        ..isManualDownload = true;
+        ..isManualDownload = isManual;
 
       await _db.saveDownloadedTrack(track);
 

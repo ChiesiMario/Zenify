@@ -213,25 +213,20 @@ class FavoriteSongsScreen extends ConsumerWidget {
   }
 }
 
-class _FavoriteSongButton extends ConsumerStatefulWidget {
+class _FavoriteSongButton extends ConsumerWidget {
   final String songId;
   const _FavoriteSongButton({required this.songId});
 
   @override
-  ConsumerState<_FavoriteSongButton> createState() => _FavoriteSongButtonState();
-}
-
-class _FavoriteSongButtonState extends ConsumerState<_FavoriteSongButton> {
-  bool _isFavorite = true;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
     final api = ref.watch(subsonicApiProvider);
     final networkState = ref.watch(networkProvider);
 
+    // 預設為 true (因為在收藏清單內)
+    final isFavorite = ref.watch(favoriteStatusProvider.select((map) => map[songId])) ?? true;
     final mutedIconColor = colorScheme.mutedForeground.withValues(alpha: 0.3);
 
     return Opacity(
@@ -243,26 +238,23 @@ class _FavoriteSongButtonState extends ConsumerState<_FavoriteSongButton> {
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
           icon: Icon(
-            _isFavorite ? Icons.favorite : LucideIcons.heart,
-            color: _isFavorite ? const Color(0xFFEF4444) : mutedIconColor,
+            isFavorite ? Icons.favorite : LucideIcons.heart,
+            color: isFavorite ? const Color(0xFFEF4444) : mutedIconColor,
             size: 16,
           ),
           onPressed: networkState.isOffline ? () {
             ZenifyToast.showError(context, l10n.serverOffline);
           } : () async {
             if (api == null) return;
-            setState(() {
-              _isFavorite = !_isFavorite;
-            });
-            
-            if (_isFavorite) {
-              await api.star(id: widget.songId);
-            } else {
-              await api.unstar(id: widget.songId);
-            }
+            await ref.read(favoriteStatusProvider.notifier).toggleStar(
+              id: songId,
+              isCurrentlyStarred: isFavorite,
+              api: api,
+              isAlbum: false,
+            );
             // 特意不 invalidate favoritesProvider，讓歌曲保留在畫面上
           },
-          tooltip: _isFavorite ? l10n.removeFromFavorites : l10n.addToFavorites,
+          tooltip: isFavorite ? l10n.removeFromFavorites : l10n.addToFavorites,
         ),
       ),
     );

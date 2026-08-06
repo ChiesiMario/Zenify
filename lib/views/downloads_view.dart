@@ -356,25 +356,21 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
             ),
           ),
         ),
-        SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          sliver: SliverCrossAxisGroup(
-            slivers: [
-              SliverCrossAxisExpanded(
-                flex: 1,
-                sliver: const SliverToBoxAdapter(child: SizedBox.shrink()),
-              ),
-              SliverConstrainedCrossAxis(
-                maxExtent: 568,
-                sliver: DecoratedSliver(
-                  decoration: BoxDecoration(
-                    color: colorScheme.card,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: colorScheme.border, width: 1.0),
-                  ),
-                  sliver: SliverList.builder(
-                    itemCount: sortedTracks.length,
-                    itemBuilder: (context, index) {
+        SliverLayoutBuilder(
+          builder: (context, constraints) {
+            final double horizontalPadding = (constraints.crossAxisExtent - 568) / 2;
+            final double padding = horizontalPadding > 0 ? horizontalPadding : 0;
+            return SliverPadding(
+              padding: EdgeInsets.symmetric(horizontal: 16 + padding),
+              sliver: DecoratedSliver(
+                decoration: BoxDecoration(
+                  color: colorScheme.card,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: colorScheme.border, width: 1.0),
+                ),
+                sliver: SliverList.builder(
+                  itemCount: sortedTracks.length,
+                  itemBuilder: (context, index) {
                       final track = sortedTracks[index];
                       int sizeBytes = track.sizeBytes;
                       if (sizeBytes <= 0) {
@@ -477,13 +473,8 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
                     },
                   ),
                 ),
-              ),
-              SliverCrossAxisExpanded(
-                flex: 1,
-                sliver: const SliverToBoxAdapter(child: SizedBox.shrink()),
-              ),
-            ],
-          ),
+            );
+          },
         ),
         const SliverPadding(padding: EdgeInsets.only(bottom: 128)),
       ],

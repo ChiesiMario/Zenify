@@ -3,8 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zenify/providers/server_providers.dart';
 import 'package:zenify/providers/sort_providers.dart';
 import 'package:zenify/providers/network_provider.dart';
+import 'package:zenify/models/artist.dart';
 
-final artistsProvider = FutureProvider<List<dynamic>>((ref) async {
+final artistsProvider = FutureProvider<List<Artist>>((ref) async {
   final server = await ref.watch(activeServerProvider.future);
   if (server == null) return [];
   
@@ -13,17 +14,17 @@ final artistsProvider = FutureProvider<List<dynamic>>((ref) async {
   
   final artists = await db.getArtists(server.id);
   
-  final result = artists.map((a) => jsonDecode(a.rawData)).toList();
+  final result = artists.toList();
   
   switch (sortOption) {
     case ArtistSortOption.nameAsc:
-      result.sort((a, b) => (a['name']?.toString() ?? '').compareTo(b['name']?.toString() ?? ''));
+      result.sort((a, b) => (a.name ?? '').compareTo(b.name ?? ''));
       break;
     case ArtistSortOption.nameDesc:
-      result.sort((a, b) => (b['name']?.toString() ?? '').compareTo(a['name']?.toString() ?? ''));
+      result.sort((a, b) => (b.name ?? '').compareTo(a.name ?? ''));
       break;
     case ArtistSortOption.albumCountDesc:
-      result.sort((a, b) => (b['albumCount'] as int? ?? 0).compareTo(a['albumCount'] as int? ?? 0));
+      result.sort((a, b) => (b.albumCount ?? 0).compareTo(a.albumCount ?? 0));
       break;
     case ArtistSortOption.random:
       result.shuffle();

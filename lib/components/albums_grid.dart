@@ -9,6 +9,8 @@ import 'package:zenify/screens/artist_detail_screen.dart';
 import 'package:zenify/providers/download_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zenify/router/app_router.dart';
+import 'dart:convert';
+import 'package:zenify/models/album.dart';
 
 class AlbumsGrid extends ConsumerWidget {
   final List<dynamic> albums;
@@ -123,18 +125,30 @@ class AlbumsGrid extends ConsumerWidget {
           ),
           itemCount: albums.length,
           itemBuilder: (context, index) {
-            final album = albums[index];
+            final item = albums[index];
+            late Map<String, dynamic> album;
+            if (item is Album) {
+              album = jsonDecode(item.rawData) as Map<String, dynamic>;
+            } else {
+              album = item as Map<String, dynamic>;
+            }
             final title = album['title'] ?? album['name'] ?? l10n.unknownAlbum;
             final artist = showYearInsteadOfArtist 
                 ? (album['year']?.toString() ?? l10n.unknownYear) 
                 : (album['artist'] ?? album['year']?.toString() ?? l10n.unknownArtist);
             final artistId = album['artistId'];
-            final albumCoverId = album['coverArt'] ?? album['id'];
+            final albumId = album['id']?.toString();
+            final albumCoverId = album['coverArt'] ?? albumId;
             final fallbackUrl = api != null && albumCoverId != null 
                 ? api.getCoverArtUrl(albumCoverId, size: 250) 
                 : null;
-            final isOffline = offlineAlbumIds.contains(album['id']?.toString());
+            final isOffline = offlineAlbumIds.contains(albumId);
             final isDisabled = networkState.isOffline && !isOffline;
+            
+            // 全域覆蓋狀態 (Override State)
+            final isStarred = albumId != null 
+                ? (ref.watch(favoriteStatusProvider.select((map) => map[albumId])) ?? (album['starred'] != null))
+                : false;
             
             return AlbumCard(
               title: title,
@@ -147,17 +161,14 @@ class AlbumsGrid extends ConsumerWidget {
               padding: 0,
               isDisabled: isDisabled,
               isArtistDisabled: networkState.isOffline,
-              isStarred: album['starred'] != null,
-              onStarToggle: api == null ? null : (shouldStar) async {
-                final aId = album['id'];
-                if (aId == null) return;
-                if (shouldStar) {
-                  await api.star(albumId: aId);
-                  album['starred'] = DateTime.now().toIso8601String();
-                } else {
-                  await api.unstar(albumId: aId);
-                  album.remove('starred');
-                }
+              isStarred: isStarred,
+              onStarToggle: api == null || albumId == null ? null : (shouldStar) async {
+                await ref.read(favoriteStatusProvider.notifier).toggleStar(
+                  id: albumId,
+                  isCurrentlyStarred: !shouldStar,
+                  api: api,
+                  isAlbum: true,
+                );
               },
               onTap: () {
                 if (album['id'] != null) {
