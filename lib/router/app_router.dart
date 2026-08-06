@@ -17,8 +17,10 @@ import 'package:zenify/views/playlists_view.dart';
 import 'package:zenify/views/downloads_view.dart';
 
 import 'package:zenify/screens/playlist_detail_screen.dart';
+import 'package:zenify/components/app_shell.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
+final _topLevelNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'topLevel');
 final _shellNavigatorAlbumKey = GlobalKey<NavigatorState>(debugLabel: 'shellAlbum');
 final _shellNavigatorArtistKey = GlobalKey<NavigatorState>(debugLabel: 'shellArtist');
 final _shellNavigatorFavKey = GlobalKey<NavigatorState>(debugLabel: 'shellFav');
@@ -89,7 +91,13 @@ final routerProvider = Provider<GoRouter>((ref) {
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/albums',
     routes: [
-      StatefulShellRoute.indexedStack(
+      ShellRoute(
+        navigatorKey: _topLevelNavigatorKey,
+        builder: (context, state, child) {
+          return AppShell(child: child);
+        },
+        routes: [
+          StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return HomeScreen(navigationShell: navigationShell);
         },
@@ -132,14 +140,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/settings',
         name: 'Settings',
-        parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const SettingsScreen(),
       ),
       GoRoute(
         path: '/servers',
         name: 'Servers',
-        parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const ServerManagementScreen(),
+      ),
+        ],
       ),
     ],
   );

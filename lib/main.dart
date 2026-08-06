@@ -8,7 +8,6 @@ import 'package:window_manager/window_manager.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:zenify/providers/theme_provider.dart';
 import 'package:zenify/screens/home_screen.dart';
-import 'package:zenify/components/custom_title_bar.dart';
 import 'package:zenify/services/image_service.dart';
 import 'package:zenify/router/app_router.dart';
 import 'package:just_audio_background/just_audio_background.dart';
@@ -212,10 +211,6 @@ class _ZenifyAppState extends ConsumerState<ZenifyApp> with WindowListener, Tray
       ],
       routerConfig: goRouter,
       builder: (context, child) {
-        final isDark = themeMode == ThemeMode.dark ||
-            (themeMode == ThemeMode.system &&
-                View.of(context).platformDispatcher.platformBrightness == Brightness.dark);
-        
         return Directionality(
           textDirection: TextDirection.ltr,
           child: DefaultTextStyle(
@@ -223,24 +218,7 @@ class _ZenifyAppState extends ConsumerState<ZenifyApp> with WindowListener, Tray
               fontFamily: 'NotoSansTC',
               fontFamilyFallback: ['Nunito', 'NotoSansSC', 'Microsoft JhengHei UI', 'Microsoft YaHei UI', 'Segoe UI', 'sans-serif'],
             ),
-            child: Stack(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 32.0),
-                  child: child!,
-                ),
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: 32.0,
-                  child: Material(
-                    type: MaterialType.transparency,
-                    child: CustomTitleBar(isDark: isDark),
-                  ),
-                ),
-              ],
-            ),
+            child: child!,
           ),
         );
       },

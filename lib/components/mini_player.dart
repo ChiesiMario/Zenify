@@ -36,6 +36,7 @@ class MiniPlayer extends ConsumerWidget {
         showModalBottomSheet(
           context: context,
           isScrollControlled: true,
+          useRootNavigator: true,
           backgroundColor: Colors.transparent, // Important for solid color filling correctly without artifacts
           builder: (context) => const FullPlayerScreen(),
         );

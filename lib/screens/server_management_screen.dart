@@ -38,10 +38,13 @@ class _ServerManagementScreenState extends ConsumerState<ServerManagementScreen>
           scrolledUnderElevation: 0,
           elevation: 0,
           titleSpacing: 0,
-          leading: Transform.translate(
-            offset: const Offset(-8.0, 0.0),
-            child: IconButton(
-              icon: Icon(LucideIcons.arrowLeft, color: colorScheme.foreground),
+          leading: Center(
+            child: ZenifyButton(
+              variant: ZenifyButtonVariant.ghost,
+              isCircular: true,
+              text: '',
+              padding: const EdgeInsets.all(8),
+              icon: Icon(LucideIcons.arrowLeft, color: colorScheme.foreground, size: 20),
               onPressed: () {
                 if (Navigator.of(context).canPop()) {
                   Navigator.of(context).pop();

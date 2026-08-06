@@ -11,6 +11,8 @@ import 'package:zenify/components/play_queue_sheet.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:file_selector/file_selector.dart';
+import 'package:zenify/screens/search_screen.dart';
+import 'package:zenify/components/zenify_slider.dart';
 
 class FullPlayerScreen extends ConsumerWidget {
   const FullPlayerScreen({super.key});
@@ -121,6 +123,7 @@ class FullPlayerScreen extends ConsumerWidget {
                             showModalBottomSheet(
                               context: context,
                               isScrollControlled: true,
+                              useRootNavigator: true,
                               backgroundColor: Colors.transparent,
                               constraints: const BoxConstraints(maxWidth: 500),
                               builder: (context) => FractionallySizedBox(
@@ -289,25 +292,18 @@ class FullPlayerScreen extends ConsumerWidget {
                           const SizedBox(height: 48),
 
                           // 播放進度條 (極簡細線設計)
-                          SliderTheme(
-                            data: SliderThemeData(
-                              trackHeight: 3.0,
-                              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6.0),
-                              overlayShape: const RoundSliderOverlayShape(overlayRadius: 14.0),
-                              activeTrackColor: colorScheme.foreground,
-                              inactiveTrackColor: colorScheme.foreground.withValues(alpha: 0.1),
-                              thumbColor: colorScheme.foreground,
-                              overlayColor: colorScheme.foreground.withValues(alpha: 0.1),
-                            ),
-                            child: Slider(
-                              value: sliderValue,
-                              min: 0.0,
-                              max: 1.0,
-                              onChanged: (val) {
-                                final newPos = Duration(milliseconds: (val * duration.inMilliseconds).round());
-                                audioNotifier.seek(newPos);
-                              },
-                            ),
+                          ZenifySlider(
+                            value: sliderValue,
+                            min: 0.0,
+                            max: 1.0,
+                            trackHeight: 3.0,
+                            thumbRadius: 6.0,
+                            activeColor: colorScheme.foreground,
+                            inactiveColor: colorScheme.foreground.withValues(alpha: 0.1),
+                            onChanged: (val) {
+                              final newPos = Duration(milliseconds: (val * duration.inMilliseconds).round());
+                              audioNotifier.seek(newPos);
+                            },
                           ),
                           const SizedBox(height: 4),
                           Row(

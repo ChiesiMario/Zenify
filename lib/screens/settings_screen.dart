@@ -14,6 +14,9 @@ import 'package:zenify/screens/server_management_screen.dart';
 import 'package:zenify/providers/audio_provider.dart';
 import 'package:zenify/l10n/app_localizations.dart';
 import 'package:zenify/components/zenify_button.dart';
+import 'package:zenify/components/zenify_slider.dart';
+import 'package:zenify/components/zenify_dialog.dart';
+import 'package:zenify/components/zenify_select.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -96,10 +99,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           scrolledUnderElevation: 0,
           elevation: 0,
           titleSpacing: 0,
-          leading: Transform.translate(
-            offset: const Offset(-8.0, 0.0),
-            child: IconButton(
-              icon: Icon(LucideIcons.arrowLeft, color: colorScheme.foreground),
+          leading: Center(
+            child: ZenifyButton(
+              variant: ZenifyButtonVariant.ghost,
+              isCircular: true,
+              text: '',
+              padding: const EdgeInsets.all(8),
+              icon: Icon(LucideIcons.arrowLeft, color: colorScheme.foreground, size: 20),
               onPressed: () {
                 if (Navigator.of(context).canPop()) {
                   Navigator.of(context).pop();
@@ -150,7 +156,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       icon: LucideIcons.languages,
                       trailing: SizedBox(
                         width: 180,
-                        child: ShadSelect<String>(
+                        child: ZenifySelect<String>(
                           placeholder: Text(l10n.languageSystem),
                           initialValue: ref.watch(localeProvider)?.toString() ?? 'system',
                           onChanged: (val) {
@@ -188,7 +194,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           : (themeMode == ThemeMode.light ? LucideIcons.sun : LucideIcons.sunMoon),
                       trailing: SizedBox(
                         width: 180,
-                        child: ShadSelect<ThemeMode>(
+                        child: ZenifySelect<ThemeMode>(
                           placeholder: Text(l10n.selectTheme),
                           initialValue: themeMode,
                           onChanged: (mode) {
@@ -361,26 +367,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 Text('1 GB', style: TextStyle(color: theme.colorScheme.mutedForeground, fontSize: 12)),
                                 const SizedBox(width: 12),
                                 Expanded(
-                                  child: SliderTheme(
-                                    data: SliderThemeData(
-                                      activeTrackColor: theme.colorScheme.primary,
-                                      inactiveTrackColor: theme.colorScheme.border,
-                                      thumbColor: theme.colorScheme.primary,
-                                      trackHeight: 4,
-                                      overlayShape: SliderComponentShape.noOverlay,
-                                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                                    ),
-                                    child: Slider(
-                                      value: cacheLimit.clamp(1.0, 11.0),
-                                      min: 1,
-                                      max: 11,
-                                      divisions: 10,
-                                      onChanged: (val) {
-                                        setState(() {
-                                          _draggingCacheLimit = val;
-                                        });
-                                      },
-                                      onChangeEnd: (val) async {
+                                  child: ZenifySlider(
+                                    value: cacheLimit.clamp(1.0, 11.0),
+                                    min: 1,
+                                    max: 11,
+                                    divisions: 10,
+                                    onChanged: (val) {
+                                      setState(() {
+                                        _draggingCacheLimit = val;
+                                      });
+                                    },
+                                    onChangeEnd: (val) async {
                                         if (val <= 10.0) {
                                           final newMaxBytes = (val * 1024 * 1024 * 1024).toInt();
                                           if (totalCacheSizeBytes > newMaxBytes) {
@@ -390,83 +387,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                             
                                             final confirm = await showDialog<bool>(
                                               context: context,
-                                              builder: (context) => Dialog(
-                                                backgroundColor: Colors.transparent,
-                                                elevation: 0,
-                                                child: Container(
-                                                  width: 360,
-                                                  padding: const EdgeInsets.all(28),
-                                                  decoration: BoxDecoration(
-                                                    color: theme.colorScheme.card,
-                                                    borderRadius: BorderRadius.circular(16),
-                                                    border: Border.all(color: theme.colorScheme.border),
-                                                    boxShadow: [
-                                                      BoxShadow(
-                                                        color: Colors.black.withValues(alpha: 0.1),
-                                                        blurRadius: 24,
-                                                        offset: const Offset(0, 12),
-                                                      ),
-                                                    ],
+                                              builder: (context) => ZenifyDialog(
+                                                icon: LucideIcons.alertTriangle,
+                                                iconColor: theme.colorScheme.destructive,
+                                                title: l10n.reduceCacheSize,
+                                                description: l10n.currentCacheUsedStr(currentStr.toString()) + l10n.cacheLimitWarning(val.toInt().toString(), excessStr.toString()),
+                                                actions: [
+                                                  ZenifyButton(
+                                                    variant: ZenifyButtonVariant.outline,
+                                                    onPressed: () => Navigator.pop(context, false),
+                                                    text: l10n.cancel,
                                                   ),
-                                                  child: Column(
-                                                    mainAxisSize: MainAxisSize.min,
-                                                    children: [
-                                                      Container(
-                                                        padding: const EdgeInsets.all(16),
-                                                        decoration: BoxDecoration(
-                                                          color: theme.colorScheme.destructive.withValues(alpha: 0.1),
-                                                          shape: BoxShape.circle,
-                                                        ),
-                                                        child: Icon(
-                                                          LucideIcons.alertTriangle,
-                                                          size: 32,
-                                                          color: theme.colorScheme.destructive,
-                                                        ),
-                                                      ),
-                                                      const SizedBox(height: 24),
-                                                      Text(
-                                                        l10n.reduceCacheSize,
-                                                        style: TextStyle(
-                                                          color: theme.colorScheme.foreground,
-                                                          fontSize: 18,
-                                                          fontWeight: FontWeight.w600,
-                                                          letterSpacing: -0.5,
-                                                        ),
-                                                      ),
-                                                      const SizedBox(height: 12),
-                                                      Text(
-                                                        l10n.currentCacheUsedStr(currentStr.toString()) +
-                                                        l10n.cacheLimitWarning(val.toInt().toString(), excessStr.toString()),
-                                                        textAlign: TextAlign.center,
-                                                        style: TextStyle(
-                                                          color: theme.colorScheme.mutedForeground,
-                                                          fontSize: 14,
-                                                          height: 1.6,
-                                                        ),
-                                                      ),
-                                                      const SizedBox(height: 32),
-                                                      Row(
-                                                        children: [
-                                                          Expanded(
-                                                            child: ZenifyButton(
-                                                              variant: ZenifyButtonVariant.outline,
-                                                              onPressed: () => Navigator.pop(context, false),
-                                                              text: l10n.cancel,
-                                                            ),
-                                                          ),
-                                                          const SizedBox(width: 12),
-                                                          Expanded(
-                                                            child: ZenifyButton(
-                                                              variant: ZenifyButtonVariant.destructive,
-                                                              onPressed: () => Navigator.pop(context, true),
-                                                              text: l10n.confirmClear,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ],
+                                                  ZenifyButton(
+                                                    variant: ZenifyButtonVariant.destructive,
+                                                    onPressed: () => Navigator.pop(context, true),
+                                                    text: l10n.confirmClear,
                                                   ),
-                                                ),
+                                                ],
                                               ),
                                             );
 
@@ -489,7 +426,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                           _draggingCacheLimit = null;
                                         });
                                       },
-                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -807,7 +743,10 @@ class _VercelSettingTileState extends State<_VercelSettingTile> {
                           ],
                         ),
                       ),
-                      if (!isSmallScreen && widget.trailing != null) widget.trailing!,
+                      if (!isSmallScreen && widget.trailing != null) ...[
+                        const SizedBox(width: 16),
+                        widget.trailing!,
+                      ],
                       if (!isSmallScreen && widget.showArrow) ...[
                         const SizedBox(width: 8),
                         AnimatedSlide(

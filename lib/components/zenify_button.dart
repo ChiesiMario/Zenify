@@ -12,6 +12,7 @@ class ZenifyButton extends StatefulWidget {
   final double? width;
   final EdgeInsetsGeometry padding;
   final double borderRadius;
+  final bool isCircular;
 
   const ZenifyButton({
     super.key,
@@ -23,6 +24,7 @@ class ZenifyButton extends StatefulWidget {
     this.width,
     this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     this.borderRadius = 14.0, // Match ZenifyInput
+    this.isCircular = false,
   });
 
   @override
@@ -99,13 +101,14 @@ class _ZenifyButtonState extends State<ZenifyButton> with SingleTickerProviderSt
         foregroundColor = colorScheme.destructiveForeground;
         break;
       case ZenifyButtonVariant.outline:
-        backgroundColor = _isHovered ? colorScheme.secondary : Colors.transparent;
+        backgroundColor = _isHovered ? colorScheme.foreground.withValues(alpha: 0.08) : Colors.transparent;
         foregroundColor = colorScheme.foreground;
-        borderColor = colorScheme.border;
+        borderColor = _isHovered ? Colors.transparent : colorScheme.border;
         break;
       case ZenifyButtonVariant.ghost:
-        backgroundColor = _isHovered ? colorScheme.secondary : Colors.transparent;
+        backgroundColor = _isHovered ? colorScheme.foreground.withValues(alpha: 0.08) : Colors.transparent;
         foregroundColor = colorScheme.foreground;
+        borderColor = Colors.transparent;
         break;
     }
 
@@ -136,8 +139,11 @@ class _ZenifyButtonState extends State<ZenifyButton> with SingleTickerProviderSt
               padding: widget.padding,
               decoration: BoxDecoration(
                 color: backgroundColor,
-                borderRadius: BorderRadius.circular(widget.borderRadius),
-                border: Border.all(color: borderColor, width: 1.0),
+                shape: widget.isCircular ? BoxShape.circle : BoxShape.rectangle,
+                borderRadius: widget.isCircular ? null : BorderRadius.circular(widget.borderRadius),
+                border: widget.isCircular && borderColor == Colors.transparent 
+                    ? null 
+                    : Border.all(color: borderColor, width: 1.0),
               ),
               child: Row(
                 mainAxisSize: widget.width == null ? MainAxisSize.min : MainAxisSize.max,
@@ -155,16 +161,17 @@ class _ZenifyButtonState extends State<ZenifyButton> with SingleTickerProviderSt
                     const SizedBox(width: 8),
                   ] else if (widget.icon != null) ...[
                     widget.icon!,
-                    const SizedBox(width: 8),
+                    if (widget.text.isNotEmpty) const SizedBox(width: 8),
                   ],
-                  Text(
-                    widget.text,
-                    style: TextStyle(
-                      color: foregroundColor,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
+                  if (widget.text.isNotEmpty)
+                    Text(
+                      widget.text,
+                      style: TextStyle(
+                        color: foregroundColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),

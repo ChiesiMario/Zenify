@@ -354,6 +354,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   showModalBottomSheet(
                     context: context,
                     isScrollControlled: true,
+                    useRootNavigator: true,
                     backgroundColor: Colors.transparent,
                     builder: (context) => const FullPlayerScreen(),
                   );
