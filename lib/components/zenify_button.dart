@@ -23,7 +23,7 @@ class ZenifyButton extends StatefulWidget {
     this.isLoading = false,
     this.width,
     this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-    this.borderRadius = 14.0, // Match ZenifyInput
+    this.borderRadius = 8.0, // Match ZenifyInput
     this.isCircular = false,
   });
 

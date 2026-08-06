@@ -20,7 +20,7 @@ class ZenifySelect<T> extends StatefulWidget {
     this.selectedOptionBuilder,
     this.onChanged,
     this.variant = ZenifyButtonVariant.outline,
-    this.borderRadius = 14.0,
+    this.borderRadius = 8.0,
     this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
   });
 
@@ -30,6 +30,30 @@ class ZenifySelect<T> extends StatefulWidget {
 
 class _ZenifySelectState<T> extends State<ZenifySelect<T>> {
   bool _isHovered = false;
+  late final FocusNode _focusNode;
+  bool _isFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = FocusNode();
+    _focusNode.addListener(_onFocusChange);
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_onFocusChange);
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _onFocusChange() {
+    if (mounted) {
+      setState(() {
+        _isFocused = _focusNode.hasFocus;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,26 +101,30 @@ class _ZenifySelectState<T> extends State<ZenifySelect<T>> {
       cursor: isDisabled ? SystemMouseCursors.forbidden : SystemMouseCursors.click,
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
-      child: SizedBox(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         height: 48,
+        decoration: BoxDecoration(
+          color: _isFocused ? colorScheme.background : (widget.variant == ZenifyButtonVariant.outline ? colorScheme.card : backgroundColor),
+          borderRadius: BorderRadius.circular(widget.borderRadius),
+          border: Border.all(
+            color: _isFocused ? colorScheme.primary : borderColor,
+            width: 1.0,
+          ),
+        ),
         child: ShadSelect<T>(
+          focusNode: _focusNode,
           initialValue: widget.initialValue,
           placeholder: widget.placeholder,
           options: widget.options,
           selectedOptionBuilder: widget.selectedOptionBuilder,
           onChanged: widget.onChanged,
-          decoration: ShadDecoration(
-            color: backgroundColor,
-            border: ShadBorder.all(
-              color: borderColor,
-              width: 1.0,
-              radius: BorderRadius.circular(widget.borderRadius),
-            ),
-            focusedBorder: ShadBorder.all(
-              color: colorScheme.primary,
-              width: 1.0,
-              radius: BorderRadius.circular(widget.borderRadius),
-            ),
+          decoration: const ShadDecoration(
+            color: Colors.transparent,
+            border: ShadBorder.none,
+            focusedBorder: ShadBorder.none,
+            secondaryBorder: ShadBorder.none,
+            secondaryFocusedBorder: ShadBorder.none,
           ),
         ),
       ),

@@ -62,7 +62,7 @@ class _ZenifyInputState extends State<ZenifyInput> {
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
         color: _isFocused ? colorScheme.background : colorScheme.card,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: _isFocused ? colorScheme.primary : colorScheme.border,
           width: 1.0,

@@ -191,6 +191,13 @@ class _ZenifyAppState extends ConsumerState<ZenifyApp> with WindowListener, Tray
       theme: ShadThemeData(
         brightness: Brightness.light,
         colorScheme: const ShadZincColorScheme.light(),
+        popoverTheme: ShadPopoverTheme(
+          decoration: ShadDecoration(
+            border: ShadBorder.all(
+              radius: BorderRadius.circular(8),
+            ),
+          ),
+        ),
       ),
       darkTheme: ShadThemeData(
         brightness: Brightness.dark,
@@ -199,6 +206,13 @@ class _ZenifyAppState extends ConsumerState<ZenifyApp> with WindowListener, Tray
           card: Color(0xFF141414), // 略微提亮的卡片
           border: Color(0xFF262626), // 柔和的邊框
           muted: Color(0xFF1E1E1E), // 適合用於次要元素的背景
+        ),
+        popoverTheme: ShadPopoverTheme(
+          decoration: ShadDecoration(
+            border: ShadBorder.all(
+              radius: BorderRadius.circular(8),
+            ),
+          ),
         ),
       ),
       locale: locale,
