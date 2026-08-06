@@ -184,6 +184,32 @@ class _ZenifyAppState extends ConsumerState<ZenifyApp> with WindowListener, Tray
     final locale = ref.watch(localeProvider);
     final goRouter = ref.watch(routerProvider);
 
+    ShadTextTheme buildCustomTextTheme() {
+      final base = ShadTextTheme(family: 'Nunito');
+      const fallbacks = ['NotoSansTC', 'NotoSansSC'];
+      
+      TextStyle withFallback(TextStyle style) {
+        return style.copyWith(fontFamilyFallback: fallbacks);
+      }
+
+      return ShadTextTheme.custom(
+        h1Large: withFallback(base.h1Large),
+        h1: withFallback(base.h1),
+        h2: withFallback(base.h2),
+        h3: withFallback(base.h3),
+        h4: withFallback(base.h4),
+        p: withFallback(base.p),
+        blockquote: withFallback(base.blockquote),
+        table: withFallback(base.table),
+        list: withFallback(base.list),
+        lead: withFallback(base.lead),
+        large: withFallback(base.large),
+        small: withFallback(base.small),
+        muted: withFallback(base.muted),
+        family: 'Nunito',
+      );
+    }
+
     return ShadApp.router(
       title: 'Zenify',
       debugShowCheckedModeBanner: false,
@@ -191,6 +217,7 @@ class _ZenifyAppState extends ConsumerState<ZenifyApp> with WindowListener, Tray
       theme: ShadThemeData(
         brightness: Brightness.light,
         colorScheme: const ShadZincColorScheme.light(),
+        textTheme: buildCustomTextTheme(),
         popoverTheme: ShadPopoverTheme(
           decoration: ShadDecoration(
             border: ShadBorder.all(
@@ -207,6 +234,7 @@ class _ZenifyAppState extends ConsumerState<ZenifyApp> with WindowListener, Tray
           border: Color(0xFF262626), // 柔和的邊框
           muted: Color(0xFF1E1E1E), // 適合用於次要元素的背景
         ),
+        textTheme: buildCustomTextTheme(),
         popoverTheme: ShadPopoverTheme(
           decoration: ShadDecoration(
             border: ShadBorder.all(
