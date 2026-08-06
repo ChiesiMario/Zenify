@@ -763,4 +763,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get navPlaylists => 'Playlists';
+
+  @override
+  String get playbackSettings => 'Playback';
+
+  @override
+  String get replayGainTitle => 'ReplayGain (Volume Normalization)';
+
+  @override
+  String get replayGainSubtitle =>
+      'Automatically normalize volume levels across different tracks.';
 }

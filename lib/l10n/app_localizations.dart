@@ -1431,6 +1431,24 @@ abstract class AppLocalizations {
   /// In zh_TW, this message translates to:
   /// **'播放清單'**
   String get navPlaylists;
+
+  /// No description provided for @playbackSettings.
+  ///
+  /// In zh_TW, this message translates to:
+  /// **'播放'**
+  String get playbackSettings;
+
+  /// No description provided for @replayGainTitle.
+  ///
+  /// In zh_TW, this message translates to:
+  /// **'開啟音量平衡 (ReplayGain)'**
+  String get replayGainTitle;
+
+  /// No description provided for @replayGainSubtitle.
+  ///
+  /// In zh_TW, this message translates to:
+  /// **'自動平衡不同年代歌曲的音量大小，避免忽大忽小'**
+  String get replayGainSubtitle;
 }
 
 class _AppLocalizationsDelegate

@@ -515,5 +515,8 @@
     }
   },
   "songListComingSoon": "Song list coming soon",
-  "navPlaylists": "Playlists"
+  "navPlaylists": "Playlists",
+  "playbackSettings": "Playback",
+  "replayGainTitle": "ReplayGain (Volume Normalization)",
+  "replayGainSubtitle": "Automatically normalize volume levels across different tracks."
 }

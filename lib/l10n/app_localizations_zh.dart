@@ -751,6 +751,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get navPlaylists => '播放清單';
+
+  @override
+  String get playbackSettings => '播放';
+
+  @override
+  String get replayGainTitle => '開啟音量平衡 (ReplayGain)';
+
+  @override
+  String get replayGainSubtitle => '自動平衡不同年代歌曲的音量大小，避免忽大忽小';
 }
 
 /// The translations for Chinese, as used in China (`zh_CN`).
@@ -1496,10 +1505,19 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
   }
 
   @override
-  String get songListComingSoon => '歌曲清单即将推出';
+  String get songListComingSoon => '歌曲列表即将推出';
 
   @override
   String get navPlaylists => '播放列表';
+
+  @override
+  String get playbackSettings => '播放';
+
+  @override
+  String get replayGainTitle => '开启音量平衡 (ReplayGain)';
+
+  @override
+  String get replayGainSubtitle => '自动平衡不同年代歌曲的音量大小，避免忽大忽小';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
@@ -2249,4 +2267,13 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get navPlaylists => '播放清單';
+
+  @override
+  String get playbackSettings => '播放';
+
+  @override
+  String get replayGainTitle => '開啟音量平衡 (ReplayGain)';
+
+  @override
+  String get replayGainSubtitle => '自動平衡不同年代歌曲的音量大小，避免忽大忽小';
 }

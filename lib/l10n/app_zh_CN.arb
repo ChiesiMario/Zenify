@@ -514,6 +514,9 @@
       }
     }
   },
-  "songListComingSoon": "歌曲清单即将推出",
-  "navPlaylists": "播放列表"
+  "songListComingSoon": "歌曲列表即将推出",
+  "navPlaylists": "播放列表",
+  "playbackSettings": "播放",
+  "replayGainTitle": "开启音量平衡 (ReplayGain)",
+  "replayGainSubtitle": "自动平衡不同年代歌曲的音量大小，避免忽大忽小"
 }
