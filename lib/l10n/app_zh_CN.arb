@@ -261,7 +261,7 @@
   "delete": "删除",
   "saveChanges": "保存更改",
   "save": "保存",
-  "checkServer": "检查服务器",
+  "checkServer": "测试",
   "cannotConnectCheckSettings": "无法连接至该服务器，请检查网络或服务器设置。",
   "serverConnectionError": "服务器连接发生错误。",
   "addNavidromeOrSubsonic": "新增 Navidrome 或 Subsonic 连接",

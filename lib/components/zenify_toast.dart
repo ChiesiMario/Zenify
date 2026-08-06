@@ -109,11 +109,20 @@ class _ZenifyToastWidgetState extends State<_ZenifyToastWidget> with SingleTicke
   @override
   Widget build(BuildContext context) {
     final colorScheme = widget.colorScheme;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
+    Color bgColor;
+    if (widget.isError) {
+      bgColor = colorScheme.foreground;
+    } else {
+      bgColor = isDarkMode ? const Color(0xFF141414) : colorScheme.primary;
+    }
+
     return SafeArea(
       child: Align(
         alignment: Alignment.bottomCenter,
         child: Padding(
-          padding: const EdgeInsets.only(bottom: 60.0), // 避免被底層的按鈕或狀態列遮擋
+          padding: const EdgeInsets.only(bottom: 60.0, left: 24.0, right: 24.0), // 避免被底層的按鈕或狀態列遮擋，並加入左右邊距
           child: Material(
             color: Colors.transparent,
             child: SlideTransition(
@@ -130,27 +139,21 @@ class _ZenifyToastWidgetState extends State<_ZenifyToastWidget> with SingleTicke
                       ),
                     ],
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: (widget.isError ? colorScheme.foreground : colorScheme.primary).withValues(alpha: 0.75),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: colorScheme.foreground.withValues(alpha: 0.12),
-                            width: 1.0,
-                          ),
-                        ),
-                        child: Text(
-                          widget.message, 
-                          style: TextStyle(
-                            color: widget.isError ? colorScheme.background : Colors.white, 
-                            fontWeight: FontWeight.w500
-                          ),
-                        ),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: bgColor,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: colorScheme.foreground.withValues(alpha: 0.12),
+                        width: 1.0,
+                      ),
+                    ),
+                    child: Text(
+                      widget.message, 
+                      style: TextStyle(
+                        color: widget.isError ? colorScheme.background : Colors.white, 
+                        fontWeight: FontWeight.w500
                       ),
                     ),
                   ),

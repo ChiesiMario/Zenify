@@ -496,7 +496,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get save => 'Save';
 
   @override
-  String get checkServer => 'Check Server';
+  String get checkServer => 'Check';
 
   @override
   String get cannotConnectCheckSettings =>

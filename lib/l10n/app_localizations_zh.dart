@@ -488,7 +488,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get save => '儲存';
 
   @override
-  String get checkServer => '檢查伺服器';
+  String get checkServer => '測試';
 
   @override
   String get cannotConnectCheckSettings => '無法連線至該伺服器，請檢查網路或伺服器設定。';
@@ -1246,7 +1246,7 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
   String get save => '保存';
 
   @override
-  String get checkServer => '检查服务器';
+  String get checkServer => '测试';
 
   @override
   String get cannotConnectCheckSettings => '无法连接至该服务器，请检查网络或服务器设置。';
@@ -2004,7 +2004,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get save => '儲存';
 
   @override
-  String get checkServer => '檢查伺服器';
+  String get checkServer => '測試';
 
   @override
   String get cannotConnectCheckSettings => '無法連線至該伺服器，請檢查網路或伺服器設定。';

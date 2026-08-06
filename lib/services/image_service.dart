@@ -134,4 +134,21 @@ class ImageService {
     }
     return count;
   }
+
+  /// 刪除特定伺服器的所有圖片快取
+  Future<void> deleteServerCache(int serverId) async {
+    await init();
+    
+    // 1. 刪除實體資料夾
+    final serverDir = Directory(p.join(_coversDirPath!, serverId.toString()));
+    if (await serverDir.exists()) {
+      try {
+        await serverDir.delete(recursive: true);
+      } catch (_) {}
+    }
+
+    // 2. 清除記憶體快取中的紀錄
+    final prefix = '${serverId}_';
+    _cachedFileNames.removeWhere((name) => name.startsWith(prefix));
+  }
 }

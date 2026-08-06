@@ -11,7 +11,8 @@ import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/api/subsonic_api.dart';
 import 'package:zenify/components/zenify_toast.dart';
 import 'package:zenify/components/zenify_button.dart';
-import 'package:zenify/components/zenify_toast.dart';
+import 'package:zenify/providers/audio_provider.dart';
+import 'package:zenify/services/image_service.dart';
 
 class ServerManagementScreen extends ConsumerStatefulWidget {
   const ServerManagementScreen({super.key});
@@ -28,32 +29,52 @@ class _ServerManagementScreenState extends ConsumerState<ServerManagementScreen>
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Scaffold(
-      backgroundColor: colorScheme.background,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight),
-        child: AppBar(
-          backgroundColor: colorScheme.background,
-          surfaceTintColor: Colors.transparent,
-          scrolledUnderElevation: 0,
-          elevation: 0,
-          titleSpacing: 0,
-          leading: Center(
-            child: ZenifyButton(
-              variant: ZenifyButtonVariant.ghost,
-              isCircular: true,
-              text: '',
-              padding: const EdgeInsets.all(8),
-              icon: Icon(LucideIcons.arrowLeft, color: colorScheme.foreground, size: 20),
-              onPressed: () {
-                if (Navigator.of(context).canPop()) {
-                  Navigator.of(context).pop();
-                } else {
-                  context.go('/settings');
-                }
-              },
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        final hasActive = ref.read(activeServerProvider).value != null;
+        if (!hasActive) {
+          ZenifyToast.showError(context, '請選擇一個伺服器以繼續');
+          return;
+        }
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        } else {
+          context.go('/settings');
+        }
+      },
+      child: Scaffold(
+        backgroundColor: colorScheme.background,
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(kToolbarHeight),
+          child: AppBar(
+            backgroundColor: colorScheme.background,
+            surfaceTintColor: Colors.transparent,
+            scrolledUnderElevation: 0,
+            elevation: 0,
+            titleSpacing: 0,
+            leading: Center(
+              child: ZenifyButton(
+                variant: ZenifyButtonVariant.ghost,
+                isCircular: true,
+                text: '',
+                padding: const EdgeInsets.all(8),
+                icon: Icon(LucideIcons.arrowLeft, color: colorScheme.foreground, size: 20),
+                onPressed: () {
+                  final hasActive = ref.read(activeServerProvider).value != null;
+                  if (!hasActive) {
+                    ZenifyToast.showError(context, '請選擇一個伺服器以繼續');
+                    return;
+                  }
+                  if (Navigator.of(context).canPop()) {
+                    Navigator.of(context).pop();
+                  } else {
+                    context.go('/settings');
+                  }
+                },
+              ),
             ),
-          ),
           title: Text(
             l10n.serverManagement,
             style: TextStyle(
@@ -124,7 +145,7 @@ class _ServerManagementScreenState extends ConsumerState<ServerManagementScreen>
         loading: () => Center(child: CircularProgressIndicator(color: colorScheme.foreground)),
         error: (err, stack) => Center(child: Text(l10n.loadFailedErr(err.toString()), style: TextStyle(color: colorScheme.destructive))),
       ),
-    );
+    ));
   }
 
   Widget _buildAddServerTile(BuildContext context, ShadColorScheme colorScheme) {
@@ -160,7 +181,12 @@ class _ServerManagementScreenState extends ConsumerState<ServerManagementScreen>
             text: l10n.confirmDelete,
             variant: ZenifyButtonVariant.destructive,
             onPressed: () async {
+              if (server.isActive) {
+                ref.read(audioProvider.notifier).stop();
+              }
+              await ImageService().deleteServerCache(server.id);
               await ref.read(databaseProvider).deleteServer(server.id);
+              
               ref.invalidate(serversListProvider);
               if (server.isActive) {
                 ref.invalidate(activeServerProvider);
@@ -199,6 +225,7 @@ class _ServerEditDialogState extends ConsumerState<_ServerEditDialog> {
   late final TextEditingController _passwordController;
 
   bool _isConfirmingDelete = false;
+  Timer? _deleteTimer;
   bool _isCheckingConnection = false;
   bool _isConnectionValid = false;
   String? _connectionError;
@@ -217,6 +244,7 @@ class _ServerEditDialogState extends ConsumerState<_ServerEditDialog> {
 
   @override
   void dispose() {
+    _deleteTimer?.cancel();
     _urlController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
@@ -260,9 +288,11 @@ class _ServerEditDialogState extends ConsumerState<_ServerEditDialog> {
         _isCheckingConnection = false;
         if (isValid) {
           _isConnectionValid = true;
+          ZenifyToast.show(context: context, message: '連線成功');
         } else {
           _connectionError = l10n.serverConnectionOrAuthFailed;
           _isConnectionValid = false;
+          ZenifyToast.show(context: context, message: _connectionError!);
         }
       });
     } catch (e) {
@@ -271,6 +301,7 @@ class _ServerEditDialogState extends ConsumerState<_ServerEditDialog> {
         _isCheckingConnection = false;
         _connectionError = l10n.connectionError;
         _isConnectionValid = false;
+        ZenifyToast.show(context: context, message: _connectionError!);
       });
     }
   }
@@ -326,7 +357,67 @@ class _ServerEditDialogState extends ConsumerState<_ServerEditDialog> {
       titlePadding: const EdgeInsets.all(24).copyWith(bottom: 12),
       contentPadding: const EdgeInsets.symmetric(horizontal: 24),
       actionsPadding: const EdgeInsets.all(24).copyWith(top: 16),
-      title: Text(_isEditing ? l10n.editServer : l10n.addServer, style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.bold)),
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(_isEditing ? l10n.editServer : l10n.addServer, style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.bold)),
+          if (_isEditing)
+            SizedBox(
+              height: 40,
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                  return FadeTransition(opacity: animation, child: child);
+                },
+                child: _isConfirmingDelete
+                    ? ZenifyButton(
+                        key: const ValueKey('confirm_delete'),
+                        variant: ZenifyButtonVariant.destructive,
+                        text: l10n.confirm,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        onPressed: () async {
+                          _deleteTimer?.cancel();
+                          if (widget.server!.isActive) {
+                            ref.read(audioProvider.notifier).stop();
+                          }
+                          await ImageService().deleteServerCache(widget.server!.id);
+                          await ref.read(databaseProvider).deleteServer(widget.server!.id);
+                          
+                          ref.invalidate(serversListProvider);
+                          if (widget.server!.isActive) {
+                            ref.invalidate(activeServerProvider);
+                          }
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                          }
+                        },
+                      )
+                    : IconButton(
+                        key: const ValueKey('delete_icon'),
+                        icon: Icon(LucideIcons.trash2, size: 18),
+                        color: colorScheme.mutedForeground,
+                        hoverColor: colorScheme.destructive.withValues(alpha: 0.1),
+                        splashRadius: 20,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () {
+                          setState(() {
+                            _isConfirmingDelete = true;
+                          });
+                          _deleteTimer?.cancel();
+                          _deleteTimer = Timer(const Duration(seconds: 5), () {
+                            if (mounted) {
+                              setState(() {
+                                _isConfirmingDelete = false;
+                              });
+                            }
+                          });
+                        },
+                      ),
+              ),
+            ),
+        ],
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -351,62 +442,47 @@ class _ServerEditDialogState extends ConsumerState<_ServerEditDialog> {
             obscureText: true,
             onChanged: _onInputChanged,
           ),
-          if (_connectionError != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 16.0),
-              child: Text(
-                _connectionError!, 
-                style: TextStyle(color: colorScheme.destructive, fontSize: 13)
-              ),
-            ),
         ],
       ),
       actions: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            if (_isEditing)
-              ZenifyButton(
-                variant: ZenifyButtonVariant.outline,
-                text: _isConfirmingDelete ? l10n.confirmDelete : l10n.delete,
-                onPressed: () async {
-                  if (_isConfirmingDelete) {
-                    await ref.read(databaseProvider).deleteServer(widget.server!.id);
-                    ref.invalidate(serversListProvider);
-                    if (widget.server!.isActive) {
-                      ref.invalidate(activeServerProvider);
-                    }
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                    }
-                  } else {
-                    setState(() {
-                      _isConfirmingDelete = true;
-                    });
-                  }
+            ZenifyButton(
+              variant: ZenifyButtonVariant.ghost,
+              text: l10n.cancel,
+              onPressed: () => Navigator.pop(context),
+            ),
+            const SizedBox(width: 8),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutCubic,
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                layoutBuilder: (Widget? currentChild, List<Widget> previousChildren) {
+                  return Stack(
+                    alignment: Alignment.centerRight,
+                    children: <Widget>[
+                      ...previousChildren,
+                      if (currentChild != null) currentChild,
+                    ],
+                  );
                 },
-              )
-            else
-              const SizedBox.shrink(),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ZenifyButton(
-                  variant: ZenifyButtonVariant.ghost,
-                  text: l10n.cancel,
-                  onPressed: () => Navigator.pop(context),
-                ),
-                const SizedBox(width: 8),
-                ZenifyButton(
-                  text: _isConnectionValid ? (_isEditing ? l10n.saveChanges : l10n.save) : l10n.checkServer,
-                  isLoading: _isCheckingConnection,
-                  onPressed: isInputEmpty
-                      ? null
-                      : _isConnectionValid
-                          ? _saveServer
-                          : _checkConnection,
-                ),
-              ],
+                child: _isConnectionValid
+                    ? ZenifyButton(
+                        key: const ValueKey('save_btn'),
+                        text: _isEditing ? l10n.saveChanges : l10n.save,
+                        onPressed: isInputEmpty ? null : _saveServer,
+                      )
+                    : ZenifyButton(
+                        key: const ValueKey('check_btn'),
+                        text: l10n.checkServer,
+                        isLoading: _isCheckingConnection,
+                        onPressed: isInputEmpty ? null : _checkConnection,
+                      ),
+              ),
             ),
           ],
         ),

@@ -49,6 +49,27 @@ class DatabaseService {
   Future<void> deleteServer(int id) async {
     final isar = await db;
     await isar.writeTxn(() async {
+      // 1. Delete physical files from DownloadedTrack
+      final tracks = await isar.downloadedTracks.filter().serverIdEqualTo(id).findAll();
+      for (final track in tracks) {
+        final file = File(track.localPath);
+        if (file.existsSync()) {
+          try {
+            file.deleteSync();
+          } catch (_) {}
+        }
+      }
+
+      // 2. Delete related records
+      await isar.downloadedTracks.filter().serverIdEqualTo(id).deleteAll();
+      await isar.offlinePreferences.filter().serverIdEqualTo(id).deleteAll();
+      await isar.playlistCaches.filter().serverIdEqualTo(id).deleteAll();
+      await isar.favoriteItems.filter().serverIdEqualTo(id).deleteAll();
+      await isar.albumDetailCaches.filter().serverIdEqualTo(id).deleteAll();
+      await isar.albums.filter().serverIdEqualTo(id).deleteAll();
+      await isar.artists.filter().serverIdEqualTo(id).deleteAll();
+
+      // 3. Delete server record
       await isar.servers.delete(id);
     });
   }

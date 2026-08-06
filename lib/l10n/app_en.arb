@@ -261,7 +261,7 @@
   "delete": "Delete",
   "saveChanges": "Save Changes",
   "save": "Save",
-  "checkServer": "Check Server",
+  "checkServer": "Check",
   "cannotConnectCheckSettings": "Cannot connect to this server, please check network or server settings.",
   "serverConnectionError": "Server connection error.",
   "addNavidromeOrSubsonic": "Add Navidrome or Subsonic connection",

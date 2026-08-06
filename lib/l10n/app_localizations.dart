@@ -997,7 +997,7 @@ abstract class AppLocalizations {
   /// No description provided for @checkServer.
   ///
   /// In zh_TW, this message translates to:
-  /// **'檢查伺服器'**
+  /// **'測試'**
   String get checkServer;
 
   /// No description provided for @cannotConnectCheckSettings.
