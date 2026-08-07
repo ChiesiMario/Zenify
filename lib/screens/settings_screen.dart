@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
@@ -454,6 +455,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
 
                     const SizedBox(height: 32),
+
+                    if (kDebugMode) ...[
+                      // Developer SECTION
+                      _buildSectionHeader('Developer Settings', colorScheme),
+                      const SizedBox(height: 12),
+                      _VercelSettingTile(
+                        title: 'Dispose AudioPlayer',
+                        subtitle: 'Forces audio player disposal. Useful for hot reload.',
+                        icon: LucideIcons.bug,
+                        trailing: ZenifyButton(
+                          variant: ZenifyButtonVariant.outline,
+                          onPressed: () {
+                            ref.read(audioProvider.notifier).disposePlayer();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('AudioPlayer disposed successfully')),
+                            );
+                          },
+                          text: 'Dispose',
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                    ],
 
                     // 5. 關於與版本 SECTION
                     _buildSectionHeader(l10n.aboutZenify, colorScheme),

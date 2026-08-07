@@ -680,6 +680,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deleteAll => '刪除全部';
 
   @override
+  String get deleteAllConfirmDesc => '這將會刪除所有手動下載的歌曲，此操作無法復原。';
+
+  @override
   String get favoriteCategories => '珍藏分類';
 
   @override
@@ -1441,6 +1444,9 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
   String get deleteAll => '删除全部';
 
   @override
+  String get deleteAllConfirmDesc => '这将会删除所有手动下载的歌曲，此操作无法恢复。';
+
+  @override
   String get favoriteCategories => '收藏分类';
 
   @override
@@ -2200,6 +2206,9 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get deleteAll => '刪除全部';
+
+  @override
+  String get deleteAllConfirmDesc => '這將會刪除所有手動下載的歌曲，此操作無法復原。';
 
   @override
   String get favoriteCategories => '珍藏分類';

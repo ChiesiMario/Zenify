@@ -33,13 +33,7 @@ class MiniPlayer extends ConsumerWidget {
 
     return GestureDetector(
       onTap: () {
-        showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          useRootNavigator: true,
-          backgroundColor: Colors.transparent, // Important for solid color filling correctly without artifacts
-          builder: (context) => const FullPlayerScreen(),
-        );
+        FullPlayerScreen.show(context);
       },
       child: Container(
         height: 64,

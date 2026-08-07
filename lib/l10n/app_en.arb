@@ -438,6 +438,7 @@
   "confirm": "Confirm",
   "finalConfirm": "Final Confirm",
   "deleteAll": "Delete All",
+  "deleteAllConfirmDesc": "This will delete all manually downloaded songs. This action cannot be undone.",
   "favoriteCategories": "Favorite Categories",
   "favoriteSinglesAndPersonalFavorites": "Favorite singles and personal favorites",
   "songsCountOnly": "{count} Songs",

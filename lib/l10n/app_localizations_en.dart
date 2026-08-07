@@ -691,6 +691,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteAll => 'Delete All';
 
   @override
+  String get deleteAllConfirmDesc =>
+      'This will delete all manually downloaded songs. This action cannot be undone.';
+
+  @override
   String get favoriteCategories => 'Favorite Categories';
 
   @override

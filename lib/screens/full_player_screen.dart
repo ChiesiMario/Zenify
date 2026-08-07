@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/providers/audio_provider.dart';
@@ -14,8 +15,33 @@ import 'package:file_selector/file_selector.dart';
 import 'package:zenify/screens/search_screen.dart';
 import 'package:zenify/components/zenify_slider.dart';
 
-class FullPlayerScreen extends ConsumerWidget {
-  const FullPlayerScreen({super.key});
+class FullPlayerScreen extends ConsumerStatefulWidget {
+  final Animation<double>? routeAnimation;
+  const FullPlayerScreen({super.key, this.routeAnimation});
+
+  static Future<void> show(BuildContext context) {
+    return showGeneralDialog(
+      context: context,
+      barrierDismissible: false, // Handled internally
+      barrierColor: Colors.transparent, // Background handled internally to combine blur & drag
+      transitionDuration: const Duration(milliseconds: 300),
+      useRootNavigator: true,
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return FullPlayerScreen(routeAnimation: animation);
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return child; // Animations handled inside
+      },
+    );
+  }
+
+  @override
+  ConsumerState<FullPlayerScreen> createState() => _FullPlayerScreenState();
+}
+
+class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen> {
+  double _dragProgress = 0.0;
+  bool _isDismissed = false;
 
   String _formatDuration(Duration duration) {
     final minutes = duration.inMinutes;
@@ -24,7 +50,7 @@ class FullPlayerScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final audioState = ref.watch(audioProvider);
     final audioNotifier = ref.read(audioProvider.notifier);
@@ -57,16 +83,53 @@ class FullPlayerScreen extends ConsumerWidget {
     final screenSize = MediaQuery.of(context).size;
     final isCompact = screenSize.width <= 400 && screenSize.height <= 600;
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () => Navigator.pop(context),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: Align(
-          alignment: Alignment.bottomCenter,
-          child: GestureDetector(
-            onTap: () {}, // 攔截卡片本身的點擊，避免關閉
-            child: ConstrainedBox(
+    return AnimatedBuilder(
+      animation: widget.routeAnimation ?? const AlwaysStoppedAnimation(1.0),
+      builder: (context, child) {
+        final effectiveProgress = (widget.routeAnimation?.value ?? 1.0) * (1.0 - _dragProgress);
+        final blurValue = 15.0 * effectiveProgress;
+        final alphaValue = 0.4 * effectiveProgress;
+
+        return Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Stack(
+            children: [
+              Positioned.fill(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: blurValue, sigmaY: blurValue),
+                  child: Container(color: Colors.black.withValues(alpha: alphaValue)),
+                ),
+              ),
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => Navigator.pop(context),
+                  child: Container(),
+                ),
+              ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: SlideTransition(
+                  position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+                    .animate(CurvedAnimation(
+                      parent: widget.routeAnimation ?? const AlwaysStoppedAnimation(1.0),
+                      curve: Curves.easeOutCubic,
+                    )),
+                  child: GestureDetector(
+                    onTap: () {}, // 攔截卡片本身的點擊，避免關閉
+                    child: _isDismissed 
+                      ? const SizedBox.shrink() 
+                      : Dismissible(
+                      key: const Key('full_player_dismissible'),
+                      direction: DismissDirection.down,
+                      onUpdate: (details) {
+                        setState(() => _dragProgress = details.progress);
+                      },
+                      onDismissed: (_) {
+                        setState(() => _isDismissed = true);
+                        Navigator.pop(context);
+                      },
+                      child: ConstrainedBox(
               constraints: const BoxConstraints(minWidth: 350, maxWidth: 400, maxHeight: 600),
               child: Container(
             margin: isCompact ? EdgeInsets.zero : const EdgeInsets.only(top: 10),
@@ -358,12 +421,17 @@ class FullPlayerScreen extends ConsumerWidget {
               ),
             ],
           ),
-        ),
-      ),
-    ),
-  ),
-),
-      ),
+        ), // SafeArea
+      ), // Container
+    ), // ConstrainedBox
+  ), // Dismissible
+), // GestureDetector
+              ), // SlideTransition
+            ), // Align
+            ], // Stack children
+          ), // Stack
+        );
+      },
     );
   }
 }

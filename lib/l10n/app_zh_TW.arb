@@ -438,6 +438,7 @@
   "confirm": "確認",
   "finalConfirm": "最終確認",
   "deleteAll": "刪除全部",
+  "deleteAllConfirmDesc": "這將會刪除所有手動下載的歌曲，此操作無法復原。",
   "favoriteCategories": "珍藏分類",
   "favoriteSinglesAndPersonalFavorites": "喜愛單曲與個人最愛",
   "songsCountOnly": "{count} 首",

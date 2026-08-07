@@ -1,7 +1,6 @@
 import 'package:zenify/l10n/app_localizations.dart';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zenify/models/downloaded_track.dart';
@@ -79,7 +78,6 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
         list.shuffle();
         break;
       case SongSortOption.defaultOrder:
-      default:
         list.sort((a, b) {
           final da = a.downloadedAt;
           final db = b.downloadedAt;
@@ -108,6 +106,14 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
     final colorScheme = theme.colorScheme;
     final downloadsAsync = ref.watch(downloadedTracksProvider);
     final api = ref.watch(subsonicApiProvider);
+    final audioNotifier = ref.read(audioProvider.notifier);
+
+    final showCached = ref.watch(showCachedDownloadsProvider);
+    List<DownloadedTrack> currentViewTracks = [];
+    downloadsAsync.whenData((tracks) {
+      final validTracks = tracks.where((t) => File(t.localPath).existsSync()).toList();
+      currentViewTracks = showCached ? validTracks : validTracks.where((t) => t.isManualDownload).toList();
+    });
 
     return Scaffold(
       backgroundColor: colorScheme.background,
@@ -179,8 +185,22 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
                         ),
                       ),
                     ),
-                    if (ref.watch(activeServerProvider).value?.id != null)
-                      _DeleteAllButton(serverId: ref.watch(activeServerProvider).value!.id),
+                    if (currentViewTracks.isNotEmpty)
+                      _HoverablePlayIconButton(
+                        onPressed: () {
+                          final songs = currentViewTracks.map((t) {
+                            try {
+                              return jsonDecode(t.rawData) as Map<String, dynamic>;
+                            } catch (_) {
+                              return null;
+                            }
+                          }).whereType<Map<String, dynamic>>().toList();
+                          
+                          if (songs.isNotEmpty) {
+                            audioNotifier.playQueue(songs, 0);
+                          }
+                        },
+                      ),
                   ],
                 ),
               ),
@@ -190,21 +210,18 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
       ),
       body: downloadsAsync.when(
         data: (tracks) {
-          final validTracks = tracks.where((t) => File(t.localPath).existsSync()).toList();
-          final manualTracks = validTracks.where((t) => t.isManualDownload).toList();
-
           return TabBarView(
             controller: _tabController,
             children: [
               _buildAlbumsTab(
                 context: context,
-                manualTracks: manualTracks,
+                manualTracks: currentViewTracks,
                 colorScheme: colorScheme,
                 api: api,
               ),
               _buildSongsTab(
                 context: context,
-                manualTracks: manualTracks,
+                manualTracks: currentViewTracks,
                 colorScheme: colorScheme,
                 api: api,
               ),
@@ -482,129 +499,66 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
   }
 }
 
-class _DeleteAllButton extends ConsumerStatefulWidget {
-  final int serverId;
+class _HoverablePlayIconButton extends StatefulWidget {
+  final VoidCallback onPressed;
 
-  const _DeleteAllButton({required this.serverId});
+  const _HoverablePlayIconButton({required this.onPressed});
 
   @override
-  ConsumerState<_DeleteAllButton> createState() => _DeleteAllButtonState();
+  State<_HoverablePlayIconButton> createState() => _HoverablePlayIconButtonState();
 }
 
-class _DeleteAllButtonState extends ConsumerState<_DeleteAllButton> {
-  int _clickCount = 0;
-  Timer? _resetTimer;
-
-  void _handleClick() async {
-    setState(() {
-      _clickCount++;
-    });
-
-    _resetTimer?.cancel();
-
-    if (_clickCount >= 3) {
-      // Execute delete
-      final downloadService = ref.read(downloadServiceProvider);
-      await downloadService.deleteAllManualDownloads(widget.serverId);
-      ref.invalidate(downloadedTracksProvider);
-      
-      setState(() {
-        _clickCount = 0;
-      });
-      
-      if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.deletedAllOfflineMusic, style: const TextStyle(color: Colors.white)),
-            backgroundColor: ShadTheme.of(context).colorScheme.primary,
-          ),
-        );
-      }
-    } else {
-      // Start reset timer (3 seconds to confirm)
-      _resetTimer = Timer(const Duration(seconds: 3), () {
-        if (mounted) {
-          setState(() {
-            _clickCount = 0;
-          });
-        }
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _resetTimer?.cancel();
-    super.dispose();
-  }
+class _HoverablePlayIconButtonState extends State<_HoverablePlayIconButton> {
+  bool _isHovered = false;
+  bool _isPressed = false;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
     
-    String buttonText;
-    Color buttonColor;
-    Color borderColor;
-    Color textColor;
-    IconData buttonIcon;
-    
-    switch (_clickCount) {
-      case 1:
-        buttonText = l10n.confirm;
-        buttonColor = colorScheme.destructive;
-        textColor = colorScheme.destructiveForeground;
-        borderColor = Colors.transparent;
-        buttonIcon = LucideIcons.check;
-        break;
-      case 2:
-        buttonText = l10n.finalConfirm;
-        buttonColor = colorScheme.destructive;
-        textColor = colorScheme.destructiveForeground;
-        borderColor = Colors.transparent;
-        buttonIcon = LucideIcons.alertTriangle;
-        break;
-      case 0:
-      default:
-        buttonText = l10n.deleteAll;
-        buttonColor = Colors.transparent;
-        textColor = colorScheme.mutedForeground;
-        borderColor = colorScheme.border;
-        buttonIcon = LucideIcons.trash2;
-        break;
-    }
-    
-    final isSmallScreen = MediaQuery.sizeOf(context).width < 450;
-
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      height: 36,
-      width: isSmallScreen ? 48 : null,
-      child: ShadButton.outline(
-        onPressed: _handleClick,
-        backgroundColor: buttonColor,
-        hoverBackgroundColor: _clickCount == 0 
-            ? colorScheme.destructive.withValues(alpha: 0.1)
-            : buttonColor,
-        foregroundColor: textColor,
-        hoverForegroundColor: textColor,
-        padding: isSmallScreen ? EdgeInsets.zero : const EdgeInsets.symmetric(horizontal: 16),
-        decoration: ShadDecoration(
-          border: ShadBorder.all(
-            color: borderColor,
-            width: 1,
-            radius: const BorderRadius.all(Radius.circular(8)),
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: (_) => setState(() => _isPressed = true),
+        onTapUp: (_) {
+          setState(() => _isPressed = false);
+          widget.onPressed();
+        },
+        onTapCancel: () => setState(() => _isPressed = false),
+        child: AnimatedScale(
+          scale: _isPressed ? 0.90 : 1.0,
+          duration: const Duration(milliseconds: 120),
+          curve: Curves.easeOutCubic,
+          child: AnimatedOpacity(
+            opacity: _isPressed ? 0.6 : (_isHovered ? 0.8 : 1.0),
+            duration: const Duration(milliseconds: 150),
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: colorScheme.foreground,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: colorScheme.border,
+                  width: 1.0,
+                ),
+              ),
+              child: Center(
+                child: Icon(
+                  LucideIcons.play,
+                  size: 20,
+                  color: colorScheme.background,
+                ),
+              ),
+            ),
           ),
         ),
-        child: isSmallScreen
-            ? Icon(buttonIcon, size: 16)
-            : Text(
-                buttonText,
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-              ),
       ),
     );
   }
 }
+

@@ -23,6 +23,9 @@ import 'package:zenify/l10n/app_localizations.dart';
 
 import 'package:go_router/go_router.dart';
 import 'package:zenify/router/app_router.dart';
+import 'package:zenify/components/zenify_dialog.dart';
+import 'package:zenify/components/zenify_button.dart';
+import 'package:zenify/providers/download_provider.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key, required this.navigationShell});
@@ -101,6 +104,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final location = routerState.uri.path;
     final isRoot = location == '/albums' || location == '/artists' || location == '/favorites' || location == '/settings' || location == '/servers';
     final canPop = !isRoot;
+
+    final downloadsAsync = ref.watch(downloadedTracksProvider);
+    final hasDownloads = downloadsAsync.maybeWhen(
+      data: (tracks) => tracks.any((t) => t.isManualDownload),
+      orElse: () => false,
+    );
     
     String currentSubTitle = '';
     if (location.endsWith('/search')) {
@@ -249,7 +258,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
               ),
               actions: [
-                if (_shouldShowSortButton(canPop, currentSubTitle))
+                if (_shouldShowSortButton(canPop, currentSubTitle)) ...[
                   ShadPopover(
                     controller: _sortPopoverController,
                     popover: (context) => SortPopoverContent(
@@ -258,14 +267,80 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       onClose: () => _sortPopoverController.hide(),
                     ),
                     child: IconButton(
-                      icon: Icon(LucideIcons.arrowUpDown, color: colorScheme.foreground, size: 20),
+                      icon: Icon(LucideIcons.arrowUpDown, color: colorScheme.mutedForeground, size: 20),
                       onPressed: () {
                         _sortPopoverController.toggle();
                       },
                     ),
                   ),
+                  if (currentSubTitle == l10n.offlineStatus)
+                    IconButton(
+                      icon: Icon(
+                        ref.watch(showCachedDownloadsProvider) ? LucideIcons.hardDriveDownload : LucideIcons.download, 
+                        color: colorScheme.mutedForeground, 
+                        size: 20
+                      ),
+                      onPressed: () {
+                        ref.read(showCachedDownloadsProvider.notifier).toggle();
+                        final isCached = ref.read(showCachedDownloadsProvider);
+                        if (isCached) {
+                          ZenifyToast.showSuccess(context, '顯示所有已離線和已快取的歌曲');
+                        } else {
+                          ZenifyToast.showSuccess(context, '僅顯示所有已離線歌曲');
+                        }
+                      },
+                    ),
+                  if (currentSubTitle == l10n.offlineStatus)
+                    IconButton(
+                      icon: Icon(LucideIcons.trash2, color: hasDownloads ? colorScheme.mutedForeground : colorScheme.mutedForeground.withValues(alpha: 0.3), size: 20),
+                      onPressed: !hasDownloads ? null : () async {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => ZenifyDialog(
+                            icon: LucideIcons.alertTriangle,
+                            iconColor: theme.colorScheme.destructive,
+                            title: l10n.deleteAll,
+                            description: l10n.deleteAllConfirmDesc,
+                            actions: [
+                              ZenifyButton(
+                                variant: ZenifyButtonVariant.outline,
+                                onPressed: () => Navigator.pop(context, false),
+                                text: l10n.cancel,
+                              ),
+                              ZenifyButton(
+                                variant: ZenifyButtonVariant.destructive,
+                                onPressed: () => Navigator.pop(context, true),
+                                text: l10n.confirm,
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirm == true) {
+                          final serverId = ref.read(activeServerProvider).value?.id;
+                          if (serverId != null) {
+                            await ref.read(downloadServiceProvider).deleteAllManualDownloads(serverId);
+                            ref.invalidate(downloadedTracksProvider);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(l10n.deletedAllOfflineMusic, style: const TextStyle(color: Colors.white)),
+                                  backgroundColor: theme.colorScheme.primary,
+                                ),
+                              );
+                            }
+                          }
+                        }
+                      },
+                    ),
+                  Container(
+                    width: 1,
+                    height: 20,
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    color: colorScheme.border,
+                  ),
+                ],
                 IconButton(
-                  icon: Icon(LucideIcons.search, color: networkState.isOffline ? colorScheme.mutedForeground.withValues(alpha: 0.5) : colorScheme.foreground, size: 20),
+                  icon: Icon(LucideIcons.search, color: networkState.isOffline ? colorScheme.mutedForeground.withValues(alpha: 0.5) : colorScheme.mutedForeground, size: 20),
                   onPressed: networkState.isOffline ? null : () {
                     context.pushBranch('search');
                   },
@@ -285,17 +360,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     },
                   ),
                 ),
-                if (kDebugMode)
-                  IconButton(
-                    icon: Icon(LucideIcons.bug, color: Colors.red.withValues(alpha: 0.5), size: 20),
-                    tooltip: 'Dispose AudioPlayer (for Shift+R)',
-                    onPressed: () {
-                      ref.read(audioProvider.notifier).disposePlayer();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(l10n.homeAudioPlayerDisposed)),
-                      );
-                    },
-                  ),
+                const SizedBox(width: 8),
               ],
             ),
           ),
@@ -351,13 +416,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: () {
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    useRootNavigator: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (context) => const FullPlayerScreen(),
-                  );
+                  FullPlayerScreen.show(context);
                 },
                 child: Container(
                   width: 72,

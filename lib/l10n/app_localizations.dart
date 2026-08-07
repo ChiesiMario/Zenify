@@ -1318,6 +1318,12 @@ abstract class AppLocalizations {
   /// **'刪除全部'**
   String get deleteAll;
 
+  /// No description provided for @deleteAllConfirmDesc.
+  ///
+  /// In zh_TW, this message translates to:
+  /// **'這將會刪除所有手動下載的歌曲，此操作無法復原。'**
+  String get deleteAllConfirmDesc;
+
   /// No description provided for @favoriteCategories.
   ///
   /// In zh_TW, this message translates to:
