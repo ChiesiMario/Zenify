@@ -32,8 +32,8 @@ class SyncNotifier extends Notifier<SyncState> {
     return SyncState();
   }
 
-  Future<void> startSync(AppLocalizations l10n) async {
-    if (state.isSyncing) return;
+  Future<void> startSync(AppLocalizations l10n, {bool force = false}) async {
+    if (state.isSyncing && !force) return;
 
     final api = ref.read(subsonicApiProvider);
     final server = await ref.read(activeServerProvider.future);
@@ -60,6 +60,7 @@ class SyncNotifier extends Notifier<SyncState> {
       }).toList();
       
       await db.saveArtists(artists);
+      ref.invalidate(artistsProvider);
 
       // 2. 同步專輯
       state = state.copyWith(message: l10n.startSyncingAlbums, progress: 0.3);
@@ -74,7 +75,7 @@ class SyncNotifier extends Notifier<SyncState> {
         if (batch.isEmpty) {
           hasMore = false;
         } else {
-          allAlbums.addAll(batch.map((data) {
+          final mappedBatch = batch.map((data) {
             return Album()
               ..albumId = data['id'].toString()
               ..serverId = server.id
@@ -86,7 +87,11 @@ class SyncNotifier extends Notifier<SyncState> {
               ..year = data['year']
               ..coverArt = data['coverArt']
               ..rawData = jsonEncode(data);
-          }));
+          }).toList();
+
+          allAlbums.addAll(mappedBatch);
+          await db.saveAlbums(mappedBatch);
+          ref.invalidate(albumsProvider);
 
           offset += size;
           state = state.copyWith(
@@ -99,8 +104,6 @@ class SyncNotifier extends Notifier<SyncState> {
           }
         }
       }
-
-      await db.saveAlbums(allAlbums);
 
       // 3. 同步並下載封面圖片
       state = state.copyWith(message: l10n.preparingToDownloadCovers, progress: 0.9);
@@ -222,9 +225,7 @@ class SyncNotifier extends Notifier<SyncState> {
         );
       }
 
-      // 重新載入列表
-      ref.invalidate(albumsProvider);
-      ref.invalidate(artistsProvider);
+      // 重新載入其餘列表
       ref.invalidate(favoritesProvider);
       ref.invalidate(playlistsProvider);
 

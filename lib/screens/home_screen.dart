@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:zenify/models/server.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -98,6 +99,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
     final syncState = ref.watch(syncProvider);
+    final activeServerAsync = ref.watch(activeServerProvider);
+
+    ref.listen<AsyncValue<Server?>>(activeServerProvider, (previous, next) {
+      final prevId = previous?.value?.id;
+      final nextId = next.value?.id;
+      if (prevId != nextId && nextId != null) {
+        ref.read(syncProvider.notifier).startSync(l10n, force: true);
+      }
+    });
     final networkState = ref.watch(networkProvider);
 
     final routerState = GoRouterState.of(context);
