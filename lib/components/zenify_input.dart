@@ -9,6 +9,7 @@ class ZenifyInput extends StatefulWidget {
   final bool autofocus;
   final FocusNode? focusNode;
   final Widget? suffix;
+  final bool hasError;
 
   const ZenifyInput({
     super.key,
@@ -19,6 +20,7 @@ class ZenifyInput extends StatefulWidget {
     this.autofocus = false,
     this.focusNode,
     this.suffix,
+    this.hasError = false,
   });
 
   @override
@@ -64,7 +66,9 @@ class _ZenifyInputState extends State<ZenifyInput> {
         color: _isFocused ? colorScheme.background : colorScheme.card,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: _isFocused ? colorScheme.primary : colorScheme.border,
+          color: widget.hasError
+              ? colorScheme.destructive
+              : (_isFocused ? colorScheme.primary : colorScheme.border),
           width: 1.0,
         ),
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:zenify/providers/app_providers.dart';
 import 'package:go_router/go_router.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zenify/screens/home_screen.dart';
@@ -90,6 +91,23 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/albums',
+    redirect: (context, state) async {
+      final isGoingToSettings = state.matchedLocation.startsWith('/settings') || state.matchedLocation.startsWith('/servers');
+      if (isGoingToSettings) {
+        return null;
+      }
+      
+      try {
+        final activeServer = await ref.read(activeServerProvider.future);
+        if (activeServer == null) {
+          return '/servers';
+        }
+      } catch (e) {
+        return '/servers';
+      }
+      
+      return null;
+    },
     routes: [
       ShellRoute(
         navigatorKey: _topLevelNavigatorKey,

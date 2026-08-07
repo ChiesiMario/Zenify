@@ -1,5 +1,6 @@
 {
   "@@locale": "en",
+  "welcomeSubtitle": "Please select a server",
   "settingsTitle": "Settings & Preferences",
   "themeAppearance": "Appearance",
   "themeLight": "Light Mode",

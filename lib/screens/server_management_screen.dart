@@ -46,53 +46,45 @@ class _ServerManagementScreenState extends ConsumerState<ServerManagementScreen>
       },
       child: Scaffold(
         backgroundColor: colorScheme.background,
-        appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(kToolbarHeight),
-          child: AppBar(
-            backgroundColor: colorScheme.background,
-            surfaceTintColor: Colors.transparent,
-            scrolledUnderElevation: 0,
-            elevation: 0,
-            titleSpacing: 0,
-            leading: Center(
-              child: ZenifyButton(
-                variant: ZenifyButtonVariant.ghost,
-                isCircular: true,
-                text: '',
-                padding: const EdgeInsets.all(8),
-                icon: Icon(LucideIcons.arrowLeft, color: colorScheme.foreground, size: 20),
-                onPressed: () {
-                  final hasActive = ref.read(activeServerProvider).value != null;
-                  if (!hasActive) {
-                    ZenifyToast.showError(context, '請選擇一個伺服器以繼續');
-                    return;
-                  }
-                  if (Navigator.of(context).canPop()) {
-                    Navigator.of(context).pop();
-                  } else {
-                    context.go('/settings');
-                  }
-                },
-              ),
-            ),
-          title: Text(
-            l10n.serverManagement,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-              color: colorScheme.foreground,
-            ),
-          ),
-        ),
-      ),
-      body: serversAsync.when(
+        body: serversAsync.when(
         data: (servers) {
           return ListView(
-            padding: const EdgeInsets.only(top: 24, bottom: 128),
+            padding: EdgeInsets.only(top: MediaQuery.of(context).size.height * 0.1, bottom: 128),
             children: [
               Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.asset(
+                      'assets/icon/app_icon.png',
+                      width: 80,
+                      height: 80,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Zenify',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.foreground,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.welcomeSubtitle,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: colorScheme.mutedForeground,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 48),
+              Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 600),
+                  constraints: const BoxConstraints(maxWidth: 400),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Column(
@@ -120,7 +112,11 @@ class _ServerManagementScreenState extends ConsumerState<ServerManagementScreen>
                                 ref.invalidate(serversListProvider);
                                 ref.invalidate(activeServerProvider);
                                 if (context.mounted) {
-                                  Navigator.pop(context);
+                                  if (Navigator.of(context).canPop()) {
+                                    Navigator.of(context).pop();
+                                  } else {
+                                    context.go('/albums');
+                                  }
                                 }
                               },
                               onEdit: () {
@@ -223,12 +219,14 @@ class _ServerEditDialogState extends ConsumerState<_ServerEditDialog> {
   late final TextEditingController _urlController;
   late final TextEditingController _usernameController;
   late final TextEditingController _passwordController;
+  late final FocusNode _urlFocusNode;
 
   bool _isConfirmingDelete = false;
   Timer? _deleteTimer;
   bool _isCheckingConnection = false;
   bool _isConnectionValid = false;
   String? _connectionError;
+  bool _urlHasError = false;
 
   bool get _isEditing => widget.server != null;
 
@@ -239,22 +237,49 @@ class _ServerEditDialogState extends ConsumerState<_ServerEditDialog> {
     _usernameController = TextEditingController(text: widget.server?.username ?? '');
     _passwordController = TextEditingController(text: widget.server?.password ?? '');
 
+    _urlFocusNode = FocusNode();
+    _urlFocusNode.addListener(_onUrlFocusChange);
+
     _isConnectionValid = _isEditing; // Assume valid if editing, unless changed
   }
 
   @override
   void dispose() {
     _deleteTimer?.cancel();
+    _urlFocusNode.removeListener(_onUrlFocusChange);
+    _urlFocusNode.dispose();
     _urlController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
+  void _onUrlFocusChange() {
+    if (!_urlFocusNode.hasFocus) {
+      final url = _urlController.text.trim();
+      if (url.isEmpty) {
+        if (_urlHasError) {
+          setState(() {
+            _urlHasError = false;
+          });
+        }
+        return;
+      }
+      final uri = Uri.tryParse(url);
+      final isInvalid = uri == null || (!uri.isScheme('http') && !uri.isScheme('https')) || uri.host.isEmpty;
+      if (_urlHasError != isInvalid) {
+        setState(() {
+          _urlHasError = isInvalid;
+        });
+      }
+    }
+  }
+
   void _onInputChanged(String _) {
     setState(() {
       _isConnectionValid = false;
       _connectionError = null;
+      _urlHasError = false;
     });
   }
 
@@ -269,10 +294,22 @@ class _ServerEditDialogState extends ConsumerState<_ServerEditDialog> {
 
     final l10n = AppLocalizations.of(context)!;
 
+    final uri = Uri.tryParse(url);
+    if (uri == null || (!uri.isScheme('http') && !uri.isScheme('https')) || uri.host.isEmpty) {
+      setState(() {
+        _urlHasError = true;
+      });
+      ZenifyToast.showError(context, '無效的 URL 格式 (需包含 http:// 或 https://)');
+      return;
+    }
+
     setState(() {
       _isCheckingConnection = true;
       _connectionError = null;
+      _urlHasError = false;
     });
+
+    final startTime = DateTime.now();
 
     try {
       final tempServer = Server()
@@ -281,6 +318,11 @@ class _ServerEditDialogState extends ConsumerState<_ServerEditDialog> {
         ..password = password;
       final api = SubsonicApi(tempServer);
       final isValid = await api.ping();
+
+      final elapsed = DateTime.now().difference(startTime);
+      if (elapsed.inMilliseconds < 1000) {
+        await Future.delayed(Duration(milliseconds: 1000 - elapsed.inMilliseconds));
+      }
 
       if (!mounted) return;
 
@@ -296,6 +338,11 @@ class _ServerEditDialogState extends ConsumerState<_ServerEditDialog> {
         }
       });
     } catch (e) {
+      final elapsed = DateTime.now().difference(startTime);
+      if (elapsed.inMilliseconds < 1000) {
+        await Future.delayed(Duration(milliseconds: 1000 - elapsed.inMilliseconds));
+      }
+
       if (!mounted) return;
       setState(() {
         _isCheckingConnection = false;
@@ -347,9 +394,15 @@ class _ServerEditDialogState extends ConsumerState<_ServerEditDialog> {
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
     
-    final isInputEmpty = _urlController.text.trim().isEmpty || 
+    final urlText = _urlController.text.trim();
+    final uri = Uri.tryParse(urlText);
+    final isUrlFormatValid = uri != null && (uri.isScheme('http') || uri.isScheme('https')) && uri.host.isNotEmpty;
+
+    final isInputEmpty = urlText.isEmpty || 
                          _usernameController.text.trim().isEmpty || 
                          _passwordController.text.isEmpty;
+                         
+    final canSubmit = !isInputEmpty && isUrlFormatValid;
 
     return AlertDialog(
       backgroundColor: colorScheme.card,
@@ -425,8 +478,10 @@ class _ServerEditDialogState extends ConsumerState<_ServerEditDialog> {
           const SizedBox(height: 20),
           ZenifyInput(
             controller: _urlController,
+            focusNode: _urlFocusNode,
             placeholder: Text(l10n.serverUrlExample),
             autofocus: true,
+            hasError: _urlHasError,
             onChanged: _onInputChanged,
           ),
           const SizedBox(height: 16),
@@ -454,35 +509,16 @@ class _ServerEditDialogState extends ConsumerState<_ServerEditDialog> {
               onPressed: () => Navigator.pop(context),
             ),
             const SizedBox(width: 8),
-            AnimatedSize(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeOutCubic,
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                switchInCurve: Curves.easeOutCubic,
-                switchOutCurve: Curves.easeInCubic,
-                layoutBuilder: (Widget? currentChild, List<Widget> previousChildren) {
-                  return Stack(
-                    alignment: Alignment.centerRight,
-                    children: <Widget>[
-                      ...previousChildren,
-                      if (currentChild != null) currentChild,
-                    ],
-                  );
-                },
-                child: _isConnectionValid
-                    ? ZenifyButton(
-                        key: const ValueKey('save_btn'),
-                        text: _isEditing ? l10n.saveChanges : l10n.save,
-                        onPressed: isInputEmpty ? null : _saveServer,
-                      )
-                    : ZenifyButton(
-                        key: const ValueKey('check_btn'),
-                        text: l10n.checkServer,
-                        isLoading: _isCheckingConnection,
-                        onPressed: isInputEmpty ? null : _checkConnection,
-                      ),
-              ),
+            ZenifyButton(
+              key: const ValueKey('action_btn'),
+              width: 100,
+              text: _isCheckingConnection
+                  ? ''
+                  : (_isConnectionValid ? l10n.save : l10n.checkServer),
+              isLoading: _isCheckingConnection,
+              onPressed: canSubmit
+                  ? (_isConnectionValid ? _saveServer : _checkConnection)
+                  : null,
             ),
           ],
         ),

@@ -9,6 +9,9 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get welcomeSubtitle => '請選擇伺服器';
+
+  @override
   String get settingsTitle => '系統設定與偏好';
 
   @override
@@ -767,6 +770,9 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
   AppLocalizationsZhCn() : super('zh_CN');
 
   @override
+  String get welcomeSubtitle => '请选择服务器';
+
+  @override
   String get settingsTitle => '系统设置与偏好';
 
   @override
@@ -1523,6 +1529,9 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
 class AppLocalizationsZhTw extends AppLocalizationsZh {
   AppLocalizationsZhTw() : super('zh_TW');
+
+  @override
+  String get welcomeSubtitle => '請選擇伺服器';
 
   @override
   String get settingsTitle => '系統設定與偏好';

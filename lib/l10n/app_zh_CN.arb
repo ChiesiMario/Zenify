@@ -1,5 +1,6 @@
 {
   "@@locale": "zh_CN",
+  "welcomeSubtitle": "请选择服务器",
   "settingsTitle": "系统设置与偏好",
   "themeAppearance": "主题外观",
   "themeLight": "浅色模式",

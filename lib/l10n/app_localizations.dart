@@ -100,6 +100,12 @@ abstract class AppLocalizations {
     Locale('zh'),
   ];
 
+  /// No description provided for @welcomeSubtitle.
+  ///
+  /// In zh_TW, this message translates to:
+  /// **'請選擇伺服器'**
+  String get welcomeSubtitle;
+
   /// No description provided for @settingsTitle.
   ///
   /// In zh_TW, this message translates to:

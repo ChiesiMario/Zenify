@@ -1,5 +1,6 @@
 {
   "@@locale": "zh",
+  "welcomeSubtitle": "請選擇伺服器",
   "settingsTitle": "系統設定與偏好",
   "themeAppearance": "主題外觀",
   "themeLight": "淺色模式",
