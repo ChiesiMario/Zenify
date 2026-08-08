@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:convert';
 import 'package:go_router/go_router.dart';
+import 'package:zenify/utils/responsive.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/router/app_router.dart';
 import 'package:zenify/screens/playlist_detail_screen.dart';
 
 import 'package:zenify/providers/sort_providers.dart';
+import 'dart:math';
 
 final playlistsProvider = FutureProvider<List<dynamic>>((ref) async {
   final networkState = ref.watch(networkProvider);
@@ -37,7 +39,7 @@ final playlistsProvider = FutureProvider<List<dynamic>>((ref) async {
 class PlaylistsView extends ConsumerWidget {
   const PlaylistsView({super.key});
 
-  List<dynamic> _sortPlaylists(List<dynamic> playlists, AlbumSortOption option) {
+  List<dynamic> _sortPlaylists(List<dynamic> playlists, AlbumSortOption option, int randomSeed) {
     final list = List<dynamic>.from(playlists);
     switch (option) {
       case AlbumSortOption.nameAsc:
@@ -47,7 +49,7 @@ class PlaylistsView extends ConsumerWidget {
         list.sort((a, b) => (b['name'] ?? '').toString().toLowerCase().compareTo((a['name'] ?? '').toString().toLowerCase()));
         break;
       case AlbumSortOption.random:
-        list.shuffle();
+        list.shuffle(Random(randomSeed));
         break;
       case AlbumSortOption.defaultOrder:
       default:
@@ -68,7 +70,8 @@ class PlaylistsView extends ConsumerWidget {
       backgroundColor: colorScheme.background,
       body: playlistsAsync.when(
         data: (rawPlaylists) {
-          final playlists = _sortPlaylists(rawPlaylists, sortOption);
+          final randomSeed = ref.read(albumSortProvider.notifier).randomSeed;
+          final playlists = _sortPlaylists(rawPlaylists, sortOption, randomSeed);
           if (playlists.isEmpty) {
             return Center(
               child: Text(l10n.noPlaylistsCurrently, style: TextStyle(color: colorScheme.mutedForeground)),
@@ -82,7 +85,7 @@ class PlaylistsView extends ConsumerWidget {
               children: [
                 Center(
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 600),
+                    constraints: BoxConstraints(maxWidth: getResponsiveMaxWidth(context)),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Column(

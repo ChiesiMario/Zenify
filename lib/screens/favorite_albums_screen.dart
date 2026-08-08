@@ -7,11 +7,13 @@ import 'package:zenify/components/albums_grid.dart';
 import 'package:zenify/providers/audio_provider.dart';
 
 import 'package:zenify/providers/sort_providers.dart';
+import 'dart:math';
+import 'package:zenify/utils/responsive.dart';
 
 class FavoriteAlbumsScreen extends ConsumerWidget {
   const FavoriteAlbumsScreen({super.key});
 
-  List<dynamic> _sortAlbums(List<dynamic> albums, AlbumSortOption option) {
+  List<dynamic> _sortAlbums(List<dynamic> albums, AlbumSortOption option, int randomSeed) {
     final list = List<dynamic>.from(albums);
     switch (option) {
       case AlbumSortOption.nameAsc:
@@ -27,7 +29,7 @@ class FavoriteAlbumsScreen extends ConsumerWidget {
         list.sort((a, b) => (a['year'] ?? 0).compareTo(b['year'] ?? 0));
         break;
       case AlbumSortOption.random:
-        list.shuffle();
+        list.shuffle(Random(randomSeed));
         break;
       case AlbumSortOption.defaultOrder:
         break;
@@ -57,7 +59,8 @@ class FavoriteAlbumsScreen extends ConsumerWidget {
           return favoritesAsync.when(
             data: (favorites) {
               final rawAlbums = favorites['albums'] ?? [];
-              final albums = _sortAlbums(rawAlbums, sortOption);
+              final randomSeed = ref.read(albumSortProvider.notifier).randomSeed;
+              final albums = _sortAlbums(rawAlbums, sortOption, randomSeed);
 
               if (albums.isEmpty) {
                 return Center(child: Text(l10n.noFavoriteAlbums, style: TextStyle(color: colorScheme.mutedForeground)));
@@ -68,7 +71,7 @@ class FavoriteAlbumsScreen extends ConsumerWidget {
                 children: [
                   Center(
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 600),
+                      constraints: BoxConstraints(maxWidth: getResponsiveMaxWidth(context)),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Column(

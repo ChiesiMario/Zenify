@@ -14,6 +14,7 @@ import 'package:zenify/api/subsonic_api.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:zenify/services/image_service.dart';
 import 'package:zenify/providers/offline_preference_provider.dart';
+import 'package:zenify/utils/responsive.dart';
 
 class AlbumDetailScreen extends ConsumerWidget {
   final String albumId;
@@ -88,7 +89,7 @@ class AlbumDetailScreen extends ConsumerWidget {
                   SliverToBoxAdapter(
                     child: Center(
                       child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 600),
+                        constraints: BoxConstraints(maxWidth: getResponsiveMaxWidth(context)),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 24),
                           child: Column(
@@ -524,7 +525,7 @@ class AlbumDetailScreen extends ConsumerWidget {
                         SliverToBoxAdapter(
                           child: Center(
                             child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 600),
+                              constraints: BoxConstraints(maxWidth: getResponsiveMaxWidth(context)),
                               child: Padding(
                                 padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
                                 child: Row(
@@ -548,7 +549,7 @@ class AlbumDetailScreen extends ConsumerWidget {
                   SliverToBoxAdapter(
                         child: Center(
                           child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 600),
+                            constraints: BoxConstraints(maxWidth: getResponsiveMaxWidth(context)),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 24),
                               child: Container(
@@ -675,7 +676,7 @@ class AlbumDetailScreen extends ConsumerWidget {
                       padding: const EdgeInsets.only(top: 24, bottom: 148),
                       child: Center(
                         child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 600),
+                          constraints: BoxConstraints(maxWidth: getResponsiveMaxWidth(context)),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 24),
                             child: Column(

@@ -21,6 +21,9 @@ enum ArtistSortOption {
 
 class AlbumSortNotifier extends Notifier<AlbumSortOption> {
   static const _key = 'album_sort_option';
+  
+  int _randomSeed = DateTime.now().millisecondsSinceEpoch;
+  int get randomSeed => _randomSeed;
 
   @override
   AlbumSortOption build() {
@@ -33,6 +36,9 @@ class AlbumSortNotifier extends Notifier<AlbumSortOption> {
   }
 
   void setSort(AlbumSortOption option) {
+    if (option == AlbumSortOption.random) {
+      _randomSeed = DateTime.now().millisecondsSinceEpoch;
+    }
     state = option;
     ref.read(sharedPreferencesProvider).setInt(_key, option.index);
   }
@@ -40,6 +46,9 @@ class AlbumSortNotifier extends Notifier<AlbumSortOption> {
 
 class ArtistSortNotifier extends Notifier<ArtistSortOption> {
   static const _key = 'artist_sort_option';
+
+  int _randomSeed = DateTime.now().millisecondsSinceEpoch;
+  int get randomSeed => _randomSeed;
 
   @override
   ArtistSortOption build() {
@@ -52,6 +61,9 @@ class ArtistSortNotifier extends Notifier<ArtistSortOption> {
   }
 
   void setSort(ArtistSortOption option) {
+    if (option == ArtistSortOption.random) {
+      _randomSeed = DateTime.now().millisecondsSinceEpoch;
+    }
     state = option;
     ref.read(sharedPreferencesProvider).setInt(_key, option.index);
   }
@@ -70,6 +82,9 @@ enum SongSortOption {
 class SongSortNotifier extends Notifier<SongSortOption> {
   static const _key = 'song_sort_option';
 
+  int _randomSeed = DateTime.now().millisecondsSinceEpoch;
+  int get randomSeed => _randomSeed;
+
   @override
   SongSortOption build() {
     final prefs = ref.watch(sharedPreferencesProvider);
@@ -81,6 +96,9 @@ class SongSortNotifier extends Notifier<SongSortOption> {
   }
 
   void setSort(SongSortOption option) {
+    if (option == SongSortOption.random) {
+      _randomSeed = DateTime.now().millisecondsSinceEpoch;
+    }
     state = option;
     ref.read(sharedPreferencesProvider).setInt(_key, option.index);
   }

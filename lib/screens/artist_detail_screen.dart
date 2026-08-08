@@ -8,6 +8,7 @@ import 'package:zenify/components/albums_grid.dart';
 import 'package:zenify/components/zenify_toast.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/audio_provider.dart';
+import 'package:zenify/utils/responsive.dart';
 
 class ArtistDetailScreen extends ConsumerStatefulWidget {
   final String artistId;
@@ -66,7 +67,7 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
               SliverToBoxAdapter(
                 child: Center(
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 600),
+                    constraints: BoxConstraints(maxWidth: getResponsiveMaxWidth(context)),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: Column(
@@ -181,7 +182,7 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
                 child: Align(
                   alignment: Alignment.topCenter,
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 600),
+                    constraints: BoxConstraints(maxWidth: getResponsiveMaxWidth(context)),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Column(
@@ -442,7 +443,7 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
                   padding: const EdgeInsets.only(top: 24, bottom: 148),
                   child: Center(
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 600),
+                      constraints: BoxConstraints(maxWidth: getResponsiveMaxWidth(context)),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: _StreamingPlatformsRow(

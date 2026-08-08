@@ -12,6 +12,7 @@ import 'package:zenify/l10n/app_localizations.dart';
 import 'dart:async';
 import 'package:zenify/components/group_tab_bar.dart';
 import 'package:zenify/router/app_router.dart';
+import 'package:zenify/utils/responsive.dart';
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
 
@@ -222,7 +223,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         automaticallyImplyLeading: false,
         title: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 600),
+            constraints: BoxConstraints(maxWidth: getResponsiveMaxWidth(context)),
             child: ZenifyInput(
               controller: _searchController,
               placeholder: Text(l10n.searchPlaceholder),
@@ -234,7 +235,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       ),
       body: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
+          constraints: BoxConstraints(maxWidth: getResponsiveMaxWidth(context)),
           child: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _searchController.text.trim().isEmpty

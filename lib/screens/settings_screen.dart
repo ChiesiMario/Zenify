@@ -18,6 +18,7 @@ import 'package:zenify/components/zenify_button.dart';
 import 'package:zenify/components/zenify_slider.dart';
 import 'package:zenify/components/zenify_dialog.dart';
 import 'package:zenify/components/zenify_select.dart';
+import 'package:zenify/utils/responsive.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -131,7 +132,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         children: [
           Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 600),
+              constraints: BoxConstraints(maxWidth: getResponsiveMaxWidth(context)),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(

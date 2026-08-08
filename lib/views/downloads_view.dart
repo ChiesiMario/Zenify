@@ -12,6 +12,7 @@ import 'package:zenify/components/albums_grid.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/providers/sort_providers.dart';
 import 'package:zenify/components/group_tab_bar.dart';
+import 'dart:math';
 
 class DownloadsView extends ConsumerStatefulWidget {
   const DownloadsView({super.key});
@@ -47,7 +48,7 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
     super.dispose();
   }
 
-  List<dynamic> _sortAlbums(List<dynamic> albums, AlbumSortOption option) {
+  List<dynamic> _sortAlbums(List<dynamic> albums, AlbumSortOption option, int randomSeed) {
     final list = List<dynamic>.from(albums);
     switch (option) {
       case AlbumSortOption.nameAsc:
@@ -57,7 +58,7 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
         list.sort((a, b) => (b['title'] ?? '').toString().toLowerCase().compareTo((a['title'] ?? '').toString().toLowerCase()));
         break;
       case AlbumSortOption.random:
-        list.shuffle();
+        list.shuffle(Random(randomSeed));
         break;
       case AlbumSortOption.defaultOrder:
       default:
@@ -66,7 +67,7 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
     return list;
   }
 
-  List<DownloadedTrack> _sortSongs(List<DownloadedTrack> tracks, SongSortOption option) {
+  List<DownloadedTrack> _sortSongs(List<DownloadedTrack> tracks, SongSortOption option, int randomSeed) {
     final list = List<DownloadedTrack>.from(tracks);
     switch (option) {
       case SongSortOption.nameAsc:
@@ -76,7 +77,7 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
         list.sort((a, b) => b.title.toLowerCase().compareTo(a.title.toLowerCase()));
         break;
       case SongSortOption.random:
-        list.shuffle();
+        list.shuffle(Random(randomSeed));
         break;
       case SongSortOption.defaultOrder:
         list.sort((a, b) {
@@ -248,7 +249,8 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
       };
     }).toList();
 
-    final sortedAlbums = _sortAlbums(albums, sortOption);
+    final albumSeed = ref.read(albumSortProvider.notifier).randomSeed;
+    final sortedAlbums = _sortAlbums(albums, sortOption, albumSeed);
 
     if (sortedAlbums.isEmpty) {
       return Center(
@@ -312,7 +314,8 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
   }) {
     final l10n = AppLocalizations.of(context)!;
     final sortOption = ref.watch(songSortProvider);
-    final sortedTracks = _sortSongs(manualTracks, sortOption);
+    final songSeed = ref.read(songSortProvider.notifier).randomSeed;
+    final sortedTracks = _sortSongs(manualTracks, sortOption, songSeed);
 
     if (sortedTracks.isEmpty) {
       return Center(

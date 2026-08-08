@@ -5,7 +5,9 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/audio_provider.dart';
 import 'package:zenify/components/local_cover_image.dart';
+import 'package:zenify/utils/responsive.dart';
 import 'package:zenify/components/zenify_toast.dart';
+import 'dart:math';
 
 import 'package:zenify/providers/sort_providers.dart';
 import 'package:zenify/providers/download_provider.dart';
@@ -20,8 +22,8 @@ class FavoriteSongsScreen extends ConsumerWidget {
     return '$minutes:${remainingSeconds.toString().padLeft(2, '0')}';
   }
 
-  List<dynamic> _sortSongs(List<dynamic> songs, AlbumSortOption option) {
-    final list = List<dynamic>.from(songs);
+  List<dynamic> _sortSongs(List<dynamic> tracks, AlbumSortOption option, int randomSeed) {
+    final list = List<dynamic>.from(tracks);
     switch (option) {
       case AlbumSortOption.nameAsc:
         list.sort((a, b) => (a['title'] ?? '').toString().toLowerCase().compareTo((b['title'] ?? '').toString().toLowerCase()));
@@ -36,7 +38,7 @@ class FavoriteSongsScreen extends ConsumerWidget {
         list.sort((a, b) => (a['year'] ?? 0).compareTo(b['year'] ?? 0));
         break;
       case AlbumSortOption.random:
-        list.shuffle();
+        list.shuffle(Random(randomSeed));
         break;
       case AlbumSortOption.defaultOrder:
         break;
@@ -66,7 +68,8 @@ class FavoriteSongsScreen extends ConsumerWidget {
           return favoritesAsync.when(
             data: (favorites) {
               final rawSongs = favorites['songs'] ?? [];
-              final songs = _sortSongs(rawSongs, sortOption);
+              final randomSeed = ref.read(albumSortProvider.notifier).randomSeed;
+              final songs = _sortSongs(rawSongs, sortOption, randomSeed);
 
               if (songs.isEmpty) {
                 return Center(child: Text(l10n.noFavoriteSongs, style: TextStyle(color: colorScheme.mutedForeground)));
@@ -74,7 +77,7 @@ class FavoriteSongsScreen extends ConsumerWidget {
 
               return Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 600),
+                  constraints: BoxConstraints(maxWidth: getResponsiveMaxWidth(context)),
                   child: CustomScrollView(
                     slivers: [
                       // Padding for top spacing

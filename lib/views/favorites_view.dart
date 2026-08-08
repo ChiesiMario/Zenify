@@ -11,7 +11,8 @@ import 'package:zenify/screens/favorite_songs_screen.dart';
 import 'package:zenify/screens/favorite_albums_screen.dart';
 import 'package:zenify/views/playlists_view.dart';
 import 'package:zenify/views/downloads_view.dart';
-import 'package:go_router/go_router.dart';
+import 'package:zenify/components/group_tab_bar.dart';
+import 'package:zenify/utils/responsive.dart';
 import 'package:zenify/router/app_router.dart';
 
 class FavoritesView extends ConsumerWidget {
@@ -62,7 +63,7 @@ class FavoritesView extends ConsumerWidget {
             padding: const EdgeInsets.only(left: 2.0),
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 600),
+                constraints: BoxConstraints(maxWidth: getResponsiveMaxWidth(context)),
                 child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
