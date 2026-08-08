@@ -92,7 +92,7 @@ class _ArtistCardState extends State<ArtistCard> {
                   ),
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 3),
               Text(
                 widget.name,
                 style: TextStyle(

@@ -12,6 +12,7 @@ import 'dart:math';
 import 'package:zenify/providers/sort_providers.dart';
 import 'package:zenify/providers/download_provider.dart';
 import 'package:zenify/providers/offline_preference_provider.dart';
+import 'package:zenify/components/zenify_song_list.dart';
 
 class FavoriteSongsScreen extends ConsumerWidget {
   const FavoriteSongsScreen({super.key});
@@ -97,105 +98,34 @@ class FavoriteSongsScreen extends ConsumerWidget {
                       // Spacing between banner and list
                       const SliverPadding(padding: EdgeInsets.only(top: 20)),
 
-                      // Lazy loaded group card list with outer border
-                      SliverPadding(
+                      ZenifySongList(
+                        useSliver: true,
                         padding: const EdgeInsets.symmetric(horizontal: 16),
-                        sliver: DecoratedSliver(
-                          decoration: BoxDecoration(
-                            color: colorScheme.card,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: colorScheme.border, width: 1.0),
-                          ),
-                          sliver: SliverList.builder(
-                            itemCount: songs.length,
-                            itemBuilder: (context, songIndex) {
-                              final song = songs[songIndex];
-                              final api = ref.watch(subsonicApiProvider);
-                              final coverUrl = api != null && song['coverArt'] != null
-                                  ? api.getCoverArtUrl(song['coverArt'])
-                                  : null;
-                                  
-                              final isFirst = songIndex == 0;
-                              final isLast = songIndex == songs.length - 1;
-
-                              return Container(
-                                decoration: BoxDecoration(
-                                  border: isLast
-                                      ? null
-                                      : Border(
-                                          bottom: BorderSide(
-                                            color: colorScheme.border.withValues(alpha: 0.5),
-                                            width: 0.5,
-                                          ),
-                                        ),
-                                ),
-                                child: Material(
-                                  color: Colors.transparent,
-                                  borderRadius: BorderRadius.vertical(
-                                    top: isFirst ? const Radius.circular(12) : Radius.zero,
-                                    bottom: isLast ? const Radius.circular(12) : Radius.zero,
-                                  ),
-                                  clipBehavior: Clip.antiAlias, // Ensures child ink/bg respects the corner radius
-                                  child: ListTile(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.vertical(
-                                        top: isFirst ? const Radius.circular(12) : Radius.zero,
-                                        bottom: isLast ? const Radius.circular(12) : Radius.zero,
-                                      ),
-                                    ),
-                                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                                    leading: Container(
-                                      width: 44,
-                                      height: 44,
-                                      decoration: BoxDecoration(
-                                        color: colorScheme.muted,
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      clipBehavior: Clip.antiAlias,
-                                      child: coverUrl == null
-                                          ? Icon(LucideIcons.music, size: 20, color: colorScheme.mutedForeground)
-                                          : LocalCoverImage(
-                                              id: song['albumId']?.toString() ?? song['parent']?.toString() ?? song['coverArt']?.toString() ?? '',
-                                              serverId: server.id,
-                                              fallbackUrl: coverUrl,
-                                            ),
-                                    ),
-                                    title: Text(
-                                      song['title'] ?? l10n.unknownSong,
-                                      style: TextStyle(
-                                        color: colorScheme.foreground,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 14,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    subtitle: Text(
-                                      song['artist'] ?? l10n.unknownArtist,
-                                      style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    trailing: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          song['duration'] != null ? _formatDuration(song['duration'] as int) : '--:--',
-                                          style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13, fontWeight: FontWeight.w500),
-                                        ),
-                                        const SizedBox(width: 4),
-                                        _FavoriteSongButton(songId: song['id'].toString()),
-                                      ],
-                                    ),
-                                    onTap: () {
-                                      ref.read(audioProvider.notifier).playQueue(songs, songIndex);
-                                    },
-                                  ),
-                                ),
-                              );
+                        songs: songs.asMap().entries.map((entry) {
+                          final songIndex = entry.key;
+                          final song = entry.value;
+                          final api = ref.watch(subsonicApiProvider);
+                          final networkState = ref.watch(networkProvider);
+                          final coverUrl = api != null ? api.getCoverArtUrl(song['albumId']?.toString() ?? song['parent']?.toString() ?? song['coverArt']?.toString() ?? '', size: 250) : null;
+                          final songId = song['id']?.toString() ?? '';
+                          
+                          return SongTileData(
+                            id: songId,
+                            title: song['title'] ?? l10n.unknownSong,
+                            subtitle: song['artist'] ?? l10n.unknownArtist,
+                            coverId: song['albumId']?.toString() ?? song['parent']?.toString() ?? song['coverArt']?.toString() ?? '',
+                            fallbackCoverUrl: coverUrl,
+                            duration: song['duration'] != null ? _formatDuration(song['duration'] as int) : '--:--',
+                            isOfflineUnplayable: networkState.isOffline && !(song['isDownloaded'] == true),
+                            serverId: server.id,
+                            onTap: () {
+                              ref.read(audioProvider.notifier).playQueue(songs, songIndex);
                             },
-                          ),
-                        ),
+                            isFavorite: true,
+                          );
+                        }).toList(),
+                        showCover: true,
+                        showFavoriteButton: true,
                       ),
                       
                       // Bottom padding
@@ -216,53 +146,6 @@ class FavoriteSongsScreen extends ConsumerWidget {
   }
 }
 
-class _FavoriteSongButton extends ConsumerWidget {
-  final String songId;
-  const _FavoriteSongButton({required this.songId});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    final theme = ShadTheme.of(context);
-    final colorScheme = theme.colorScheme;
-    final api = ref.watch(subsonicApiProvider);
-    final networkState = ref.watch(networkProvider);
-
-    // 預設為 true (因為在收藏清單內)
-    final isFavorite = ref.watch(favoriteStatusProvider.select((map) => map[songId])) ?? true;
-    final mutedIconColor = colorScheme.mutedForeground.withValues(alpha: 0.3);
-
-    return Opacity(
-      opacity: networkState.isOffline ? 0.3 : 1.0,
-      child: SizedBox(
-        width: 28,
-        height: 28,
-        child: IconButton(
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-          icon: Icon(
-            isFavorite ? Icons.favorite : LucideIcons.heart,
-            color: isFavorite ? const Color(0xFFEF4444) : mutedIconColor,
-            size: 16,
-          ),
-          onPressed: networkState.isOffline ? () {
-            ZenifyToast.showError(context, l10n.serverOffline);
-          } : () async {
-            if (api == null) return;
-            await ref.read(favoriteStatusProvider.notifier).toggleStar(
-              id: songId,
-              isCurrentlyStarred: isFavorite,
-              api: api,
-              isAlbum: false,
-            );
-            // 特意不 invalidate favoritesProvider，讓歌曲保留在畫面上
-          },
-          tooltip: isFavorite ? l10n.removeFromFavorites : l10n.addToFavorites,
-        ),
-      ),
-    );
-  }
-}
 
 class _FavoriteHeroBanner extends ConsumerStatefulWidget {
   final List<dynamic> songs;

@@ -279,7 +279,7 @@ class _AlbumCardState extends State<AlbumCard> {
                   ),
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 3),
               // Title (Apple Music w600 weight)
               Text(
                 widget.title,

@@ -15,6 +15,7 @@ import 'package:file_selector/file_selector.dart';
 import 'package:zenify/services/image_service.dart';
 import 'package:zenify/providers/offline_preference_provider.dart';
 import 'package:zenify/utils/responsive.dart';
+import 'package:zenify/components/zenify_song_list.dart';
 
 class AlbumDetailScreen extends ConsumerWidget {
   final String albumId;
@@ -552,115 +553,31 @@ class AlbumDetailScreen extends ConsumerWidget {
                             constraints: BoxConstraints(maxWidth: getResponsiveMaxWidth(context)),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 24),
-                              child: Container(
-                            decoration: BoxDecoration(
-                              color: colorScheme.card,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: colorScheme.border, width: 1.0),
-                            ),
-                            child: Column(
-                              children: List.generate(group.length, (localIndex) {
-                                final item = group[localIndex];
-                                final int absoluteIndex = item['index'];
+                              child: ZenifySongList(
+                              songs: group.map((item) {
+                                final absoluteIndex = item['index'] as int;
                                 final song = item['song'];
-                                final duration = song['duration'] != null ? _formatDuration(song['duration']) : '--:--';
+                                final songId = song['id']?.toString() ?? '';
+                                final isOfflineUnplayable = networkState.isOffline && !downloadedIds.contains(songId);
                                 
-                                final isFirst = localIndex == 0;
-                                final isLast = localIndex == group.length - 1;
-                                
-                                final isOfflineUnplayable = networkState.isOffline && !downloadedIds.contains(song['id']?.toString());
-                                final opacity = isOfflineUnplayable ? 0.3 : 1.0;
-
-                                return Container(
-                                  decoration: BoxDecoration(
-                                    border: isLast ? null : Border(bottom: BorderSide(color: colorScheme.border.withValues(alpha: 0.5), width: 0.5)),
-                                  ),
-                                  child: Opacity(
-                                    opacity: opacity,
-                                    child: Material(
-                                      color: Colors.transparent,
-                                      borderRadius: BorderRadius.vertical(
-                                        top: isFirst ? const Radius.circular(12) : Radius.zero,
-                                        bottom: isLast ? const Radius.circular(12) : Radius.zero,
-                                      ),
-                                      clipBehavior: Clip.antiAlias,
-                                      child: ListTile(
-                                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                                        leading: SizedBox(
-                                          width: 24,
-                                          child: Center(
-                                            child: Text(
-                                              song['track']?.toString() ?? '${localIndex + 1}',
-                                              style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13, fontWeight: FontWeight.w600),
-                                            ),
-                                          ),
-                                        ),
-                                        title: Text(
-                                          song['title'] ?? l10n.unknownSong,
-                                          style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.w600, fontSize: 14),
-                                        ),
-                                        subtitle: song['artist'] != album['artist']
-                                            ? Text(song['artist'] ?? '', style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12))
-                                            : null,
-                                        trailing: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              duration,
-                                              style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13, fontWeight: FontWeight.w500),
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Consumer(
-                                              builder: (context, ref, child) {
-                                                final songId = song['id']?.toString();
-                                                final isFavorite = songId != null 
-                                                    ? (ref.watch(favoriteStatusProvider.select((map) => map[songId])) ?? (song['starred'] != null))
-                                                    : false;
-
-                                                final mutedIconColor = colorScheme.mutedForeground.withValues(alpha: 0.3);
-
-                                                return Opacity(
-                                                  opacity: networkState.isOffline ? 0.3 : 1.0,
-                                                  child: SizedBox(
-                                                    width: 28,
-                                                    height: 28,
-                                                    child: IconButton(
-                                                      padding: EdgeInsets.zero,
-                                                      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                                                      icon: Icon(
-                                                        isFavorite ? Icons.favorite : LucideIcons.heart,
-                                                        color: isFavorite ? const Color(0xFFEF4444) : mutedIconColor,
-                                                        size: 16,
-                                                      ),
-                                                      onPressed: networkState.isOffline ? () {
-                                                        ZenifyToast.showError(context, l10n.serverOffline);
-                                                      } : () async {
-                                                        if (songId == null || api == null) return;
-                                                        await ref.read(favoriteStatusProvider.notifier).toggleStar(
-                                                          id: songId,
-                                                          isCurrentlyStarred: isFavorite,
-                                                          api: api,
-                                                          isAlbum: false,
-                                                        );
-                                                      },
-                                                      tooltip: isFavorite ? l10n.removeFromFavorites : l10n.addToFavorites,
-                                                    ),
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                        onTap: isOfflineUnplayable ? null : () {
-                                          ref.read(audioProvider.notifier).playQueue(songList, absoluteIndex);
-                                        },
-                                      ),
-                                    ),
-                                  ),
+                                return SongTileData(
+                                  id: songId,
+                                  title: song['title'] ?? l10n.unknownSong,
+                                  subtitle: song['artist'] != album['artist'] ? song['artist'] : null,
+                                  trackNumber: song['track']?.toString() ?? '',
+                                  duration: song['duration'] != null ? _formatDuration(song['duration']) : '--:--',
+                                  isOfflineUnplayable: isOfflineUnplayable,
+                                  serverId: server?.id ?? 0,
+                                  onTap: () {
+                                    ref.read(audioProvider.notifier).playQueue(songList, absoluteIndex);
+                                  },
+                                  isFavorite: song['starred'] != null,
                                 );
-                              }),
+                              }).toList(),
+                              showTrackNumber: true,
+                              showFavoriteButton: true,
+                              shrinkWrap: true,
                             ),
-                          ),
                         ),
                       ),
                     ),

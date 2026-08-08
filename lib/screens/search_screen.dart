@@ -8,6 +8,7 @@ import 'package:zenify/components/artist_card.dart';
 
 import 'package:zenify/components/albums_grid.dart';
 import 'package:zenify/components/zenify_input.dart';
+import 'package:zenify/components/zenify_song_list.dart';
 import 'package:zenify/l10n/app_localizations.dart';
 import 'dart:async';
 import 'package:zenify/components/group_tab_bar.dart';
@@ -137,37 +138,33 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         ),
       );
       activeViews.add(
-        ListView.builder(
+        SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          itemCount: _songs.length,
-          itemBuilder: (context, index) {
-            final song = _songs[index];
-            final coverId = song['coverArt'] ?? song['albumId'];
-            final fallbackUrl = api != null && coverId != null ? api.getCoverArtUrl(coverId, size: 250) : null;
-            final duration = _formatDuration(song['duration'] as int? ?? 0);
-
-            return ListTile(
-              leading: ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: SizedBox(
-                  width: 48,
-                  height: 48,
-                  child: LocalCoverImage(
-                    id: song['albumId']?.toString() ?? coverId ?? '',
-                    serverId: server?.id ?? 0,
-                    fallbackUrl: fallbackUrl,
-                    isThumb: true,
-                  ),
-                ),
-              ),
-              title: Text(song['title'] ?? 'Unknown', style: const TextStyle(fontWeight: FontWeight.w500)),
-              subtitle: Text(song['artist'] ?? '', style: TextStyle(color: colorScheme.mutedForeground)),
-              trailing: Text(duration, style: TextStyle(color: colorScheme.mutedForeground)),
-              onTap: () {
-                ref.read(audioProvider.notifier).playQueue(_songs, index);
-              },
-            );
-          },
+          child: ZenifySongList(
+            songs: _songs.asMap().entries.map((entry) {
+              final index = entry.key;
+              final song = entry.value;
+              final coverId = song['coverArt'] ?? song['albumId'];
+              final fallbackUrl = api != null && coverId != null ? api.getCoverArtUrl(coverId, size: 250) : null;
+              return SongTileData(
+                id: song['id']?.toString() ?? '',
+                title: song['title'] ?? 'Unknown',
+                subtitle: song['artist'] ?? '',
+                coverId: song['albumId']?.toString() ?? coverId ?? '',
+                fallbackCoverUrl: fallbackUrl,
+                duration: _formatDuration(song['duration'] as int? ?? 0),
+                isOfflineUnplayable: networkState.isOffline && !(song['isDownloaded'] == true),
+                serverId: server?.id ?? 0,
+                onTap: () {
+                  ref.read(audioProvider.notifier).playQueue(_songs, index);
+                },
+                isFavorite: song['starred'] != null,
+              );
+            }).toList(),
+            showCover: true,
+            showFavoriteButton: true,
+            shrinkWrap: true,
+          ),
         ),
       );
     }
@@ -221,14 +218,18 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         backgroundColor: colorScheme.background,
         elevation: 0,
         automaticallyImplyLeading: false,
+        titleSpacing: 0,
         title: Center(
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: getResponsiveMaxWidth(context)),
-            child: ZenifyInput(
-              controller: _searchController,
-              placeholder: Text(l10n.searchPlaceholder),
-              autofocus: true,
-              onChanged: _onSearchChanged,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: ZenifyInput(
+                controller: _searchController,
+                placeholder: Text(l10n.searchPlaceholder),
+                autofocus: true,
+                onChanged: _onSearchChanged,
+              ),
             ),
           ),
         ),
@@ -262,8 +263,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                           const SizedBox(height: 16),
                           Align(
                             alignment: Alignment.centerLeft,
-                            child: GroupTabBar(
-                              tabs: activeTabs,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: GroupTabBar(
+                                tabs: activeTabs,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 16),

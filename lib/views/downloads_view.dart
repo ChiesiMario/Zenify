@@ -12,6 +12,7 @@ import 'package:zenify/components/albums_grid.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/providers/sort_providers.dart';
 import 'package:zenify/components/group_tab_bar.dart';
+import 'package:zenify/components/zenify_song_list.dart';
 import 'dart:math';
 
 class DownloadsView extends ConsumerStatefulWidget {
@@ -354,121 +355,57 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
         ),
         SliverLayoutBuilder(
           builder: (context, constraints) {
-            final double horizontalPadding = (constraints.crossAxisExtent - 568) / 2;
+            final double horizontalPadding = (constraints.crossAxisExtent - 600) / 2;
             final double padding = horizontalPadding > 0 ? horizontalPadding : 0;
             return SliverPadding(
               padding: EdgeInsets.symmetric(horizontal: 16 + padding),
-              sliver: DecoratedSliver(
-                decoration: BoxDecoration(
-                  color: colorScheme.card,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: colorScheme.border, width: 1.0),
-                ),
-                sliver: SliverList.builder(
-                  itemCount: sortedTracks.length,
-                  itemBuilder: (context, index) {
-                      final track = sortedTracks[index];
-                      int sizeBytes = track.sizeBytes;
-                      if (sizeBytes <= 0) {
-                        try {
-                          final f = File(track.localPath);
-                          if (f.existsSync()) {
-                            sizeBytes = f.lengthSync();
-                            if (sizeBytes > 0) {
-                              track.sizeBytes = sizeBytes;
-                              ref.read(databaseProvider).saveDownloadedTrack(track);
-                            }
-                          }
-                        } catch (_) {}
+              sliver: ZenifySongList(
+                useSliver: true,
+                songs: sortedTracks.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final track = entry.value;
+                  int sizeBytes = track.sizeBytes;
+                  if (sizeBytes <= 0) {
+                    try {
+                      final f = File(track.localPath);
+                      if (f.existsSync()) {
+                        sizeBytes = f.lengthSync();
+                        if (sizeBytes > 0) {
+                          track.sizeBytes = sizeBytes;
+                          ref.read(databaseProvider).saveDownloadedTrack(track);
+                        }
                       }
-                      final duration = _formatDuration(track.duration);
-                      final size = _formatSize(sizeBytes);
-                      
-                      final isFirst = index == 0;
-                      final isLast = index == sortedTracks.length - 1;
-
-                      return Container(
-                        decoration: BoxDecoration(
-                          border: isLast
-                              ? null
-                              : Border(
-                                  bottom: BorderSide(
-                                    color: colorScheme.border.withValues(alpha: 0.5),
-                                    width: 0.5,
-                                  ),
-                                ),
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          borderRadius: BorderRadius.vertical(
-                            top: isFirst ? const Radius.circular(12) : Radius.zero,
-                            bottom: isLast ? const Radius.circular(12) : Radius.zero,
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                          child: ListTile(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(
-                                top: isFirst ? const Radius.circular(12) : Radius.zero,
-                                bottom: isLast ? const Radius.circular(12) : Radius.zero,
-                              ),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                            leading: Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: colorScheme.muted,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              clipBehavior: Clip.antiAlias,
-                              child: track.coverArt != null
-                                  ? LocalCoverImage(
-                                      id: track.albumId ?? track.coverArt!,
-                                      serverId: track.serverId,
-                                      fallbackUrl: api?.getCoverArtUrl(track.coverArt!),
-                                    )
-                                  : Icon(LucideIcons.music, size: 20, color: colorScheme.mutedForeground),
-                            ),
-                            title: Text(
-                              track.title,
-                              style: TextStyle(color: colorScheme.foreground, fontWeight: FontWeight.w600, fontSize: 14),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            subtitle: Text(
-                              '${track.artist} • $size',
-                              style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: Icon(LucideIcons.trash2, color: colorScheme.destructive, size: 18),
-                                  onPressed: () async {
-                                    await ref.read(downloadServiceProvider).deleteDownload(track.songId);
-                                    ref.invalidate(downloadedTracksProvider);
-                                  },
-                                  tooltip: l10n.delete,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  duration,
-                                  style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12),
-                                ),
-                              ],
-                            ),
-                            onTap: () {
-                              final allSongs = sortedTracks.map((t) => jsonDecode(t.rawData)).toList();
-                              ref.read(audioProvider.notifier).playQueue(allSongs, index);
-                            },
-                          ),
-                        ),
-                      );
+                    } catch (_) {}
+                  }
+                  final duration = _formatDuration(track.duration);
+                  final size = _formatSize(sizeBytes);
+                  
+                  return SongTileData(
+                    id: track.songId,
+                    title: track.title,
+                    subtitle: '${track.artist} • $size',
+                    coverId: track.albumId ?? track.coverArt,
+                    fallbackCoverUrl: track.coverArt != null ? api?.getCoverArtUrl(track.coverArt!) : null,
+                    duration: duration,
+                    isOfflineUnplayable: false,
+                    serverId: track.serverId,
+                    onTap: () {
+                      final allSongs = sortedTracks.map((t) => jsonDecode(t.rawData)).toList();
+                      ref.read(audioProvider.notifier).playQueue(allSongs, index);
                     },
-                  ),
-                ),
+                    customTrailing: IconButton(
+                      icon: Icon(LucideIcons.trash2, color: colorScheme.destructive, size: 18),
+                      onPressed: () async {
+                        await ref.read(downloadServiceProvider).deleteDownload(track.songId);
+                        ref.invalidate(downloadedTracksProvider);
+                      },
+                      tooltip: l10n.delete,
+                    ),
+                  );
+                }).toList(),
+                showCover: true,
+                showFavoriteButton: false,
+              ),
             );
           },
         ),
