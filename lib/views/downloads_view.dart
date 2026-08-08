@@ -11,6 +11,7 @@ import 'package:zenify/components/local_cover_image.dart';
 import 'package:zenify/components/albums_grid.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/providers/sort_providers.dart';
+import 'package:zenify/components/group_tab_bar.dart';
 
 class DownloadsView extends ConsumerStatefulWidget {
   const DownloadsView({super.key});
@@ -134,56 +135,31 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 240),
-                      child: Container(
-                        height: 52,
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: colorScheme.card,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: colorScheme.border,
-                            width: 1.0,
+                    GroupTabBar(
+                      controller: _tabController,
+                      maxWidth: 240,
+                      tabs: [
+                        Tab(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(LucideIcons.disc, size: 16),
+                              const SizedBox(width: 6),
+                              Text(l10n.navAlbums),
+                            ],
                           ),
                         ),
-                        child: TabBar(
-                          controller: _tabController,
-                          overlayColor: WidgetStateProperty.all(Colors.transparent),
-                          dividerColor: Colors.transparent,
-                          indicatorSize: TabBarIndicatorSize.tab,
-                          indicator: BoxDecoration(
-                            color: colorScheme.primary,
-                            borderRadius: BorderRadius.circular(10),
+                        Tab(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(LucideIcons.music, size: 16),
+                              SizedBox(width: 6),
+                              Text(l10n.songs),
+                            ],
                           ),
-                          labelColor: colorScheme.primaryForeground,
-                          labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, letterSpacing: 0.2),
-                          unselectedLabelColor: colorScheme.foreground.withValues(alpha: 0.5),
-                          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
-                          tabs: [
-                            Tab(
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(LucideIcons.disc, size: 16),
-                                  const SizedBox(width: 6),
-                                  Text(l10n.navAlbums),
-                                ],
-                              ),
-                            ),
-                            Tab(
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(LucideIcons.music, size: 16),
-                                  SizedBox(width: 6),
-                                  Text(l10n.songs),
-                                ],
-                              ),
-                            ),
-                          ],
                         ),
-                      ),
+                      ],
                     ),
                     if (currentViewTracks.isNotEmpty)
                       _HoverablePlayIconButton(

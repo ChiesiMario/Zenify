@@ -5,12 +5,12 @@ import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/audio_provider.dart';
 import 'package:zenify/components/local_cover_image.dart';
 import 'package:zenify/components/artist_card.dart';
-import 'package:zenify/screens/artist_detail_screen.dart';
+
 import 'package:zenify/components/albums_grid.dart';
 import 'package:zenify/components/zenify_input.dart';
 import 'package:zenify/l10n/app_localizations.dart';
 import 'dart:async';
-import 'package:go_router/go_router.dart';
+import 'package:zenify/components/group_tab_bar.dart';
 import 'package:zenify/router/app_router.dart';
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
@@ -98,6 +98,122 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final api = ref.watch(subsonicApiProvider);
     final networkState = ref.watch(networkProvider);
 
+    final activeTabs = <Widget>[];
+    final activeViews = <Widget>[];
+
+    if (_albums.isNotEmpty) {
+      activeTabs.add(
+        Tab(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(LucideIcons.disc, size: 16),
+              const SizedBox(width: 6),
+              Text(l10n.navAlbums),
+            ],
+          ),
+        ),
+      );
+      activeViews.add(
+        SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: AlbumsGrid(albums: _albums.toList()),
+        ),
+      );
+    }
+
+    if (_songs.isNotEmpty) {
+      activeTabs.add(
+        Tab(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(LucideIcons.music, size: 16),
+              const SizedBox(width: 6),
+              Text(l10n.songs),
+            ],
+          ),
+        ),
+      );
+      activeViews.add(
+        ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          itemCount: _songs.length,
+          itemBuilder: (context, index) {
+            final song = _songs[index];
+            final coverId = song['coverArt'] ?? song['albumId'];
+            final fallbackUrl = api != null && coverId != null ? api.getCoverArtUrl(coverId, size: 250) : null;
+            final duration = _formatDuration(song['duration'] as int? ?? 0);
+
+            return ListTile(
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: LocalCoverImage(
+                    id: song['albumId']?.toString() ?? coverId ?? '',
+                    serverId: server?.id ?? 0,
+                    fallbackUrl: fallbackUrl,
+                    isThumb: true,
+                  ),
+                ),
+              ),
+              title: Text(song['title'] ?? 'Unknown', style: const TextStyle(fontWeight: FontWeight.w500)),
+              subtitle: Text(song['artist'] ?? '', style: TextStyle(color: colorScheme.mutedForeground)),
+              trailing: Text(duration, style: TextStyle(color: colorScheme.mutedForeground)),
+              onTap: () {
+                ref.read(audioProvider.notifier).playQueue(_songs, index);
+              },
+            );
+          },
+        ),
+      );
+    }
+
+    if (_artists.isNotEmpty) {
+      activeTabs.add(
+        Tab(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(LucideIcons.user, size: 16),
+              const SizedBox(width: 6),
+              Text(l10n.navArtists),
+            ],
+          ),
+        ),
+      );
+      activeViews.add(
+        SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Wrap(
+            spacing: 16,
+            runSpacing: 16,
+            children: _artists.map((artist) {
+              final id = artist['id'];
+              final coverId = artist['coverArt'] ?? id;
+              final fallbackUrl = api?.getCoverArtUrl(coverId, size: 250);
+              return SizedBox(
+                width: 100,
+                child: ArtistCard(
+                  name: artist['name'] ?? 'Unknown',
+                  artistId: id,
+                  coverArtId: coverId,
+                  fallbackCoverUrl: fallbackUrl,
+                  serverId: server?.id ?? 0,
+                  isDisabled: networkState.isOffline,
+                  onTap: () {
+                    context.pushBranch('artist/', extra: artist['name'] ?? 'Unknown');
+                  },
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: colorScheme.background,
       appBar: AppBar(
@@ -106,18 +222,19 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         automaticallyImplyLeading: false,
         title: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 650),
+            constraints: const BoxConstraints(maxWidth: 600),
             child: ZenifyInput(
               controller: _searchController,
               placeholder: Text(l10n.searchPlaceholder),
               autofocus: true,
+              onChanged: _onSearchChanged,
             ),
           ),
         ),
       ),
       body: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 650),
+          constraints: const BoxConstraints(maxWidth: 600),
           child: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _searchController.text.trim().isEmpty
@@ -127,109 +244,36 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     style: TextStyle(color: colorScheme.mutedForeground),
                   ),
                 )
-              : ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    if (_artists.isEmpty && _albums.isEmpty && _songs.isEmpty)
-                      Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(32.0),
-                          child: Text(
-                            l10n.searchNoResults,
-                            style: TextStyle(color: colorScheme.mutedForeground),
-                          ),
+              : activeTabs.isEmpty
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(32.0),
+                        child: Text(
+                          l10n.searchNoResults,
+                          style: TextStyle(color: colorScheme.mutedForeground),
                         ),
                       ),
-                    
-                    // Artists Section
-                    if (_artists.isNotEmpty) ...[
-                      Text(l10n.navArtists, style: theme.textTheme.h4),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        height: 120,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: _artists.length,
-                          itemBuilder: (context, index) {
-                            final artist = _artists[index];
-                            final id = artist['id'];
-                            final coverId = artist['coverArt'] ?? id;
-                            final fallbackUrl = api?.getCoverArtUrl(coverId, size: 250);
-                            
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 16.0),
-                              child: SizedBox(
-                                width: 80,
-                                child: ArtistCard(
-                                  name: artist['name'] ?? 'Unknown',
-                                  artistId: id,
-                                  coverArtId: coverId,
-                                  fallbackCoverUrl: fallbackUrl,
-                                  serverId: server?.id ?? 0,
-                                  isDisabled: networkState.isOffline,
-                                  onTap: () {
-                                    context.pushBranch('artist/$id', extra: artist['name'] ?? 'Unknown');
-                                  },
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
-
-                    // Albums Section
-                    if (_albums.isNotEmpty) ...[
-                      Text(l10n.navAlbums, style: theme.textTheme.h4),
-                      AlbumsGrid(albums: _albums.toList()),
-                      const SizedBox(height: 24),
-                    ],
-
-                    // Songs Section
-                    if (_songs.isNotEmpty) ...[
-                      // We don't have navSongs in ARB right now, so we can use l10n.navFavorites or just "Songs" translated or we can just keep l10n.songs. I will use hardcoded for a sec, wait. 
-                      // No, I can add it to ARB. I'll just use l10n.songs for now and fix later, or use playerQueue? I'll use hardcoded l10n.songs to avoid crash if not in ARB.
-                      // Actually, let me use a known key. Or wait, let me just add it.
-                      Text(l10n.songs, style: theme.textTheme.h4),
-                      const SizedBox(height: 16),
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: _songs.length,
-                        itemBuilder: (context, index) {
-                          final song = _songs[index];
-                          final coverId = song['coverArt'] ?? song['albumId'];
-                          final fallbackUrl = api != null && coverId != null ? api.getCoverArtUrl(coverId, size: 250) : null;
-                          final duration = _formatDuration(song['duration'] as int? ?? 0);
-
-                          return ListTile(
-                            leading: ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: SizedBox(
-                                width: 48,
-                                height: 48,
-                                child: LocalCoverImage(
-                                  id: song['albumId']?.toString() ?? coverId ?? '',
-                                  serverId: server?.id ?? 0,
-                                  fallbackUrl: fallbackUrl,
-                                  isThumb: true,
-                                ),
-                              ),
+                    )
+                  : DefaultTabController(
+                      length: activeTabs.length,
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 16),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: GroupTabBar(
+                              tabs: activeTabs,
                             ),
-                            title: Text(song['title'] ?? 'Unknown', style: const TextStyle(fontWeight: FontWeight.w500)),
-                            subtitle: Text(song['artist'] ?? '', style: TextStyle(color: colorScheme.mutedForeground)),
-                            trailing: Text(duration, style: TextStyle(color: colorScheme.mutedForeground)),
-                            onTap: () {
-                              ref.read(audioProvider.notifier).playQueue(_songs, index);
-                            },
-                          );
-                        },
+                          ),
+                          const SizedBox(height: 16),
+                          Expanded(
+                            child: TabBarView(
+                              children: activeViews,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                    const SizedBox(height: 128),
-                  ],
-                ),
+                    ),
         ),
       ),
     );
