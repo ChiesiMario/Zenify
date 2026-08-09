@@ -115,6 +115,7 @@ class _ZenifyPopoverState extends State<ZenifyPopover> {
   @override
   Widget build(BuildContext context) {
     return ShadPopover(
+      padding: EdgeInsets.zero,
       controller: _controller,
       anchor: widget.anchor ?? _dynamicAnchor,
       popover: (context) => widget.builder(context, _close),
@@ -168,7 +169,7 @@ class _ZenifyPopoverItemState extends State<ZenifyPopoverItem> {
         onTap: widget.onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 120),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
           decoration: BoxDecoration(
             color: _isHovered
                 ? widget.colorScheme.foreground.withValues(alpha: 0.06)
@@ -190,16 +191,13 @@ class _ZenifyPopoverItemState extends State<ZenifyPopoverItem> {
                 widget.label,
                 style: TextStyle(
                   color: fgColor,
-                  fontWeight: highlight ? FontWeight.w600 : FontWeight.normal,
+                  fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.w500,
                   fontSize: 13,
                 ),
               ),
               if (widget.trailing != null) ...[
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 widget.trailing!,
-              ] else if (widget.icon != null) ...[
-                // If there's an icon, add trailing padding for consistent width
-                const SizedBox(width: 16),
               ],
             ],
           ),
