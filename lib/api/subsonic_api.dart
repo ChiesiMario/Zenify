@@ -370,10 +370,37 @@ class SubsonicApi {
   }
 
 
-  /// Create a new Playlist
-  Future<bool> createPlaylist(String name) async {
+  /// Create a new Playlist (optionally with a song)
+  Future<bool> createPlaylist(String name, {String? songId}) async {
     try {
-      final uri = _buildUri('createPlaylist', {'name': name});
+      final params = <String, String>{'name': name};
+      if (songId != null) {
+        params['songId'] = songId;
+      }
+      final uri = _buildUri('createPlaylist', params);
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        return json['subsonic-response']?['status'] == 'ok';
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Update a Playlist (e.g. Add song to playlist)
+  Future<bool> updatePlaylist(String playlistId, {String? songIdToAdd, String? name}) async {
+    try {
+      final params = <String, String>{
+        'playlistId': playlistId,
+      };
+      if (name != null) params['name'] = name;
+      if (songIdToAdd != null) {
+        params['songIdToAdd'] = songIdToAdd;
+      }
+
+      final uri = _buildUri('updatePlaylist', params);
       final response = await http.get(uri);
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);

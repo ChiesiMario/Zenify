@@ -478,6 +478,8 @@
   },
   "appSettings": "應用程式設定",
   "createPlaylist": "新增播放列表",
+  "addToPlaylist": "添加到播放清單",
+  "addedToPlaylist": "已添加到播放清單",
   "createPlaylistDesc": "請輸入新的播放列表名稱",
   "playlistName": "播放列表名稱",
   "createPlaylistSuccess": "成功建立播放列表",

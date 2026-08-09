@@ -137,6 +137,7 @@ class ZenifyPopoverItem extends StatefulWidget {
   final ShadColorScheme colorScheme;
   final VoidCallback onTap;
   final bool isSelected;
+  final bool isDestructive;
   final Widget? trailing;
 
   const ZenifyPopoverItem({
@@ -146,6 +147,7 @@ class ZenifyPopoverItem extends StatefulWidget {
     required this.colorScheme,
     required this.onTap,
     this.isSelected = false,
+    this.isDestructive = false,
     this.trailing,
   });
 
@@ -159,7 +161,9 @@ class _ZenifyPopoverItemState extends State<ZenifyPopoverItem> {
   @override
   Widget build(BuildContext context) {
     final bool highlight = _isHovered || widget.isSelected;
-    final fgColor = highlight ? widget.colorScheme.foreground : widget.colorScheme.mutedForeground;
+    final fgColor = widget.isDestructive
+        ? widget.colorScheme.destructive
+        : (highlight ? widget.colorScheme.foreground : widget.colorScheme.mutedForeground);
     
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -172,7 +176,9 @@ class _ZenifyPopoverItemState extends State<ZenifyPopoverItem> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
           decoration: BoxDecoration(
             color: _isHovered
-                ? widget.colorScheme.foreground.withValues(alpha: 0.06)
+                ? (widget.isDestructive
+                    ? widget.colorScheme.destructive.withValues(alpha: 0.10)
+                    : widget.colorScheme.foreground.withValues(alpha: 0.06))
                 : (widget.isSelected ? widget.colorScheme.muted.withValues(alpha: 0.3) : Colors.transparent),
             borderRadius: BorderRadius.circular(8),
           ),
@@ -202,6 +208,26 @@ class _ZenifyPopoverItemState extends State<ZenifyPopoverItem> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class ZenifyPopoverDivider extends StatelessWidget {
+  final ShadColorScheme colorScheme;
+
+  const ZenifyPopoverDivider({
+    super.key,
+    required this.colorScheme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Container(
+        height: 1,
+        color: colorScheme.border.withValues(alpha: 0.6),
       ),
     );
   }

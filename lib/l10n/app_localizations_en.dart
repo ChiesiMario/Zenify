@@ -755,6 +755,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createPlaylist => 'Create Playlist';
 
   @override
+  String get addToPlaylist => 'Add to Playlist';
+
+  @override
+  String get addedToPlaylist => 'Added to playlist';
+
+  @override
   String get createPlaylistDesc => 'Please enter a name for the new playlist';
 
   @override

@@ -1426,6 +1426,18 @@ abstract class AppLocalizations {
   /// **'新增播放列表'**
   String get createPlaylist;
 
+  /// No description provided for @addToPlaylist.
+  ///
+  /// In zh_TW, this message translates to:
+  /// **'添加到播放清單'**
+  String get addToPlaylist;
+
+  /// No description provided for @addedToPlaylist.
+  ///
+  /// In zh_TW, this message translates to:
+  /// **'已添加到播放清單'**
+  String get addedToPlaylist;
+
   /// No description provided for @createPlaylistDesc.
   ///
   /// In zh_TW, this message translates to:

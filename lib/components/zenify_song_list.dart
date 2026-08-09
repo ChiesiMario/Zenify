@@ -6,7 +6,6 @@ import 'package:zenify/components/local_cover_image.dart';
 import 'package:zenify/components/zenify_toast.dart';
 import 'package:zenify/components/song_action_popover.dart';
 import 'package:zenify/providers/app_providers.dart';
-import 'package:zenify/providers/ui_providers.dart';
 import 'package:zenify/l10n/app_localizations.dart';
 
 class SongTileData {
@@ -89,6 +88,54 @@ class ZenifyFavoriteSongButton extends ConsumerWidget {
                       );
                 },
           tooltip: isFavorite ? l10n.removeFromFavorites : l10n.addToFavorites,
+        ),
+      ),
+    );
+  }
+}
+
+class _MoreActionButton extends ConsumerStatefulWidget {
+  final ShadColorScheme colorScheme;
+  final String songId;
+
+  const _MoreActionButton({
+    required this.colorScheme,
+    required this.songId,
+  });
+
+  @override
+  ConsumerState<_MoreActionButton> createState() => _MoreActionButtonState();
+}
+
+class _MoreActionButtonState extends ConsumerState<_MoreActionButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final activeId = ref.watch(activePopoverSongIdProvider);
+    final isOpen = activeId == widget.songId;
+    final isHighlighted = _isHovered || isOpen;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        width: 28,
+        height: 28,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: isHighlighted ? Theme.of(context).hoverColor : Colors.transparent,
+        ),
+        child: Center(
+          child: Icon(
+            LucideIcons.moreHorizontal,
+            color: isHighlighted
+                ? widget.colorScheme.foreground
+                : widget.colorScheme.mutedForeground.withValues(alpha: 0.5),
+            size: 16,
+          ),
         ),
       ),
     );
@@ -191,29 +238,22 @@ class ZenifySongList extends ConsumerWidget {
       children: [
         if (song.customTrailing != null) song.customTrailing!,
         if (song.customTrailing != null) const SizedBox(width: 4),
+        if (showFavoriteButton) ...[
+          ZenifyFavoriteSongButton(songId: song.id, defaultState: song.isFavorite),
+          const SizedBox(width: 4),
+        ],
         Text(
           song.duration,
           style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13, fontWeight: FontWeight.w500),
         ),
-        if (showFavoriteButton) ...[
-          const SizedBox(width: 4),
-          ZenifyFavoriteSongButton(songId: song.id, defaultState: song.isFavorite),
-        ],
         if (song.rawSong != null) ...[
           const SizedBox(width: 4),
           SongActionPopover(
             song: song.rawSong,
             serverId: song.serverId,
-            child: SizedBox(
-              width: 28,
-              height: 28,
-              child: Center(
-                child: Icon(
-                  LucideIcons.moreHorizontal,
-                  color: colorScheme.mutedForeground.withValues(alpha: 0.5),
-                  size: 16,
-                ),
-              ),
+            child: _MoreActionButton(
+              colorScheme: colorScheme,
+              songId: song.id,
             ),
           ),
         ],

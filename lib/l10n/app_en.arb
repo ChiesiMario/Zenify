@@ -484,6 +484,8 @@
   },
   "appSettings": "App Settings",
   "createPlaylist": "Create Playlist",
+  "addToPlaylist": "Add to Playlist",
+  "addedToPlaylist": "Added to playlist",
   "createPlaylistDesc": "Please enter a name for the new playlist",
   "playlistName": "Playlist Name",
   "createPlaylistSuccess": "Playlist created successfully",

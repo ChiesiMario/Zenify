@@ -391,22 +391,15 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
                     isOfflineUnplayable: false,
                     serverId: track.serverId,
                     rawSong: rawSong,
+                    isFavorite: rawSong is Map && rawSong['starred'] != null,
                     onTap: () {
                       final allSongs = sortedTracks.map((t) => jsonDecode(t.rawData)).toList();
                       ref.read(audioProvider.notifier).playQueue(allSongs, index);
                     },
-                    customTrailing: IconButton(
-                      icon: Icon(LucideIcons.trash2, color: colorScheme.destructive, size: 18),
-                      onPressed: () async {
-                        await ref.read(downloadServiceProvider).deleteDownload(track.songId);
-                        ref.invalidate(downloadedTracksProvider);
-                      },
-                      tooltip: l10n.delete,
-                    ),
                   );
                 }).toList(),
                 showCover: true,
-                showFavoriteButton: false,
+                showFavoriteButton: true,
               ),
             );
           },

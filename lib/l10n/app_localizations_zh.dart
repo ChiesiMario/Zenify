@@ -742,6 +742,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get createPlaylist => '新增播放列表';
 
   @override
+  String get addToPlaylist => '添加到播放清單';
+
+  @override
+  String get addedToPlaylist => '已添加到播放清單';
+
+  @override
   String get createPlaylistDesc => '請輸入新的播放列表名稱';
 
   @override
@@ -1519,6 +1525,12 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
 
   @override
   String get createPlaylist => '新增播放列表';
+
+  @override
+  String get addToPlaylist => '添加到播放列表';
+
+  @override
+  String get addedToPlaylist => '已添加到播放列表';
 
   @override
   String get createPlaylistDesc => '请输入新的播放列表名称';
@@ -2316,6 +2328,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get createPlaylist => '新增播放列表';
+
+  @override
+  String get addToPlaylist => '添加到播放清單';
+
+  @override
+  String get addedToPlaylist => '已添加到播放清單';
 
   @override
   String get createPlaylistDesc => '請輸入新的播放列表名稱';
