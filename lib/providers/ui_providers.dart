@@ -11,3 +11,5 @@ class NavigationRequest {
 }
 
 final navigationRequestProvider = StateProvider<NavigationRequest?>((ref) => null);
+
+final activePopoverSongIdProvider = StateProvider<String?>((ref) => null);

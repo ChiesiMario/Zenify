@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
@@ -7,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:zenify/providers/theme_provider.dart';
-import 'package:zenify/screens/home_screen.dart';
 import 'package:zenify/services/image_service.dart';
 import 'package:zenify/router/app_router.dart';
 import 'package:just_audio_background/just_audio_background.dart';

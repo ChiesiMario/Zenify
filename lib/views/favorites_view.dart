@@ -7,11 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/audio_provider.dart';
 import 'package:zenify/providers/download_provider.dart';
-import 'package:zenify/screens/favorite_songs_screen.dart';
-import 'package:zenify/screens/favorite_albums_screen.dart';
 import 'package:zenify/views/playlists_view.dart';
-import 'package:zenify/views/downloads_view.dart';
-import 'package:zenify/components/group_tab_bar.dart';
 import 'package:zenify/utils/responsive.dart';
 import 'package:zenify/router/app_router.dart';
 

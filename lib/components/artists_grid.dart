@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zenify/components/artist_card.dart';
 import 'package:zenify/providers/app_providers.dart';
-import 'package:go_router/go_router.dart';
 import 'package:zenify/router/app_router.dart';
 import 'dart:convert';
 import 'package:zenify/models/artist.dart';

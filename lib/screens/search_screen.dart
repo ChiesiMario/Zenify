@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/audio_provider.dart';
-import 'package:zenify/components/local_cover_image.dart';
 import 'package:zenify/components/artist_card.dart';
 
 import 'package:zenify/components/albums_grid.dart';
@@ -155,6 +154,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 duration: _formatDuration(song['duration'] as int? ?? 0),
                 isOfflineUnplayable: networkState.isOffline && !(song['isDownloaded'] == true),
                 serverId: server?.id ?? 0,
+                rawSong: song,
                 onTap: () {
                   ref.read(audioProvider.notifier).playQueue(_songs, index);
                 },

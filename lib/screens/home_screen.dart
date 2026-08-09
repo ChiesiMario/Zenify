@@ -13,6 +13,7 @@ import 'package:zenify/components/local_cover_image.dart';
 import 'package:zenify/screens/album_detail_screen.dart';
 import 'package:zenify/screens/artist_detail_screen.dart';
 import 'package:zenify/components/zenify_toast.dart';
+import 'package:zenify/components/zenify_popover.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:zenify/services/sync_service.dart';
@@ -269,18 +270,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               actions: [
                 if (_shouldShowSortButton(canPop, currentSubTitle)) ...[
-                  ShadPopover(
-                    controller: _sortPopoverController,
-                    popover: (context) => SortPopoverContent(
+                  ZenifyPopover(
+                    builder: (context, close) => SortPopoverContent(
                       currentIndex: widget.navigationShell.currentIndex,
                       subTitle: currentSubTitle,
-                      onClose: () => _sortPopoverController.hide(),
+                      onClose: close,
                     ),
                     child: IconButton(
                       icon: Icon(LucideIcons.arrowUpDown, color: colorScheme.mutedForeground, size: 20),
-                      onPressed: () {
-                        _sortPopoverController.toggle();
-                      },
+                      onPressed: null,
                     ),
                   ),
                   if (currentSubTitle == l10n.offlineStatus)
@@ -647,11 +645,11 @@ class SortPopoverContent extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: options.map((option) => _SortOptionItem<T>(
+          children: options.map((option) => ZenifyPopoverItem(
             label: option.$2,
-            value: option.$1,
-            currentValue: currentValue,
+            isSelected: option.$1 == currentValue,
             colorScheme: colorScheme,
+            icon: option.$1 == currentValue ? LucideIcons.check : null,
             onTap: () {
               if (option.$1 is AlbumSortOption) {
                 ref.read(albumSortProvider.notifier).setSort(option.$1 as AlbumSortOption);
@@ -663,77 +661,6 @@ class SortPopoverContent extends ConsumerWidget {
               onClose();
             },
           )).toList(),
-        ),
-      ),
-    );
-  }
-}
-
-class _SortOptionItem<T> extends StatefulWidget {
-  final String label;
-  final T value;
-  final T currentValue;
-  final ShadColorScheme colorScheme;
-  final VoidCallback onTap;
-
-  const _SortOptionItem({
-    required this.label,
-    required this.value,
-    required this.currentValue,
-    required this.colorScheme,
-    required this.onTap,
-  });
-
-  @override
-  State<_SortOptionItem<T>> createState() => _SortOptionItemState<T>();
-}
-
-class _SortOptionItemState<T> extends State<_SortOptionItem<T>> {
-  bool _isHovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final isSelected = widget.value == widget.currentValue;
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 120),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-          decoration: BoxDecoration(
-            color: _isHovered
-                ? widget.colorScheme.foreground.withValues(alpha: 0.06)
-                : (isSelected ? widget.colorScheme.muted.withValues(alpha: 0.3) : Colors.transparent),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: 16,
-                child: isSelected
-                    ? Icon(
-                        LucideIcons.check,
-                        size: 14,
-                        color: widget.colorScheme.foreground,
-                      )
-                    : null,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                widget.label,
-                style: TextStyle(
-                  color: isSelected ? widget.colorScheme.foreground : widget.colorScheme.mutedForeground,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                  fontSize: 13,
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );

@@ -4,9 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/audio_provider.dart';
-import 'package:zenify/components/local_cover_image.dart';
 import 'package:zenify/utils/responsive.dart';
-import 'package:zenify/components/zenify_toast.dart';
 import 'dart:math';
 
 import 'package:zenify/providers/sort_providers.dart';
@@ -106,7 +104,7 @@ class FavoriteSongsScreen extends ConsumerWidget {
                           final song = entry.value;
                           final api = ref.watch(subsonicApiProvider);
                           final networkState = ref.watch(networkProvider);
-                          final coverUrl = api != null ? api.getCoverArtUrl(song['albumId']?.toString() ?? song['parent']?.toString() ?? song['coverArt']?.toString() ?? '', size: 250) : null;
+                          final coverUrl = api?.getCoverArtUrl(song['albumId']?.toString() ?? song['parent']?.toString() ?? song['coverArt']?.toString() ?? '', size: 250);
                           final songId = song['id']?.toString() ?? '';
                           
                           return SongTileData(
@@ -118,6 +116,7 @@ class FavoriteSongsScreen extends ConsumerWidget {
                             duration: song['duration'] != null ? _formatDuration(song['duration'] as int) : '--:--',
                             isOfflineUnplayable: networkState.isOffline && !(song['isDownloaded'] == true),
                             serverId: server.id,
+                            rawSong: song,
                             onTap: () {
                               ref.read(audioProvider.notifier).playQueue(songs, songIndex);
                             },

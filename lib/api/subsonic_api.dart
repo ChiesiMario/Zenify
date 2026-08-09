@@ -369,6 +369,22 @@ class SubsonicApi {
     }
   }
 
+
+  /// Create a new Playlist
+  Future<bool> createPlaylist(String name) async {
+    try {
+      final uri = _buildUri('createPlaylist', {'name': name});
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        return json['subsonic-response']?['status'] == 'ok';
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
   /// Scrobble a song
   Future<void> scrobble({required String id, bool submission = true}) async {
     try {

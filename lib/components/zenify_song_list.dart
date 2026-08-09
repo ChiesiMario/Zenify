@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/components/local_cover_image.dart';
 import 'package:zenify/components/zenify_toast.dart';
+import 'package:zenify/components/song_action_popover.dart';
 import 'package:zenify/providers/app_providers.dart';
+import 'package:zenify/providers/ui_providers.dart';
 import 'package:zenify/l10n/app_localizations.dart';
 
 class SongTileData {
@@ -19,6 +22,7 @@ class SongTileData {
   final VoidCallback onTap;
   final Widget? customTrailing;
   final bool isFavorite;
+  final dynamic rawSong;
 
   const SongTileData({
     required this.id,
@@ -33,6 +37,7 @@ class SongTileData {
     required this.onTap,
     this.customTrailing,
     this.isFavorite = false,
+    this.rawSong,
   });
 }
 
@@ -133,35 +138,14 @@ class ZenifySongList extends ConsumerWidget {
         clipBehavior: Clip.antiAlias,
         child: Opacity(
           opacity: song.isOfflineUnplayable ? 0.3 : 1.0,
-          child: ListTile(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(
-                top: isFirst ? const Radius.circular(12) : Radius.zero,
-                bottom: isLast ? const Radius.circular(12) : Radius.zero,
-              ),
-            ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: _ZenifySongTile(
+            song: song,
+            isFirst: isFirst,
+            isLast: isLast,
             leading: _buildLeading(colorScheme, song),
-            title: Text(
-              song.title.isNotEmpty ? song.title : l10n.unknownSong,
-              style: TextStyle(
-                color: colorScheme.foreground,
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            subtitle: song.subtitle != null && song.subtitle!.isNotEmpty
-                ? Text(
-                    song.subtitle!,
-                    style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  )
-                : null,
-            trailing: _buildTrailing(colorScheme, song),
-            onTap: song.isOfflineUnplayable ? null : song.onTap,
+            trailing: _buildTrailing(context, colorScheme, song),
+            colorScheme: colorScheme,
+            l10n: l10n,
           ),
         ),
       ),
@@ -201,7 +185,7 @@ class ZenifySongList extends ConsumerWidget {
     return null;
   }
 
-  Widget _buildTrailing(ShadColorScheme colorScheme, SongTileData song) {
+  Widget _buildTrailing(BuildContext context, ShadColorScheme colorScheme, SongTileData song) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -214,6 +198,24 @@ class ZenifySongList extends ConsumerWidget {
         if (showFavoriteButton) ...[
           const SizedBox(width: 4),
           ZenifyFavoriteSongButton(songId: song.id, defaultState: song.isFavorite),
+        ],
+        if (song.rawSong != null) ...[
+          const SizedBox(width: 4),
+          SongActionPopover(
+            song: song.rawSong,
+            serverId: song.serverId,
+            child: SizedBox(
+              width: 28,
+              height: 28,
+              child: Center(
+                child: Icon(
+                  LucideIcons.moreHorizontal,
+                  color: colorScheme.mutedForeground.withValues(alpha: 0.5),
+                  size: 16,
+                ),
+              ),
+            ),
+          ),
         ],
       ],
     );
@@ -270,6 +272,105 @@ class ZenifySongList extends ConsumerWidget {
             final isLast = index == songs.length - 1;
             return _buildTile(context, colorScheme, l10n, song, index, isFirst, isLast);
           },
+        ),
+      ),
+    );
+  }
+}
+
+class _ZenifySongTile extends ConsumerStatefulWidget {
+  final SongTileData song;
+  final bool isFirst;
+  final bool isLast;
+  final Widget? leading;
+  final Widget trailing;
+  final ShadColorScheme colorScheme;
+  final AppLocalizations l10n;
+
+  const _ZenifySongTile({
+    required this.song,
+    required this.isFirst,
+    required this.isLast,
+    required this.leading,
+    required this.trailing,
+    required this.colorScheme,
+    required this.l10n,
+  });
+
+  @override
+  ConsumerState<_ZenifySongTile> createState() => _ZenifySongTileState();
+}
+
+class _ZenifySongTileState extends ConsumerState<_ZenifySongTile> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final activePopoverId = ref.watch(activePopoverSongIdProvider);
+    final isAnyPopoverOpen = activePopoverId != null;
+    final isMyPopoverOpen = activePopoverId == widget.song.id;
+
+    final shouldShowHover = isMyPopoverOpen || (_isHovered && !isAnyPopoverOpen);
+
+    final bgColor = shouldShowHover 
+        ? widget.colorScheme.muted 
+        : widget.colorScheme.muted.withValues(alpha: 0.0);
+
+    return MouseRegion(
+      cursor: widget.song.isOfflineUnplayable ? SystemMouseCursors.basic : SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.song.isOfflineUnplayable ? null : widget.song.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          constraints: const BoxConstraints(minHeight: 64),
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.vertical(
+              top: widget.isFirst ? const Radius.circular(12) : Radius.zero,
+              bottom: widget.isLast ? const Radius.circular(12) : Radius.zero,
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              if (widget.leading != null) ...[
+                widget.leading!,
+                const SizedBox(width: 16),
+              ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      widget.song.title.isNotEmpty ? widget.song.title : widget.l10n.unknownSong,
+                      style: TextStyle(
+                        color: widget.colorScheme.foreground,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (widget.song.subtitle != null && widget.song.subtitle!.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        widget.song.subtitle!,
+                        style: TextStyle(color: widget.colorScheme.mutedForeground, fontSize: 12),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              widget.trailing,
+            ],
+          ),
         ),
       ),
     );

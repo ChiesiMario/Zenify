@@ -7,7 +7,6 @@ import 'package:zenify/models/downloaded_track.dart';
 import 'package:zenify/providers/download_provider.dart';
 import 'package:zenify/providers/audio_provider.dart';
 import 'package:zenify/providers/app_providers.dart';
-import 'package:zenify/components/local_cover_image.dart';
 import 'package:zenify/components/albums_grid.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/providers/sort_providers.dart';
@@ -380,6 +379,8 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
                   final duration = _formatDuration(track.duration);
                   final size = _formatSize(sizeBytes);
                   
+                  final rawSong = jsonDecode(track.rawData);
+                  
                   return SongTileData(
                     id: track.songId,
                     title: track.title,
@@ -389,6 +390,7 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
                     duration: duration,
                     isOfflineUnplayable: false,
                     serverId: track.serverId,
+                    rawSong: rawSong,
                     onTap: () {
                       final allSongs = sortedTracks.map((t) => jsonDecode(t.rawData)).toList();
                       ref.read(audioProvider.notifier).playQueue(allSongs, index);

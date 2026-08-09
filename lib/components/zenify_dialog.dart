@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:zenify/components/zenify_button.dart';
 
 class ZenifyDialog extends StatelessWidget {
   final IconData icon;

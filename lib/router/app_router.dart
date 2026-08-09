@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:go_router/go_router.dart';
-import 'package:go_router/go_router.dart';
 import 'package:zenify/screens/home_screen.dart';
 import 'package:zenify/screens/search_screen.dart';
 import 'package:zenify/screens/album_detail_screen.dart';

@@ -10,7 +10,6 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/components/local_cover_image.dart';
 import 'package:zenify/screens/artist_detail_screen.dart';
 import 'package:zenify/components/zenify_toast.dart';
-import 'package:zenify/api/subsonic_api.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:zenify/services/image_service.dart';
 import 'package:zenify/providers/offline_preference_provider.dart';
@@ -568,6 +567,7 @@ class AlbumDetailScreen extends ConsumerWidget {
                                   duration: song['duration'] != null ? _formatDuration(song['duration']) : '--:--',
                                   isOfflineUnplayable: isOfflineUnplayable,
                                   serverId: server?.id ?? 0,
+                                  rawSong: song,
                                   onTap: () {
                                     ref.read(audioProvider.notifier).playQueue(songList, absoluteIndex);
                                   },

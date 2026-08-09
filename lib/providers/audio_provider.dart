@@ -719,6 +719,54 @@ class AudioNotifier extends Notifier<AudioState> {
       await play();
     }
   }
+
+  void addToQueue(dynamic song) {
+    final currentList = List<dynamic>.from(state.queue);
+    currentList.add(song);
+    
+    final currentOriginal = List<dynamic>.from(state.originalQueue);
+    currentOriginal.add(song);
+
+    state = state.copyWith(
+      queue: currentList,
+      originalQueue: currentOriginal,
+      currentIndex: state.currentIndex == -1 ? 0 : state.currentIndex,
+    );
+    _saveQueueState();
+  }
+
+  void playNext(dynamic song) {
+    final currentList = List<dynamic>.from(state.queue);
+    final currentOriginal = List<dynamic>.from(state.originalQueue);
+    
+    int newIndex = state.currentIndex + 1;
+    if (state.currentIndex >= 0 && state.currentIndex < currentList.length) {
+      currentList.insert(newIndex, song);
+      
+      // Attempt to insert right after the current song in originalQueue too
+      final currentSong = state.currentSong;
+      if (currentSong != null) {
+        int origIndex = currentOriginal.indexWhere((s) => s['id'] == currentSong['id']);
+        if (origIndex != -1) {
+          currentOriginal.insert(origIndex + 1, song);
+        } else {
+          currentOriginal.add(song);
+        }
+      } else {
+        currentOriginal.add(song);
+      }
+    } else {
+      currentList.add(song);
+      currentOriginal.add(song);
+    }
+    
+    state = state.copyWith(
+      queue: currentList,
+      originalQueue: currentOriginal,
+      currentIndex: state.currentIndex == -1 ? 0 : state.currentIndex,
+    );
+    _saveQueueState();
+  }
 }
 
 final audioProvider = NotifierProvider<AudioNotifier, AudioState>(() {

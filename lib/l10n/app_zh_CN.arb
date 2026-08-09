@@ -477,6 +477,11 @@
     }
   },
   "appSettings": "应用程序设置",
+  "createPlaylist": "新增播放列表",
+  "createPlaylistDesc": "请输入新的播放列表名称",
+  "playlistName": "播放列表名称",
+  "createPlaylistSuccess": "成功建立播放列表",
+  "createPlaylistFailed": "建立播放列表失败",
   "settings": "设置",
   "personalMusicCollection": "个人音乐收藏",
   "songsCountFull": "{count} 首歌曲",

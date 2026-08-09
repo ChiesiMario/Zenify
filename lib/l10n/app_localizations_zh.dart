@@ -192,6 +192,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get unknownAlbum => '未知專輯';
 
   @override
+  String get playerPlayNext => '播放下一首';
+
+  @override
+  String get addToQueue => '加入佇列';
+
+  @override
+  String get addedToQueue => '已加入佇列';
+
+  @override
+  String get goAlbum => '前往專輯';
+
+  @override
+  String get goArtist => '前往歌手';
+
+  @override
+  String get download => '下載';
+
+  @override
   String get noSongPlaying => '無播放中的歌曲';
 
   @override
@@ -719,6 +737,21 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get appSettings => '應用程式設定';
+
+  @override
+  String get createPlaylist => '新增播放列表';
+
+  @override
+  String get createPlaylistDesc => '請輸入新的播放列表名稱';
+
+  @override
+  String get playlistName => '播放列表名稱';
+
+  @override
+  String get createPlaylistSuccess => '成功建立播放列表';
+
+  @override
+  String get createPlaylistFailed => '建立播放列表失敗';
 
   @override
   String get settings => '設定';
@@ -1485,6 +1518,21 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
   String get appSettings => '应用程序设置';
 
   @override
+  String get createPlaylist => '新增播放列表';
+
+  @override
+  String get createPlaylistDesc => '请输入新的播放列表名称';
+
+  @override
+  String get playlistName => '播放列表名称';
+
+  @override
+  String get createPlaylistSuccess => '成功建立播放列表';
+
+  @override
+  String get createPlaylistFailed => '建立播放列表失败';
+
+  @override
   String get settings => '设置';
 
   @override
@@ -1718,6 +1766,24 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get unknownAlbum => '未知專輯';
+
+  @override
+  String get playerPlayNext => '播放下一首';
+
+  @override
+  String get addToQueue => '加入佇列';
+
+  @override
+  String get addedToQueue => '已加入佇列';
+
+  @override
+  String get goAlbum => '前往專輯';
+
+  @override
+  String get goArtist => '前往歌手';
+
+  @override
+  String get download => '下載';
 
   @override
   String get noSongPlaying => '無播放中的歌曲';
@@ -2247,6 +2313,21 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get appSettings => '應用程式設定';
+
+  @override
+  String get createPlaylist => '新增播放列表';
+
+  @override
+  String get createPlaylistDesc => '請輸入新的播放列表名稱';
+
+  @override
+  String get playlistName => '播放列表名稱';
+
+  @override
+  String get createPlaylistSuccess => '成功建立播放列表';
+
+  @override
+  String get createPlaylistFailed => '建立播放列表失敗';
 
   @override
   String get settings => '設定';

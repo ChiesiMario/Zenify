@@ -195,6 +195,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unknownAlbum => 'Unknown Album';
 
   @override
+  String get playerPlayNext => 'Play Next';
+
+  @override
+  String get addToQueue => 'Add to Queue';
+
+  @override
+  String get addedToQueue => 'Added to Queue';
+
+  @override
+  String get goAlbum => 'Go to Album';
+
+  @override
+  String get goArtist => 'Go to Artist';
+
+  @override
+  String get download => 'Download';
+
+  @override
   String get noSongPlaying => 'No song playing';
 
   @override
@@ -732,6 +750,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appSettings => 'App Settings';
+
+  @override
+  String get createPlaylist => 'Create Playlist';
+
+  @override
+  String get createPlaylistDesc => 'Please enter a name for the new playlist';
+
+  @override
+  String get playlistName => 'Playlist Name';
+
+  @override
+  String get createPlaylistSuccess => 'Playlist created successfully';
+
+  @override
+  String get createPlaylistFailed => 'Failed to create playlist';
 
   @override
   String get settings => 'Settings';

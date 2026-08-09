@@ -12,7 +12,6 @@ import 'package:zenify/components/play_queue_sheet.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:file_selector/file_selector.dart';
-import 'package:zenify/screens/search_screen.dart';
 import 'package:zenify/components/zenify_slider.dart';
 
 class FullPlayerScreen extends ConsumerStatefulWidget {

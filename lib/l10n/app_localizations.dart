@@ -466,6 +466,42 @@ abstract class AppLocalizations {
   /// **'未知專輯'**
   String get unknownAlbum;
 
+  /// No description provided for @playerPlayNext.
+  ///
+  /// In zh_TW, this message translates to:
+  /// **'播放下一首'**
+  String get playerPlayNext;
+
+  /// No description provided for @addToQueue.
+  ///
+  /// In zh_TW, this message translates to:
+  /// **'加入佇列'**
+  String get addToQueue;
+
+  /// No description provided for @addedToQueue.
+  ///
+  /// In zh_TW, this message translates to:
+  /// **'已加入佇列'**
+  String get addedToQueue;
+
+  /// No description provided for @goAlbum.
+  ///
+  /// In zh_TW, this message translates to:
+  /// **'前往專輯'**
+  String get goAlbum;
+
+  /// No description provided for @goArtist.
+  ///
+  /// In zh_TW, this message translates to:
+  /// **'前往歌手'**
+  String get goArtist;
+
+  /// No description provided for @download.
+  ///
+  /// In zh_TW, this message translates to:
+  /// **'下載'**
+  String get download;
+
   /// No description provided for @noSongPlaying.
   ///
   /// In zh_TW, this message translates to:
@@ -1383,6 +1419,36 @@ abstract class AppLocalizations {
   /// In zh_TW, this message translates to:
   /// **'應用程式設定'**
   String get appSettings;
+
+  /// No description provided for @createPlaylist.
+  ///
+  /// In zh_TW, this message translates to:
+  /// **'新增播放列表'**
+  String get createPlaylist;
+
+  /// No description provided for @createPlaylistDesc.
+  ///
+  /// In zh_TW, this message translates to:
+  /// **'請輸入新的播放列表名稱'**
+  String get createPlaylistDesc;
+
+  /// No description provided for @playlistName.
+  ///
+  /// In zh_TW, this message translates to:
+  /// **'播放列表名稱'**
+  String get playlistName;
+
+  /// No description provided for @createPlaylistSuccess.
+  ///
+  /// In zh_TW, this message translates to:
+  /// **'成功建立播放列表'**
+  String get createPlaylistSuccess;
+
+  /// No description provided for @createPlaylistFailed.
+  ///
+  /// In zh_TW, this message translates to:
+  /// **'建立播放列表失敗'**
+  String get createPlaylistFailed;
 
   /// No description provided for @settings.
   ///
