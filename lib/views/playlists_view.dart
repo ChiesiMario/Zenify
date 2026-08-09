@@ -6,9 +6,10 @@ import 'package:zenify/utils/responsive.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/router/app_router.dart';
-
-import 'package:zenify/providers/sort_providers.dart';
-import 'dart:math';
+import 'package:zenify/components/zenify_dialog.dart';
+import 'package:zenify/components/zenify_button.dart';
+import 'package:zenify/components/zenify_toast.dart';
+import 'package:zenify/screens/playlist_detail_screen.dart';
 
 final playlistsProvider = FutureProvider<List<dynamic>>((ref) async {
   final networkState = ref.watch(networkProvider);
@@ -37,23 +38,88 @@ final playlistsProvider = FutureProvider<List<dynamic>>((ref) async {
 class PlaylistsView extends ConsumerWidget {
   const PlaylistsView({super.key});
 
-  List<dynamic> _sortPlaylists(List<dynamic> playlists, AlbumSortOption option, int randomSeed) {
-    final list = List<dynamic>.from(playlists);
-    switch (option) {
-      case AlbumSortOption.nameAsc:
-        list.sort((a, b) => (a['name'] ?? '').toString().toLowerCase().compareTo((b['name'] ?? '').toString().toLowerCase()));
-        break;
-      case AlbumSortOption.nameDesc:
-        list.sort((a, b) => (b['name'] ?? '').toString().toLowerCase().compareTo((a['name'] ?? '').toString().toLowerCase()));
-        break;
-      case AlbumSortOption.random:
-        list.shuffle(Random(randomSeed));
-        break;
-      case AlbumSortOption.defaultOrder:
-      default:
-        break;
+  Future<void> _showCreatePlaylistDialog(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
+    final controller = TextEditingController();
+    final focusNode = FocusNode();
+    final api = ref.read(subsonicApiProvider);
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final colorScheme = ShadTheme.of(context).colorScheme;
+          return ZenifyDialog(
+            icon: LucideIcons.listPlus,
+            iconColor: colorScheme.primary,
+            title: l10n.createPlaylist,
+            description: l10n.createPlaylistDesc,
+            content: Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                decoration: BoxDecoration(
+                  color: focusNode.hasFocus ? colorScheme.background : colorScheme.card,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: focusNode.hasFocus ? colorScheme.primary : colorScheme.border,
+                    width: 1.0,
+                  ),
+                ),
+                child: TextField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  autofocus: true,
+                  style: TextStyle(color: colorScheme.foreground, fontSize: 14),
+                  decoration: InputDecoration(
+                    hintText: l10n.playlistName,
+                    hintStyle: TextStyle(color: colorScheme.mutedForeground.withValues(alpha: 0.6), fontSize: 14),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  ),
+                  onChanged: (_) => setDialogState(() {}),
+                  onSubmitted: (value) {
+                    if (value.trim().isNotEmpty) {
+                      Navigator.pop(dialogContext, true);
+                    }
+                  },
+                ),
+              ),
+            ),
+            actions: [
+              ZenifyButton(
+                variant: ZenifyButtonVariant.outline,
+                onPressed: () => Navigator.pop(dialogContext, false),
+                text: l10n.cancel,
+              ),
+              ZenifyButton(
+                variant: ZenifyButtonVariant.primary,
+                onPressed: controller.text.trim().isEmpty
+                    ? null
+                    : () => Navigator.pop(dialogContext, true),
+                text: l10n.confirm,
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    if (result == true && controller.text.trim().isNotEmpty && api != null) {
+      final name = controller.text.trim();
+      final createdId = await api.createPlaylist(name);
+      ref.invalidate(playlistsProvider);
+      if (createdId != null) {
+        ref.invalidate(playlistDetailProvider(createdId));
+      }
+      if (context.mounted) {
+        if (createdId != null) {
+          ZenifyToast.showSuccess(context, l10n.createPlaylistSuccess);
+        } else {
+          ZenifyToast.showError(context, l10n.createPlaylistFailed);
+        }
+      }
     }
-    return list;
   }
 
   @override
@@ -62,17 +128,34 @@ class PlaylistsView extends ConsumerWidget {
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
     final playlistsAsync = ref.watch(playlistsProvider);
-    final sortOption = ref.watch(albumSortProvider);
+    final networkState = ref.watch(networkProvider);
 
     return Scaffold(
       backgroundColor: colorScheme.background,
       body: playlistsAsync.when(
-        data: (rawPlaylists) {
-          final randomSeed = ref.read(albumSortProvider.notifier).randomSeed;
-          final playlists = _sortPlaylists(rawPlaylists, sortOption, randomSeed);
+        data: (playlists) {
           if (playlists.isEmpty) {
             return Center(
-              child: Text(l10n.noPlaylistsCurrently, style: TextStyle(color: colorScheme.mutedForeground)),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(l10n.noPlaylistsCurrently, style: TextStyle(color: colorScheme.mutedForeground)),
+                  if (!networkState.isOffline) ...[
+                    const SizedBox(height: 16),
+                    ShadButton(
+                      onPressed: () => _showCreatePlaylistDialog(context, ref),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(LucideIcons.plus, size: 16),
+                          const SizedBox(width: 6),
+                          Text(l10n.createPlaylist),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             );
           }
 
@@ -97,23 +180,40 @@ class PlaylistsView extends ConsumerWidget {
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(color: colorScheme.border, width: 1.0),
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  l10n.navPlaylists,
-                                  style: TextStyle(
-                                    color: colorScheme.foreground,
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: -0.5,
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      l10n.navPlaylists,
+                                      style: TextStyle(
+                                        color: colorScheme.foreground,
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: -0.5,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      l10n.totalPlaylistsCount(playlists.length.toString()),
+                                      style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13),
+                                    ),
+                                  ],
+                                ),
+                                if (!networkState.isOffline)
+                                  ShadButton(
+                                    onPressed: () => _showCreatePlaylistDialog(context, ref),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(LucideIcons.plus, size: 16),
+                                        const SizedBox(width: 6),
+                                        Text(l10n.createPlaylist),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  l10n.totalPlaylistsCount(playlists.length.toString()),
-                                  style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13),
-                                ),
                               ],
                             ),
                           ),

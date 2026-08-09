@@ -11,6 +11,7 @@ import 'package:zenify/providers/audio_provider.dart';
 import 'package:zenify/providers/download_provider.dart';
 import 'package:zenify/screens/album_detail_screen.dart';
 import 'package:zenify/screens/artist_detail_screen.dart';
+import 'package:zenify/screens/playlist_detail_screen.dart';
 import 'package:zenify/views/playlists_view.dart';
 import 'package:zenify/components/zenify_popover.dart';
 
@@ -299,10 +300,13 @@ class _AddToPlaylistSubmenuItemState extends ConsumerState<_AddToPlaylistSubmenu
     if (result == true && controller.text.trim().isNotEmpty) {
       final name = controller.text.trim();
       final songId = widget.song['id']?.toString();
-      final success = await api.createPlaylist(name, songId: songId);
+      final createdId = await api.createPlaylist(name, songId: songId);
       ref.invalidate(playlistsProvider);
+      if (createdId != null) {
+        ref.invalidate(playlistDetailProvider(createdId));
+      }
       if (context.mounted) {
-        if (success) {
+        if (createdId != null) {
           ZenifyToast.showSuccess(context, l10n.addedToPlaylist);
         } else {
           ZenifyToast.showError(context, l10n.createPlaylistFailed);
@@ -378,6 +382,7 @@ class _AddToPlaylistSubmenuItemState extends ConsumerState<_AddToPlaylistSubmenu
                                     if (songId != null) {
                                       final ok = await api.updatePlaylist(pId, songIdToAdd: songId);
                                       ref.invalidate(playlistsProvider);
+                                      ref.invalidate(playlistDetailProvider(pId));
                                       if (context.mounted) {
                                         if (ok) {
                                           ZenifyToast.showSuccess(context, '${l10n.addedToPlaylist}: $pName');

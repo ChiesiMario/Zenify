@@ -371,7 +371,7 @@ class SubsonicApi {
 
 
   /// Create a new Playlist (optionally with a song)
-  Future<bool> createPlaylist(String name, {String? songId}) async {
+  Future<String?> createPlaylist(String name, {String? songId}) async {
     try {
       final params = <String, String>{'name': name};
       if (songId != null) {
@@ -381,11 +381,20 @@ class SubsonicApi {
       final response = await http.get(uri);
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
-        return json['subsonic-response']?['status'] == 'ok';
+        final responseData = json['subsonic-response'];
+        if (responseData?['status'] == 'ok') {
+          final playlist = responseData?['playlist'];
+          final newPlaylistId = playlist?['id']?.toString();
+          // Ensure compatibility across server implementations (e.g. Navidrome, Airsonic)
+          if (songId != null && newPlaylistId != null) {
+            await updatePlaylist(newPlaylistId, songIdToAdd: songId);
+          }
+          return newPlaylistId ?? 'ok';
+        }
       }
-      return false;
+      return null;
     } catch (e) {
-      return false;
+      return null;
     }
   }
 
@@ -401,6 +410,21 @@ class SubsonicApi {
       }
 
       final uri = _buildUri('updatePlaylist', params);
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        return json['subsonic-response']?['status'] == 'ok';
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Delete a Playlist
+  Future<bool> deletePlaylist(String id) async {
+    try {
+      final uri = _buildUri('deletePlaylist', {'id': id});
       final response = await http.get(uri);
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);

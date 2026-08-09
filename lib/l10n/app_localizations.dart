@@ -466,42 +466,6 @@ abstract class AppLocalizations {
   /// **'未知專輯'**
   String get unknownAlbum;
 
-  /// No description provided for @playerPlayNext.
-  ///
-  /// In zh_TW, this message translates to:
-  /// **'播放下一首'**
-  String get playerPlayNext;
-
-  /// No description provided for @addToQueue.
-  ///
-  /// In zh_TW, this message translates to:
-  /// **'加入佇列'**
-  String get addToQueue;
-
-  /// No description provided for @addedToQueue.
-  ///
-  /// In zh_TW, this message translates to:
-  /// **'已加入佇列'**
-  String get addedToQueue;
-
-  /// No description provided for @goAlbum.
-  ///
-  /// In zh_TW, this message translates to:
-  /// **'前往專輯'**
-  String get goAlbum;
-
-  /// No description provided for @goArtist.
-  ///
-  /// In zh_TW, this message translates to:
-  /// **'前往歌手'**
-  String get goArtist;
-
-  /// No description provided for @download.
-  ///
-  /// In zh_TW, this message translates to:
-  /// **'下載'**
-  String get download;
-
   /// No description provided for @noSongPlaying.
   ///
   /// In zh_TW, this message translates to:
@@ -1171,7 +1135,7 @@ abstract class AppLocalizations {
   /// No description provided for @currentCacheUsedStr.
   ///
   /// In zh_TW, this message translates to:
-  /// **'目前的快取總共使用了 {size}。\\n'**
+  /// **'目前的快取總共使用了 {size}。\n'**
   String currentCacheUsedStr(String size);
 
   /// No description provided for @cacheLimitWarning.
@@ -1539,6 +1503,60 @@ abstract class AppLocalizations {
   /// In zh_TW, this message translates to:
   /// **'自動平衡不同年代歌曲的音量大小，避免忽大忽小'**
   String get replayGainSubtitle;
+
+  /// No description provided for @deletePlaylist.
+  ///
+  /// In zh_TW, this message translates to:
+  /// **'刪除播放列表'**
+  String get deletePlaylist;
+
+  /// No description provided for @deletePlaylistConfirm.
+  ///
+  /// In zh_TW, this message translates to:
+  /// **'確定要刪除播放列表「{name}」嗎？此操作無法還原。'**
+  String deletePlaylistConfirm(String name);
+
+  /// No description provided for @playlistDeleted.
+  ///
+  /// In zh_TW, this message translates to:
+  /// **'已刪除播放列表'**
+  String get playlistDeleted;
+
+  /// No description provided for @playerPlayNext.
+  ///
+  /// In zh_TW, this message translates to:
+  /// **'下一首播放'**
+  String get playerPlayNext;
+
+  /// No description provided for @addedToQueue.
+  ///
+  /// In zh_TW, this message translates to:
+  /// **'已加入佇列'**
+  String get addedToQueue;
+
+  /// No description provided for @addToQueue.
+  ///
+  /// In zh_TW, this message translates to:
+  /// **'加入佇列'**
+  String get addToQueue;
+
+  /// No description provided for @goAlbum.
+  ///
+  /// In zh_TW, this message translates to:
+  /// **'前往專輯'**
+  String get goAlbum;
+
+  /// No description provided for @goArtist.
+  ///
+  /// In zh_TW, this message translates to:
+  /// **'前往歌手'**
+  String get goArtist;
+
+  /// No description provided for @download.
+  ///
+  /// In zh_TW, this message translates to:
+  /// **'下載'**
+  String get download;
 }
 
 class _AppLocalizationsDelegate

@@ -61,12 +61,6 @@
   "unknownSong": "未知歌曲",
   "unknownArtist": "未知藝術家",
   "unknownAlbum": "未知專輯",
-  "playerPlayNext": "播放下一首",
-  "addToQueue": "加入佇列",
-  "addedToQueue": "已加入佇列",
-  "goAlbum": "前往專輯",
-  "goArtist": "前往歌手",
-  "download": "下載",
   "noSongPlaying": "無播放中的歌曲",
   "songInfo": "歌曲資訊",
   "addToFavorites": "加入最愛",
@@ -317,7 +311,7 @@
   "noLimit": "無上限",
   "cacheSizeLimit": "快取容量上限",
   "reduceCacheSize": "縮減快取容量",
-  "currentCacheUsedStr": "目前的快取總共使用了 {size}。\\n",
+  "currentCacheUsedStr": "目前的快取總共使用了 {size}。\n",
   "@currentCacheUsedStr": {
     "placeholders": {
       "size": {
@@ -533,5 +527,21 @@
   "navPlaylists": "播放清單",
   "playbackSettings": "播放",
   "replayGainTitle": "開啟音量平衡 (ReplayGain)",
-  "replayGainSubtitle": "自動平衡不同年代歌曲的音量大小，避免忽大忽小"
+  "replayGainSubtitle": "自動平衡不同年代歌曲的音量大小，避免忽大忽小",
+  "deletePlaylist": "刪除播放列表",
+  "deletePlaylistConfirm": "確定要刪除播放列表「{name}」嗎？此操作無法還原。",
+  "@deletePlaylistConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistDeleted": "已刪除播放列表",
+  "playerPlayNext": "下一首播放",
+  "addedToQueue": "已加入佇列",
+  "addToQueue": "加入佇列",
+  "goAlbum": "前往專輯",
+  "goArtist": "前往歌手",
+  "download": "下載"
 }

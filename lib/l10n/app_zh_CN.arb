@@ -311,7 +311,7 @@
   "noLimit": "无上限",
   "cacheSizeLimit": "缓存容量上限",
   "reduceCacheSize": "缩减缓存容量",
-  "currentCacheUsedStr": "目前的缓存总共使用了 {size}。\\n",
+  "currentCacheUsedStr": "目前的缓存总共使用了 {size}。\n",
   "@currentCacheUsedStr": {
     "placeholders": {
       "size": {
@@ -527,5 +527,21 @@
   "navPlaylists": "播放列表",
   "playbackSettings": "播放",
   "replayGainTitle": "开启音量平衡 (ReplayGain)",
-  "replayGainSubtitle": "自动平衡不同年代歌曲的音量大小，避免忽大忽小"
+  "replayGainSubtitle": "自动平衡不同年代歌曲的音量大小，避免忽大忽小",
+  "deletePlaylist": "删除播放列表",
+  "deletePlaylistConfirm": "确定要删除播放列表「{name}」吗？此操作无法还原。",
+  "@deletePlaylistConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistDeleted": "已删除播放列表",
+  "playerPlayNext": "下一首播放",
+  "addedToQueue": "已加入队列",
+  "addToQueue": "加入队列",
+  "goAlbum": "前往专辑",
+  "goArtist": "前往歌手",
+  "download": "下载"
 }

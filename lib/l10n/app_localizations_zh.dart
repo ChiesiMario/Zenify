@@ -192,24 +192,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get unknownAlbum => '未知專輯';
 
   @override
-  String get playerPlayNext => '播放下一首';
-
-  @override
-  String get addToQueue => '加入佇列';
-
-  @override
-  String get addedToQueue => '已加入佇列';
-
-  @override
-  String get goAlbum => '前往專輯';
-
-  @override
-  String get goArtist => '前往歌手';
-
-  @override
-  String get download => '下載';
-
-  @override
   String get noSongPlaying => '無播放中的歌曲';
 
   @override
@@ -582,7 +564,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String currentCacheUsedStr(String size) {
-    return '目前的快取總共使用了 $size。\\n';
+    return '目前的快取總共使用了 $size。\n';
   }
 
   @override
@@ -805,6 +787,35 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get replayGainSubtitle => '自動平衡不同年代歌曲的音量大小，避免忽大忽小';
+
+  @override
+  String get deletePlaylist => '刪除播放列表';
+
+  @override
+  String deletePlaylistConfirm(String name) {
+    return '確定要刪除播放列表「$name」嗎？此操作無法還原。';
+  }
+
+  @override
+  String get playlistDeleted => '已刪除播放列表';
+
+  @override
+  String get playerPlayNext => '下一首播放';
+
+  @override
+  String get addedToQueue => '已加入佇列';
+
+  @override
+  String get addToQueue => '加入佇列';
+
+  @override
+  String get goAlbum => '前往專輯';
+
+  @override
+  String get goArtist => '前往歌手';
+
+  @override
+  String get download => '下載';
 }
 
 /// The translations for Chinese, as used in China (`zh_CN`).
@@ -1367,7 +1378,7 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
 
   @override
   String currentCacheUsedStr(String size) {
-    return '目前的缓存总共使用了 $size。\\n';
+    return '目前的缓存总共使用了 $size。\n';
   }
 
   @override
@@ -1590,6 +1601,35 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
 
   @override
   String get replayGainSubtitle => '自动平衡不同年代歌曲的音量大小，避免忽大忽小';
+
+  @override
+  String get deletePlaylist => '删除播放列表';
+
+  @override
+  String deletePlaylistConfirm(String name) {
+    return '确定要删除播放列表「$name」吗？此操作无法还原。';
+  }
+
+  @override
+  String get playlistDeleted => '已删除播放列表';
+
+  @override
+  String get playerPlayNext => '下一首播放';
+
+  @override
+  String get addedToQueue => '已加入队列';
+
+  @override
+  String get addToQueue => '加入队列';
+
+  @override
+  String get goAlbum => '前往专辑';
+
+  @override
+  String get goArtist => '前往歌手';
+
+  @override
+  String get download => '下载';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
@@ -1778,24 +1818,6 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get unknownAlbum => '未知專輯';
-
-  @override
-  String get playerPlayNext => '播放下一首';
-
-  @override
-  String get addToQueue => '加入佇列';
-
-  @override
-  String get addedToQueue => '已加入佇列';
-
-  @override
-  String get goAlbum => '前往專輯';
-
-  @override
-  String get goArtist => '前往歌手';
-
-  @override
-  String get download => '下載';
 
   @override
   String get noSongPlaying => '無播放中的歌曲';
@@ -2170,7 +2192,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String currentCacheUsedStr(String size) {
-    return '目前的快取總共使用了 $size。\\n';
+    return '目前的快取總共使用了 $size。\n';
   }
 
   @override
@@ -2393,4 +2415,33 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get replayGainSubtitle => '自動平衡不同年代歌曲的音量大小，避免忽大忽小';
+
+  @override
+  String get deletePlaylist => '刪除播放列表';
+
+  @override
+  String deletePlaylistConfirm(String name) {
+    return '確定要刪除播放列表「$name」嗎？此操作無法還原。';
+  }
+
+  @override
+  String get playlistDeleted => '已刪除播放列表';
+
+  @override
+  String get playerPlayNext => '下一首播放';
+
+  @override
+  String get addedToQueue => '已加入佇列';
+
+  @override
+  String get addToQueue => '加入佇列';
+
+  @override
+  String get goAlbum => '前往專輯';
+
+  @override
+  String get goArtist => '前往歌手';
+
+  @override
+  String get download => '下載';
 }

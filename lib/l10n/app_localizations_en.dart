@@ -12,10 +12,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get welcomeSubtitle => 'Please select a server';
 
   @override
-  String get settingsTitle => 'Settings & Preferences';
+  String get settingsTitle => 'System Settings and Preferences';
 
   @override
-  String get themeAppearance => 'Appearance';
+  String get themeAppearance => 'Theme Appearance';
 
   @override
   String get themeLight => 'Light Mode';
@@ -24,7 +24,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get themeDark => 'Dark Mode';
 
   @override
-  String get themeSystem => 'System Auto';
+  String get themeSystem => 'Auto (System)';
 
   @override
   String get storageAndCache => 'Storage & Cache';
@@ -39,7 +39,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get languageSetting => 'Language';
 
   @override
-  String get languageSystem => 'System Default';
+  String get languageSystem => 'Follow System';
 
   @override
   String get languageEnglish => 'English';
@@ -66,7 +66,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navSearch => 'Search';
 
   @override
-  String get homeConnectionTesting => 'Testing connection...';
+  String get homeConnectionTesting => 'Testing Connection...';
 
   @override
   String get homeOffline => 'Offline.';
@@ -78,19 +78,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeSyncNow => 'Sync Now';
 
   @override
-  String get homeStatsTitle => 'Local Data Stats';
+  String get homeStatsTitle => 'Local Data Statistics';
 
   @override
-  String get homeStatsAlbums => 'Albums';
+  String get homeStatsAlbums => 'Album Count';
 
   @override
-  String get homeStatsArtists => 'Artists';
+  String get homeStatsArtists => 'Artist Count';
 
   @override
   String get homeStatsCovers => 'Downloaded Covers';
 
   @override
-  String get homeSortDefault => 'Default';
+  String get homeSortDefault => 'Default Order';
 
   @override
   String get homeSortNameAsc => 'Name (A-Z)';
@@ -99,31 +99,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeSortNameDesc => 'Name (Z-A)';
 
   @override
-  String get homeSortYearDesc => 'Year (Newest)';
+  String get homeSortYearDesc => 'Year (New to Old)';
 
   @override
-  String get homeSortYearAsc => 'Year (Oldest)';
+  String get homeSortYearAsc => 'Year (Old to New)';
 
   @override
   String get homeSortRandom => 'Random';
 
   @override
-  String get homeSortAlbumCountDesc => 'Album Count';
+  String get homeSortAlbumCountDesc => 'Album Count (High to Low)';
 
   @override
   String get homeSortRecentDownload => 'Recent Download';
 
   @override
   String get homeTestConnectionFailed =>
-      'Connection test failed. Server is still offline.';
+      'Connection test failed, server is still offline';
 
   @override
   String get homeTestConnectionSuccess =>
-      'Connection successful! Restored to normal mode.';
+      'Connection successful! Restored to online mode';
 
   @override
   String get homeAudioPlayerDisposed =>
-      'AudioPlayer disposed! Safe to Shift+R now.';
+      'Audio player disposed, safe to Shift+R';
 
   @override
   String get searchPlaceholder => 'Search songs, albums, or artists...';
@@ -177,10 +177,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerQuality => 'Quality';
 
   @override
-  String get playerNoLyrics => 'No lyrics available';
+  String get playerNoLyrics => 'No Lyrics Available';
 
   @override
-  String get playerAudioCacheError => 'Audio cache error';
+  String get playerAudioCacheError => 'Audio Cache Error';
 
   @override
   String get playerVolume => 'Volume';
@@ -195,25 +195,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unknownAlbum => 'Unknown Album';
 
   @override
-  String get playerPlayNext => 'Play Next';
-
-  @override
-  String get addToQueue => 'Add to Queue';
-
-  @override
-  String get addedToQueue => 'Added to Queue';
-
-  @override
-  String get goAlbum => 'Go to Album';
-
-  @override
-  String get goArtist => 'Go to Artist';
-
-  @override
-  String get download => 'Download';
-
-  @override
-  String get noSongPlaying => 'No song playing';
+  String get noSongPlaying => 'No song currently playing';
 
   @override
   String get songInfo => 'Song Info';
@@ -228,7 +210,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playQueue => 'Play Queue';
 
   @override
-  String get serverOffline => 'Server is offline';
+  String get serverOffline => 'Server is Offline';
 
   @override
   String get exportMusicFile => 'Export Music File';
@@ -283,14 +265,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unknownYear => 'Unknown Year';
 
   @override
-  String get unfavorited => 'Removed from Favorites';
+  String get unfavorited => 'Removed from favorites';
 
   @override
-  String get favorited => 'Added to Favorites';
+  String get favorited => 'Added to favorites';
 
   @override
   String favoriteFailed(String error) {
-    return 'Favorite failed: $error';
+    return 'Failed to favorite: $error';
   }
 
   @override
@@ -332,7 +314,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get offlineOperationFailed =>
-      'Offline operation failed, song might not be downloadable or server error';
+      'Offline operation failed, song could not be downloaded or server error';
 
   @override
   String get offlineStatus => 'Offline';
@@ -344,21 +326,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get savedToOfflineMusic => 'Saved to offline music';
 
   @override
-  String get offlineAllAlbumSongs => 'Download all songs in album';
+  String get offlineAllAlbumSongs => 'Download all album songs';
 
   @override
   String songCountWidget(String count) {
-    return '$count Songs';
+    return '$count songs';
   }
 
   @override
   String get qqMusic => 'QQ Music';
 
   @override
-  String get neteaseMusic => 'NetEase Music';
+  String get neteaseMusic => 'NetEase Cloud Music';
 
   @override
-  String get searchInOtherPlatforms => 'Search in other platforms';
+  String get searchInOtherPlatforms => 'Search on other streaming platforms';
 
   @override
   String get cannotLoadArtistData => 'Cannot load artist data';
@@ -395,10 +377,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverNotConnectedHint =>
-      'Not connected to server, please add one in the top right';
+      'Server not connected, please add one from the top right first';
 
   @override
-  String get noFavoriteAlbums => 'No favorite albums';
+  String get noFavoriteAlbums => 'No favorite albums currently';
 
   @override
   String get favoriteAlbumsTitle => 'Favorite Albums';
@@ -409,18 +391,18 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get shufflePlayAnAlbum => 'Shuffle play an album';
+  String get shufflePlayAnAlbum => 'Shuffle Play an Album';
 
   @override
   String loadFavoritesFailed(String error) {
-    return 'Load favorites failed: $error';
+    return 'Failed to load favorites: $error';
   }
 
   @override
-  String get loadServerStatusFailed => 'Load server status failed';
+  String get loadServerStatusFailed => 'Failed to load server status';
 
   @override
-  String get noFavoriteSongs => 'No favorite songs';
+  String get noFavoriteSongs => 'No favorite songs currently';
 
   @override
   String get offlineSyncEnabled => 'Offline sync enabled';
@@ -431,25 +413,25 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get offlineFavoriteSongs => 'Offline favorite songs';
+  String get offlineFavoriteSongs => 'Offline Favorite Songs';
 
   @override
   String songCountWidgetShort(String count) {
-    return '$count';
+    return '$count songs';
   }
 
   @override
   String get playAll => 'Play All';
 
   @override
-  String get startPlayingFavoriteSongs => 'Start playing favorite songs';
+  String get startPlayingFavoriteSongs => 'Start Playing Favorite Songs';
 
   @override
   String get unknown => 'Unknown';
 
   @override
   String downloadError(String error) {
-    return 'Download error: $error';
+    return 'Error during download: $error';
   }
 
   @override
@@ -496,10 +478,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addServer => 'Add Server';
 
   @override
-  String get enterServerInfo => 'Please enter Navidrome / Subsonic server info';
+  String get enterServerInfo =>
+      'Please enter Navidrome / Subsonic server information';
 
   @override
-  String get serverUrlExample => 'URL (e.g. http://192.168.1.100:4533)';
+  String get serverUrlExample => 'URL (e.g., http://192.168.1.100:4533)';
 
   @override
   String get username => 'Username';
@@ -517,11 +500,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get save => 'Save';
 
   @override
-  String get checkServer => 'Check';
+  String get checkServer => 'Test';
 
   @override
   String get cannotConnectCheckSettings =>
-      'Cannot connect to this server, please check network or server settings.';
+      'Cannot connect to server, please check network or server settings.';
 
   @override
   String get serverConnectionError => 'Server connection error.';
@@ -534,7 +517,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get themeDescription =>
-      'Toggle dark mode, light mode or follow system setting';
+      'Switch between Dark Mode, Light Mode, or Follow System';
 
   @override
   String get selectTheme => 'Select Theme';
@@ -544,27 +527,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String cacheUsed(String size, String count) {
-    return 'Cache used: $size ($count songs)';
+    return 'Used Cache: $size ($count songs)';
   }
 
   @override
   String get clearCache => 'Clear Cache';
 
   @override
-  String get offlineMusicCacheLocation =>
-      'Offline music and cache storage location';
+  String get offlineMusicCacheLocation => 'Offline Music & Cache Location';
 
   @override
   String get loading => 'Loading...';
 
   @override
-  String get selectThisDirectory => 'Select this directory';
+  String get selectThisDirectory => 'Select This Directory';
 
   @override
   String get preparingToMoveFiles => 'Preparing to move files...';
 
   @override
-  String get movingFiles => 'Moving files';
+  String get movingFiles => 'Moving files...';
 
   @override
   String movedFilesProgress(String current, String total) {
@@ -583,7 +565,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get changeDirectory => 'Change Directory';
 
   @override
-  String get noLimit => 'No Limit';
+  String get noLimit => 'Unlimited';
 
   @override
   String get cacheSizeLimit => 'Cache Size Limit';
@@ -593,12 +575,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String currentCacheUsedStr(String size) {
-    return 'Current cache total used: $size.\\n';
+    return 'Current cache total usage: $size.\n';
   }
 
   @override
   String cacheLimitWarning(String limit, String excess) {
-    return 'If limit is set to $limit GB, system will automatically clear about $excess of oldest unplayed music to free up space.';
+    return 'If the limit is set to $limit GB, the system will automatically remove about $excess of oldest unplayed music to free up space.';
   }
 
   @override
@@ -613,10 +595,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get noSubsonicServerConfigured => 'Subsonic server not configured yet';
+  String get noSubsonicServerConfigured => 'No Subsonic server configured';
 
   @override
-  String get appSlogan => 'Minimalist modern B&W Subsonic music player';
+  String get appSlogan =>
+      'Minimalist Modern Black & White Subsonic Music Player';
 
   @override
   String get errorCannotConnectServer => 'Error: Cannot connect to server';
@@ -633,11 +616,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get preparingToDownloadCovers => 'Preparing to download covers...';
+  String get preparingToDownloadCovers =>
+      'Preparing to download cover images...';
 
   @override
   String downloadingCoversProgress(String downloaded, String total) {
-    return 'Downloading covers... ($downloaded/$total)';
+    return 'Downloading cover images... ($downloaded/$total)';
   }
 
   @override
@@ -647,11 +631,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get syncingPlaylists => 'Syncing playlists...';
 
   @override
-  String get syncingOfflineAlbums => 'Syncing offline albums data...';
+  String get syncingOfflineAlbums => 'Syncing offline album data...';
 
   @override
   String syncingOfflineAlbumsProgress(String fetched, String total) {
-    return 'Syncing offline albums data... ($fetched/$total)';
+    return 'Syncing offline album data... ($fetched/$total)';
   }
 
   @override
@@ -669,7 +653,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String loadAlbumsFailed(String error) {
-    return 'Load albums failed: $error';
+    return 'Failed to load albums: $error';
   }
 
   @override
@@ -677,7 +661,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String loadArtistsFailed(String error) {
-    return 'Load artists failed: $error';
+    return 'Failed to load artists: $error';
   }
 
   @override
@@ -685,7 +669,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String totalSortedAlbumsCount(String count) {
-    return 'Total $count albums';
+    return '$count Albums in total';
   }
 
   @override
@@ -693,7 +677,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String totalSortedSongsCount(String count) {
-    return 'Total $count songs';
+    return '$count Songs in total';
   }
 
   @override
@@ -717,35 +701,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get favoriteSinglesAndPersonalFavorites =>
-      'Favorite singles and personal favorites';
+      'Favorite Singles & Personal Favorites';
 
   @override
   String songsCountOnly(String count) {
-    return '$count Songs';
+    return '$count songs';
   }
 
   @override
-  String get favoritedMusicAlbums => 'Favorited music albums';
+  String get favoritedMusicAlbums => 'Favorited Music Albums';
 
   @override
   String albumsCountOnly(String count) {
-    return '$count Albums';
+    return '$count albums';
   }
 
   @override
-  String get customMusicPlaylists => 'Custom music playlists';
+  String get customMusicPlaylists => 'Custom Music Playlists';
 
   @override
   String playlistsCountOnly(String count) {
-    return '$count Playlists';
+    return '$count playlists';
   }
 
   @override
-  String get offlineMusicAndCache => 'Offline music and cache';
+  String get offlineMusicAndCache => 'Offline Music & Cache';
 
   @override
   String validDownloadsCount(String count) {
-    return '$count Songs';
+    return '$count songs';
   }
 
   @override
@@ -761,7 +745,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addedToPlaylist => 'Added to playlist';
 
   @override
-  String get createPlaylistDesc => 'Please enter a name for the new playlist';
+  String get createPlaylistDesc => 'Please enter a new playlist name';
 
   @override
   String get playlistName => 'Playlist Name';
@@ -819,4 +803,33 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get replayGainSubtitle =>
       'Automatically normalize volume levels across different tracks.';
+
+  @override
+  String get deletePlaylist => 'Delete Playlist';
+
+  @override
+  String deletePlaylistConfirm(String name) {
+    return 'Are you sure you want to delete playlist \"$name\"? This action cannot be undone.';
+  }
+
+  @override
+  String get playlistDeleted => 'Playlist deleted';
+
+  @override
+  String get playerPlayNext => 'Play Next';
+
+  @override
+  String get addedToQueue => 'Added to Queue';
+
+  @override
+  String get addToQueue => 'Add to Queue';
+
+  @override
+  String get goAlbum => 'Go to Album';
+
+  @override
+  String get goArtist => 'Go to Artist';
+
+  @override
+  String get download => 'Download';
 }

@@ -310,6 +310,14 @@ class DatabaseService {
     });
   }
 
+  /// Delete single playlist from database cache
+  Future<void> deletePlaylist(int serverId, String playlistId) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      await isar.playlistCaches.filter().serverIdEqualTo(serverId).and().playlistIdEqualTo(playlistId).deleteAll();
+    });
+  }
+
   /// Delete all auto-cache tracks from database
   Future<List<DownloadedTrack>> deleteCacheTracks() async {
     final isar = await db;

@@ -12,6 +12,8 @@ import 'package:zenify/screens/full_player_screen.dart';
 import 'package:zenify/components/local_cover_image.dart';
 import 'package:zenify/screens/album_detail_screen.dart';
 import 'package:zenify/screens/artist_detail_screen.dart';
+import 'package:zenify/screens/playlist_detail_screen.dart';
+import 'package:zenify/views/playlists_view.dart';
 import 'package:zenify/components/zenify_toast.dart';
 import 'package:zenify/components/zenify_popover.dart';
 
@@ -43,7 +45,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   bool _isTestingConnection = false;
 
-  bool _shouldShowSortButton(bool canPop, String currentSubTitle) {
+  bool _shouldShowSortButton(bool canPop, String currentSubTitle, String location) {
+    if (location.contains('/playlist/')) return true;
     final currentIndex = widget.navigationShell.currentIndex;
     if (currentIndex == 0 || currentIndex == 1) {
       return !canPop;
@@ -51,7 +54,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       return canPop && (
         currentSubTitle == AppLocalizations.of(context)!.songs ||
         currentSubTitle == AppLocalizations.of(context)!.navAlbums ||
-        currentSubTitle == AppLocalizations.of(context)!.navPlaylists ||
         currentSubTitle == AppLocalizations.of(context)!.offlineStatus
       );
     }
@@ -73,6 +75,90 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.dispose();
   }
 
+
+  Future<void> _showCreatePlaylistDialog(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    final controller = TextEditingController();
+    final focusNode = FocusNode();
+    final api = ref.read(subsonicApiProvider);
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final colorScheme = ShadTheme.of(context).colorScheme;
+          return ZenifyDialog(
+            icon: LucideIcons.listPlus,
+            iconColor: colorScheme.primary,
+            title: l10n.createPlaylist,
+            description: l10n.createPlaylistDesc,
+            content: Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                decoration: BoxDecoration(
+                  color: focusNode.hasFocus ? colorScheme.background : colorScheme.card,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: focusNode.hasFocus ? colorScheme.primary : colorScheme.border,
+                    width: 1.0,
+                  ),
+                ),
+                child: TextField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  autofocus: true,
+                  style: TextStyle(color: colorScheme.foreground, fontSize: 14),
+                  decoration: InputDecoration(
+                    hintText: l10n.playlistName,
+                    hintStyle: TextStyle(color: colorScheme.mutedForeground.withValues(alpha: 0.6), fontSize: 14),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  ),
+                  onChanged: (_) => setDialogState(() {}),
+                  onSubmitted: (value) {
+                    if (value.trim().isNotEmpty) {
+                      Navigator.pop(dialogContext, true);
+                    }
+                  },
+                ),
+              ),
+            ),
+            actions: [
+              ZenifyButton(
+                variant: ZenifyButtonVariant.outline,
+                onPressed: () => Navigator.pop(dialogContext, false),
+                text: l10n.cancel,
+              ),
+              ZenifyButton(
+                variant: ZenifyButtonVariant.primary,
+                onPressed: controller.text.trim().isEmpty
+                    ? null
+                    : () => Navigator.pop(dialogContext, true),
+                text: l10n.confirm,
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    if (result == true && controller.text.trim().isNotEmpty && api != null) {
+      final name = controller.text.trim();
+      final createdId = await api.createPlaylist(name);
+      ref.invalidate(playlistsProvider);
+      if (createdId != null) {
+        ref.invalidate(playlistDetailProvider(createdId));
+      }
+      if (context.mounted) {
+        if (createdId != null) {
+          ZenifyToast.showSuccess(context, l10n.createPlaylistSuccess);
+        } else {
+          ZenifyToast.showError(context, l10n.createPlaylistFailed);
+        }
+      }
+    }
+  }
 
   Widget _buildNavItem(int index, IconData icon, String label, ShadColorScheme colorScheme, {bool isDisabled = false}) {
     final isSelected = widget.navigationShell.currentIndex == index;
@@ -269,11 +355,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
               ),
               actions: [
-                if (_shouldShowSortButton(canPop, currentSubTitle)) ...[
+                if (_shouldShowSortButton(canPop, currentSubTitle, location)) ...[
                   ZenifyPopover(
                     builder: (context, close) => SortPopoverContent(
                       currentIndex: widget.navigationShell.currentIndex,
                       subTitle: currentSubTitle,
+                      location: location,
                       onClose: close,
                     ),
                     child: IconButton(
@@ -340,6 +427,74 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         }
                       },
                     ),
+                  if (!location.contains('/playlist/'))
+                    Container(
+                      width: 1,
+                      height: 20,
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      color: colorScheme.border,
+                    ),
+                ],
+                if (location.endsWith('/playlists') || currentSubTitle == l10n.customMusicPlaylists || currentSubTitle == l10n.navPlaylists) ...[
+                  IconButton(
+                    icon: Icon(LucideIcons.plus, color: networkState.isOffline ? colorScheme.mutedForeground.withValues(alpha: 0.5) : colorScheme.mutedForeground, size: 20),
+                    tooltip: l10n.createPlaylist,
+                    onPressed: networkState.isOffline ? null : () => _showCreatePlaylistDialog(context),
+                  ),
+                  Container(
+                    width: 1,
+                    height: 20,
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    color: colorScheme.border,
+                  ),
+                ],
+                if (location.contains('/playlist/')) ...[
+                  IconButton(
+                    icon: Icon(LucideIcons.trash2, color: colorScheme.mutedForeground, size: 20),
+                    tooltip: l10n.deletePlaylist,
+                    onPressed: () async {
+                      final playlistId = location.split('/playlist/').last.split('?').first;
+                      final playlistName = currentSubTitle.isNotEmpty ? currentSubTitle : l10n.navPlaylists;
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => ZenifyDialog(
+                          icon: LucideIcons.alertTriangle,
+                          iconColor: theme.colorScheme.destructive,
+                          title: l10n.deletePlaylist,
+                          description: l10n.deletePlaylistConfirm(playlistName),
+                          actions: [
+                            ZenifyButton(
+                              variant: ZenifyButtonVariant.outline,
+                              onPressed: () => Navigator.pop(context, false),
+                              text: l10n.cancel,
+                            ),
+                            ZenifyButton(
+                              variant: ZenifyButtonVariant.destructive,
+                              onPressed: () => Navigator.pop(context, true),
+                              text: l10n.confirm,
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirm == true) {
+                        final api = ref.read(subsonicApiProvider);
+                        final server = ref.read(activeServerProvider).value;
+                        final db = ref.read(databaseProvider);
+                        if (api != null) {
+                          await api.deletePlaylist(playlistId);
+                        }
+                        if (server != null) {
+                          await db.deletePlaylist(server.id, playlistId);
+                        }
+                        ref.invalidate(playlistsProvider);
+                        ref.invalidate(playlistDetailProvider(playlistId));
+                        if (context.mounted) {
+                          context.pop();
+                          ZenifyToast.showSuccess(context, l10n.playlistDeleted);
+                        }
+                      }
+                    },
+                  ),
                   Container(
                     width: 1,
                     height: 20,
@@ -548,12 +703,14 @@ class SyncPopoverContent extends ConsumerWidget {
 class SortPopoverContent extends ConsumerWidget {
   final int currentIndex;
   final String subTitle;
+  final String location;
   final VoidCallback onClose;
 
   const SortPopoverContent({
     super.key, 
     required this.currentIndex, 
     required this.subTitle, 
+    required this.location,
     required this.onClose,
   });
 
@@ -562,6 +719,19 @@ class SortPopoverContent extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
+
+    if (location.contains('/playlist/')) {
+      final currentSort = ref.watch(songSortProvider);
+      return _buildMenu<SongSortOption>(
+        context, ref, colorScheme, currentSort,
+        [
+          (SongSortOption.defaultOrder, l10n.homeSortDefault),
+          (SongSortOption.nameAsc, l10n.homeSortNameAsc),
+          (SongSortOption.nameDesc, l10n.homeSortNameDesc),
+          (SongSortOption.random, l10n.homeSortRandom),
+        ]
+      );
+    }
 
     if (currentIndex == 0 || (currentIndex == 2 && subTitle == AppLocalizations.of(context)!.navAlbums)) {
       final currentSort = ref.watch(albumSortProvider);
