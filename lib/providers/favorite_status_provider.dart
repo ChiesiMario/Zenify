@@ -1,12 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zenify/api/subsonic_api.dart';
+import 'package:zenify/providers/favorite_providers.dart';
 
 final favoriteStatusProvider = StateNotifierProvider<FavoriteStatusNotifier, Map<String, bool>>((ref) {
-  return FavoriteStatusNotifier();
+  return FavoriteStatusNotifier(ref);
 });
 
 class FavoriteStatusNotifier extends StateNotifier<Map<String, bool>> {
-  FavoriteStatusNotifier() : super({});
+  final Ref ref;
+
+  FavoriteStatusNotifier(this.ref) : super({});
 
   Future<void> toggleStar({
     required String id,
@@ -31,6 +34,9 @@ class FavoriteStatusNotifier extends StateNotifier<Map<String, bool>> {
           await api.unstar(id: id);
         }
       }
+
+      // Refresh favoritesProvider so the newly starred/unstarred item is reflected immediately
+      ref.invalidate(favoritesProvider);
     } catch (e) {
       print('Failed to toggle star: $e');
       // Revert state on failure

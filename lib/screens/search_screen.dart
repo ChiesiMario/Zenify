@@ -29,6 +29,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   List<dynamic> _albums = [];
   List<dynamic> _songs = [];
 
+  final ScrollController _albumsScrollController = ScrollController();
+  final ScrollController _songsScrollController = ScrollController();
+  final ScrollController _artistsScrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
@@ -36,6 +40,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   @override
   void dispose() {
+    _albumsScrollController.dispose();
+    _songsScrollController.dispose();
+    _artistsScrollController.dispose();
     _searchController.dispose();
     _debounce?.cancel();
     super.dispose();
@@ -117,8 +124,16 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       );
       activeViews.add(
         SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: AlbumsGrid(albums: _albums.toList()),
+          controller: _albumsScrollController,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: getResponsiveMaxWidth(context)),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 16, right: 16, bottom: 120),
+                child: AlbumsGrid(albums: _albums.toList()),
+              ),
+            ),
+          ),
         ),
       );
     }
@@ -138,32 +153,41 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       );
       activeViews.add(
         SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: ZenifySongList(
-            songs: _songs.asMap().entries.map((entry) {
-              final index = entry.key;
-              final song = entry.value;
-              final coverId = song['coverArt'] ?? song['albumId'];
-              final fallbackUrl = api != null && coverId != null ? api.getCoverArtUrl(coverId, size: 250) : null;
-              return SongTileData(
-                id: song['id']?.toString() ?? '',
-                title: song['title'] ?? 'Unknown',
-                subtitle: song['artist'] ?? '',
-                coverId: song['albumId']?.toString() ?? coverId ?? '',
-                fallbackCoverUrl: fallbackUrl,
-                duration: _formatDuration(song['duration'] as int? ?? 0),
-                isOfflineUnplayable: networkState.isOffline && !(song['isDownloaded'] == true),
-                serverId: server?.id ?? 0,
-                rawSong: song,
-                onTap: () {
-                  ref.read(audioProvider.notifier).playQueue(_songs, index);
-                },
-                isFavorite: song['starred'] != null,
-              );
-            }).toList(),
-            showCover: true,
-            showFavoriteButton: true,
-            shrinkWrap: true,
+          controller: _songsScrollController,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: getResponsiveMaxWidth(context)),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 16, right: 16, bottom: 120),
+                child: ZenifySongList(
+                  songs: _songs.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final song = entry.value;
+                    final coverId = song['coverArt'] ?? song['albumId'];
+                    final fallbackUrl = api != null && coverId != null ? api.getCoverArtUrl(coverId, size: 250) : null;
+                    return SongTileData(
+                      id: song['id']?.toString() ?? '',
+                      title: song['title'] ?? 'Unknown',
+                      subtitle: song['artist'] ?? '',
+                      coverId: song['albumId']?.toString() ?? coverId ?? '',
+                      fallbackCoverUrl: fallbackUrl,
+                      duration: _formatDuration(song['duration'] as int? ?? 0),
+                      isOfflineUnplayable: networkState.isOffline && !(song['isDownloaded'] == true),
+                      serverId: server?.id ?? 0,
+                      rawSong: song,
+                      onTap: () {
+                        ref.read(audioProvider.notifier).playQueue(_songs, index);
+                      },
+                      isFavorite: song['starred'] != null,
+                    );
+                  }).toList(),
+                  showCover: true,
+                  showFavoriteButton: true,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                ),
+              ),
+            ),
           ),
         ),
       );
@@ -184,29 +208,37 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       );
       activeViews.add(
         SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Wrap(
-            spacing: 16,
-            runSpacing: 16,
-            children: _artists.map((artist) {
-              final id = artist['id'];
-              final coverId = artist['coverArt'] ?? id;
-              final fallbackUrl = api?.getCoverArtUrl(coverId, size: 250);
-              return SizedBox(
-                width: 100,
-                child: ArtistCard(
-                  name: artist['name'] ?? 'Unknown',
-                  artistId: id,
-                  coverArtId: coverId,
-                  fallbackCoverUrl: fallbackUrl,
-                  serverId: server?.id ?? 0,
-                  isDisabled: networkState.isOffline,
-                  onTap: () {
-                    context.pushBranch('artist/', extra: artist['name'] ?? 'Unknown');
-                  },
+          controller: _artistsScrollController,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: getResponsiveMaxWidth(context)),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 16, right: 16, bottom: 120),
+                child: Wrap(
+                  spacing: 16,
+                  runSpacing: 16,
+                  children: _artists.map((artist) {
+                    final id = artist['id'];
+                    final coverId = artist['coverArt'] ?? id;
+                    final fallbackUrl = api?.getCoverArtUrl(coverId, size: 250);
+                    return SizedBox(
+                      width: 100,
+                      child: ArtistCard(
+                        name: artist['name'] ?? 'Unknown',
+                        artistId: id,
+                        coverArtId: coverId,
+                        fallbackCoverUrl: fallbackUrl,
+                        serverId: server?.id ?? 0,
+                        isDisabled: networkState.isOffline,
+                        onTap: () {
+                          context.pushBranch('artist/', extra: artist['name'] ?? 'Unknown');
+                        },
+                      ),
+                    );
+                  }).toList(),
                 ),
-              );
-            }).toList(),
+              ),
+            ),
           ),
         ),
       );
@@ -234,10 +266,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           ),
         ),
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: getResponsiveMaxWidth(context)),
-          child: _isLoading
+      body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _searchController.text.trim().isEmpty
               ? Center(
@@ -261,12 +290,17 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       child: Column(
                         children: [
                           const SizedBox(height: 16),
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              child: GroupTabBar(
-                                tabs: activeTabs,
+                          Center(
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(maxWidth: getResponsiveMaxWidth(context)),
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                                  child: GroupTabBar(
+                                    tabs: activeTabs,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
@@ -279,8 +313,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                         ],
                       ),
                     ),
-        ),
-      ),
     );
   }
 }

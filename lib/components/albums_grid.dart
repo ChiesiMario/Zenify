@@ -114,9 +114,7 @@ class AlbumsGrid extends ConsumerWidget {
           finalPadding = resolvedBasePadding;
         }
 
-        Widget grid = Padding(
-          padding: const EdgeInsets.only(right: 2.0),
-          child: GridView.builder(
+        Widget grid = GridView.builder(
           shrinkWrap: shrinkWrap,
           physics: physics,
           padding: finalPadding,
@@ -222,8 +220,7 @@ class AlbumsGrid extends ConsumerWidget {
                   : null,
             );
           },
-        ),
-      );
+        );
 
       if (onLoadMore != null) {
         grid = NotificationListener<ScrollNotification>(

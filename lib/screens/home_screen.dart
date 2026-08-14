@@ -76,90 +76,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
 
-  Future<void> _showCreatePlaylistDialog(BuildContext context) async {
-    final l10n = AppLocalizations.of(context)!;
-    final controller = TextEditingController();
-    final focusNode = FocusNode();
-    final api = ref.read(subsonicApiProvider);
-
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          final colorScheme = ShadTheme.of(context).colorScheme;
-          return ZenifyDialog(
-            icon: LucideIcons.listPlus,
-            iconColor: colorScheme.primary,
-            title: l10n.createPlaylist,
-            description: l10n.createPlaylistDesc,
-            content: Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                decoration: BoxDecoration(
-                  color: focusNode.hasFocus ? colorScheme.background : colorScheme.card,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: focusNode.hasFocus ? colorScheme.primary : colorScheme.border,
-                    width: 1.0,
-                  ),
-                ),
-                child: TextField(
-                  controller: controller,
-                  focusNode: focusNode,
-                  autofocus: true,
-                  style: TextStyle(color: colorScheme.foreground, fontSize: 14),
-                  decoration: InputDecoration(
-                    hintText: l10n.playlistName,
-                    hintStyle: TextStyle(color: colorScheme.mutedForeground.withValues(alpha: 0.6), fontSize: 14),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  ),
-                  onChanged: (_) => setDialogState(() {}),
-                  onSubmitted: (value) {
-                    if (value.trim().isNotEmpty) {
-                      Navigator.pop(dialogContext, true);
-                    }
-                  },
-                ),
-              ),
-            ),
-            actions: [
-              ZenifyButton(
-                variant: ZenifyButtonVariant.outline,
-                onPressed: () => Navigator.pop(dialogContext, false),
-                text: l10n.cancel,
-              ),
-              ZenifyButton(
-                variant: ZenifyButtonVariant.primary,
-                onPressed: controller.text.trim().isEmpty
-                    ? null
-                    : () => Navigator.pop(dialogContext, true),
-                text: l10n.confirm,
-              ),
-            ],
-          );
-        },
-      ),
-    );
-
-    if (result == true && controller.text.trim().isNotEmpty && api != null) {
-      final name = controller.text.trim();
-      final createdId = await api.createPlaylist(name);
-      ref.invalidate(playlistsProvider);
-      if (createdId != null) {
-        ref.invalidate(playlistDetailProvider(createdId));
-      }
-      if (context.mounted) {
-        if (createdId != null) {
-          ZenifyToast.showSuccess(context, l10n.createPlaylistSuccess);
-        } else {
-          ZenifyToast.showError(context, l10n.createPlaylistFailed);
-        }
-      }
-    }
-  }
-
   Widget _buildNavItem(int index, IconData icon, String label, ShadColorScheme colorScheme, {bool isDisabled = false}) {
     final isSelected = widget.navigationShell.currentIndex == index;
     
@@ -434,19 +350,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       margin: const EdgeInsets.symmetric(horizontal: 4),
                       color: colorScheme.border,
                     ),
-                ],
-                if (location.endsWith('/playlists') || currentSubTitle == l10n.customMusicPlaylists || currentSubTitle == l10n.navPlaylists) ...[
-                  IconButton(
-                    icon: Icon(LucideIcons.plus, color: networkState.isOffline ? colorScheme.mutedForeground.withValues(alpha: 0.5) : colorScheme.mutedForeground, size: 20),
-                    tooltip: l10n.createPlaylist,
-                    onPressed: networkState.isOffline ? null : () => _showCreatePlaylistDialog(context),
-                  ),
-                  Container(
-                    width: 1,
-                    height: 20,
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    color: colorScheme.border,
-                  ),
                 ],
                 if (location.contains('/playlist/')) ...[
                   IconButton(

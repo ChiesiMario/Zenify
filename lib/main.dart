@@ -16,6 +16,7 @@ import 'package:zenify/services/audio_cache_proxy.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:zenify/l10n/app_localizations.dart';
 import 'package:zenify/providers/locale_provider.dart';
+import 'package:zenify/components/zenify_scrollbar.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -251,14 +252,24 @@ class _ZenifyAppState extends ConsumerState<ZenifyApp> with WindowListener, Tray
       ],
       routerConfig: goRouter,
       builder: (context, child) {
-        return Directionality(
-          textDirection: TextDirection.ltr,
-          child: DefaultTextStyle(
-            style: const TextStyle(
-              fontFamily: 'NotoSansTC',
-              fontFamilyFallback: ['Nunito', 'NotoSansSC', 'Microsoft JhengHei UI', 'Microsoft YaHei UI', 'Segoe UI', 'sans-serif'],
+        return ScrollConfiguration(
+          behavior: const ZenifyScrollBehavior(),
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              scrollbarTheme: const ScrollbarThemeData(
+                crossAxisMargin: 3.0,
+              ),
             ),
-            child: child!,
+            child: Directionality(
+              textDirection: TextDirection.ltr,
+              child: DefaultTextStyle(
+                style: const TextStyle(
+                  fontFamily: 'NotoSansTC',
+                  fontFamilyFallback: ['Nunito', 'NotoSansSC', 'Microsoft JhengHei UI', 'Microsoft YaHei UI', 'Segoe UI', 'sans-serif'],
+                ),
+                child: child!,
+              ),
+            ),
           ),
         );
       },
