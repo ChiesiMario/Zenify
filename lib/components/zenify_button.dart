@@ -101,9 +101,9 @@ class _ZenifyButtonState extends State<ZenifyButton> with SingleTickerProviderSt
         foregroundColor = colorScheme.destructiveForeground;
         break;
       case ZenifyButtonVariant.outline:
-        backgroundColor = _isHovered ? colorScheme.foreground.withValues(alpha: 0.08) : Colors.transparent;
-        foregroundColor = colorScheme.foreground;
-        borderColor = _isHovered ? Colors.transparent : colorScheme.border;
+        backgroundColor = _isHovered ? colorScheme.foreground : Colors.transparent;
+        foregroundColor = _isHovered ? colorScheme.background : colorScheme.foreground;
+        borderColor = _isHovered ? colorScheme.foreground : colorScheme.border;
         break;
       case ZenifyButtonVariant.ghost:
         backgroundColor = _isHovered ? colorScheme.foreground.withValues(alpha: 0.08) : Colors.transparent;
@@ -145,34 +145,37 @@ class _ZenifyButtonState extends State<ZenifyButton> with SingleTickerProviderSt
                     ? null 
                     : Border.all(color: borderColor, width: 1.0),
               ),
-              child: Row(
-                mainAxisSize: widget.width == null ? MainAxisSize.min : MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (widget.isLoading) ...[
-                    SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.0,
-                        color: foregroundColor,
+              child: IconTheme(
+                data: IconThemeData(color: foregroundColor),
+                child: Row(
+                  mainAxisSize: widget.width == null ? MainAxisSize.min : MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (widget.isLoading) ...[
+                      SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.0,
+                          color: foregroundColor,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                  ] else if (widget.icon != null) ...[
-                    widget.icon!,
-                    if (widget.text.isNotEmpty) const SizedBox(width: 8),
+                      const SizedBox(width: 8),
+                    ] else if (widget.icon != null) ...[
+                      widget.icon!,
+                      if (widget.text.isNotEmpty) const SizedBox(width: 8),
+                    ],
+                    if (widget.text.isNotEmpty)
+                      Text(
+                        widget.text,
+                        style: TextStyle(
+                          color: foregroundColor,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
                   ],
-                  if (widget.text.isNotEmpty)
-                    Text(
-                      widget.text,
-                      style: TextStyle(
-                        color: foregroundColor,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
-                    ),
-                ],
+                ),
               ),
             ),
           ),

@@ -81,7 +81,7 @@ class _ZenifySelectState<T> extends State<ZenifySelect<T>> {
       case ZenifyButtonVariant.outline:
         backgroundColor = _isHovered ? colorScheme.secondary : Colors.transparent;
         foregroundColor = colorScheme.foreground;
-        borderColor = colorScheme.border;
+        borderColor = _isHovered ? colorScheme.foreground.withValues(alpha: 0.4) : colorScheme.border;
         break;
       case ZenifyButtonVariant.ghost:
         backgroundColor = _isHovered ? colorScheme.secondary : Colors.transparent;

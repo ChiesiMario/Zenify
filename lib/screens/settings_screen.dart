@@ -253,7 +253,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           ref.invalidate(downloadedTracksProvider);
                         },
                         text: l10n.clearCache,
-                        icon: Icon(LucideIcons.trash2, size: 13, color: colorScheme.mutedForeground),
+                        icon: const Icon(LucideIcons.trash2, size: 13),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -701,7 +701,7 @@ class _VercelSettingTileState extends State<_VercelSettingTile> {
                 color: colorScheme.card,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: (widget.onTap != null && _isHovered)
+                  color: _isHovered
                       ? colorScheme.foreground.withValues(alpha: 0.4)
                       : colorScheme.border,
                   width: 1.0,
@@ -718,12 +718,12 @@ class _VercelSettingTileState extends State<_VercelSettingTile> {
                         width: 42,
                         height: 42,
                         decoration: BoxDecoration(
-                          color: (widget.onTap != null && _isHovered)
+                          color: _isHovered
                               ? colorScheme.foreground
                               : colorScheme.muted.withValues(alpha: 0.4),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: (widget.onTap != null && _isHovered)
+                            color: _isHovered
                                 ? colorScheme.foreground
                                 : colorScheme.border.withValues(alpha: 0.5),
                             width: 1,
@@ -732,7 +732,7 @@ class _VercelSettingTileState extends State<_VercelSettingTile> {
                         child: Icon(
                           widget.icon,
                           size: 19,
-                          color: (widget.onTap != null && _isHovered)
+                          color: _isHovered
                               ? colorScheme.background
                               : colorScheme.foreground,
                         ),
