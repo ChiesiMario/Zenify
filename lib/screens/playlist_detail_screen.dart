@@ -109,15 +109,15 @@ class PlaylistDetailScreen extends ConsumerWidget {
 
           final sortedSongs = _sortSongs(songs, sortOption, randomSeed);
 
-          return Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: getResponsiveMaxWidth(context)),
-              child: RefreshIndicator(
-                onRefresh: () async => ref.refresh(playlistDetailProvider(playlistId)),
-                child: CustomScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  slivers: [
-                    SliverToBoxAdapter(
+          return RefreshIndicator(
+            onRefresh: () async => ref.refresh(playlistDetailProvider(playlistId)),
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: getResponsiveMaxWidth(context)),
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(16, 24, 16, 20),
                         child: Column(
@@ -189,53 +189,62 @@ class PlaylistDetailScreen extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    if (sortedSongs.isEmpty)
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.all(40),
-                          child: Center(
-                            child: Text(
-                              l10n.playlistIsEmpty,
-                              style: TextStyle(color: colorScheme.mutedForeground),
-                            ),
-                          ),
-                        ),
-                      )
-                    else
-                      ZenifySongList(
-                        useSliver: true,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        showCover: true,
-                        showFavoriteButton: true,
-                        songs: sortedSongs.asMap().entries.map((entry) {
-                          final songIndex = entry.key;
-                          final song = entry.value;
-                          final coverId = song['coverArt'] ?? song['albumId'];
-                          final fallbackUrl = api != null && coverId != null ? api.getCoverArtUrl(coverId, size: 250) : null;
-                          final duration = _formatDuration(song['duration'] as int? ?? 0);
-                          final songId = song['id']?.toString() ?? '';
-
-                          return SongTileData(
-                            id: songId,
-                            title: song['title'] ?? l10n.unknownSong,
-                            subtitle: song['artist'] ?? l10n.unknownArtist,
-                            coverId: song['albumId']?.toString() ?? coverId?.toString() ?? '',
-                            fallbackCoverUrl: fallbackUrl,
-                            duration: duration,
-                            isOfflineUnplayable: networkState.isOffline && !(song['isDownloaded'] == true),
-                            serverId: server?.id ?? 0,
-                            rawSong: song,
-                            isFavorite: song['starred'] != null,
-                            onTap: () {
-                              ref.read(audioProvider.notifier).playQueue(songs, songIndex);
-                            },
-                          );
-                        }).toList(),
-                      ),
-                    const SliverPadding(padding: EdgeInsets.only(bottom: 128)),
-                  ],
+                  ),
                 ),
-              ),
+                if (sortedSongs.isEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(40),
+                      child: Center(
+                        child: Text(
+                          l10n.playlistIsEmpty,
+                          style: TextStyle(color: colorScheme.mutedForeground),
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  SliverLayoutBuilder(
+                    builder: (context, constraints) {
+                      final double maxW = getResponsiveMaxWidth(context);
+                      final double horizontalPadding = (constraints.crossAxisExtent - maxW) / 2;
+                      final double padding = horizontalPadding > 0 ? horizontalPadding : 0;
+                      return SliverPadding(
+                        padding: EdgeInsets.symmetric(horizontal: 16 + padding),
+                        sliver: ZenifySongList(
+                          useSliver: true,
+                          showCover: true,
+                          showFavoriteButton: true,
+                          songs: sortedSongs.asMap().entries.map((entry) {
+                            final songIndex = entry.key;
+                            final song = entry.value;
+                            final coverId = song['coverArt'] ?? song['albumId'];
+                            final fallbackUrl = api != null && coverId != null ? api.getCoverArtUrl(coverId, size: 250) : null;
+                            final duration = _formatDuration(song['duration'] as int? ?? 0);
+                            final songId = song['id']?.toString() ?? '';
+
+                            return SongTileData(
+                              id: songId,
+                              title: song['title'] ?? l10n.unknownSong,
+                              subtitle: song['artist'] ?? l10n.unknownArtist,
+                              coverId: song['albumId']?.toString() ?? coverId?.toString() ?? '',
+                              fallbackCoverUrl: fallbackUrl,
+                              duration: duration,
+                              isOfflineUnplayable: networkState.isOffline && !(song['isDownloaded'] == true),
+                              serverId: server?.id ?? 0,
+                              rawSong: song,
+                              isFavorite: song['starred'] != null,
+                              onTap: () {
+                                ref.read(audioProvider.notifier).playQueue(songs, songIndex);
+                              },
+                            );
+                          }).toList(),
+                        ),
+                      );
+                    },
+                  ),
+                const SliverPadding(padding: EdgeInsets.only(bottom: 128)),
+              ],
             ),
           );
         },

@@ -81,9 +81,7 @@ class ArtistsGrid extends ConsumerWidget {
               )
             : resolvedBasePadding;
 
-        Widget grid = Padding(
-          padding: const EdgeInsets.only(right: 2.0),
-          child: GridView.builder(
+        Widget grid = GridView.builder(
           shrinkWrap: shrinkWrap,
           physics: physics,
           padding: finalPadding,
@@ -139,8 +137,7 @@ class ArtistsGrid extends ConsumerWidget {
               },
             );
           },
-        ),
-      );
+        );
 
       if (onLoadMore != null) {
         grid = NotificationListener<ScrollNotification>(

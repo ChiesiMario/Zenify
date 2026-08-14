@@ -28,7 +28,6 @@ class FavoritesView extends ConsumerWidget {
     final favoritesAsync = ref.watch(favoritesProvider);
     final playlistsAsync = ref.watch(playlistsProvider);
     final downloadsAsync = ref.watch(downloadedTracksProvider);
-    final server = ref.watch(activeServerProvider).value;
 
     final List songs = favoritesAsync.value?['songs'] ?? [];
     final List albums = favoritesAsync.value?['albums'] ?? [];
@@ -50,17 +49,13 @@ class FavoritesView extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: colorScheme.background,
-      body: Padding(
-        padding: const EdgeInsets.only(right: 2.0),
-        child: ListView(
+      body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 24),
         children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 2.0),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: getResponsiveMaxWidth(context)),
-                child: Padding(
+          Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: getResponsiveMaxWidth(context)),
+              child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,9 +146,7 @@ class FavoritesView extends ConsumerWidget {
               ),
             ),
           ),
-          ),
         ],
-      ),
       ),
     );
   }

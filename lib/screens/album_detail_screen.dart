@@ -80,10 +80,8 @@ class AlbumDetailScreen extends ConsumerWidget {
           final discNumbers = groupedSongs.keys.toList()..sort();
           final hasMultipleDiscs = discNumbers.length > 1;
 
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2.0),
-            child: CustomScrollView(
-              slivers: [
+          return CustomScrollView(
+            slivers: [
                   const SliverToBoxAdapter(child: SizedBox(height: 32)),
                   // Header
                   SliverToBoxAdapter(
@@ -627,8 +625,7 @@ class AlbumDetailScreen extends ConsumerWidget {
                     ),
                   ),
                 ],
-              ),
-            );
+              );
         },
         loading: () => Center(child: CircularProgressIndicator(color: colorScheme.foreground)),
         error: (err, stack) => Center(child: Text(l10n.loadFailed(err.toString()), style: TextStyle(color: colorScheme.destructive))),

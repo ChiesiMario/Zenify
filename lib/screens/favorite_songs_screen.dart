@@ -74,64 +74,69 @@ class FavoriteSongsScreen extends ConsumerWidget {
                 return Center(child: Text(l10n.noFavoriteSongs, style: TextStyle(color: colorScheme.mutedForeground)));
               }
 
-              return Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: getResponsiveMaxWidth(context)),
-                  child: CustomScrollView(
-                    slivers: [
-                      // Padding for top spacing
-                      const SliverPadding(padding: EdgeInsets.only(top: 24)),
-                      
-                      // Hero Sub-Banner
-                      SliverPadding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        sliver: SliverToBoxAdapter(
+              return CustomScrollView(
+                slivers: [
+                  const SliverPadding(padding: EdgeInsets.only(top: 24)),
+                  
+                  SliverToBoxAdapter(
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: getResponsiveMaxWidth(context)),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: _FavoriteHeroBanner(
                             songs: songs,
                             serverId: server.id,
                           ),
                         ),
                       ),
-                      
-                      // Spacing between banner and list
-                      const SliverPadding(padding: EdgeInsets.only(top: 20)),
-
-                      ZenifySongList(
-                        useSliver: true,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        songs: songs.asMap().entries.map((entry) {
-                          final songIndex = entry.key;
-                          final song = entry.value;
-                          final api = ref.watch(subsonicApiProvider);
-                          final networkState = ref.watch(networkProvider);
-                          final coverUrl = api?.getCoverArtUrl(song['albumId']?.toString() ?? song['parent']?.toString() ?? song['coverArt']?.toString() ?? '', size: 250);
-                          final songId = song['id']?.toString() ?? '';
-                          
-                          return SongTileData(
-                            id: songId,
-                            title: song['title'] ?? l10n.unknownSong,
-                            subtitle: song['artist'] ?? l10n.unknownArtist,
-                            coverId: song['albumId']?.toString() ?? song['parent']?.toString() ?? song['coverArt']?.toString() ?? '',
-                            fallbackCoverUrl: coverUrl,
-                            duration: song['duration'] != null ? _formatDuration(song['duration'] as int) : '--:--',
-                            isOfflineUnplayable: networkState.isOffline && !(song['isDownloaded'] == true),
-                            serverId: server.id,
-                            rawSong: song,
-                            onTap: () {
-                              ref.read(audioProvider.notifier).playQueue(songs, songIndex);
-                            },
-                            isFavorite: true,
-                          );
-                        }).toList(),
-                        showCover: true,
-                        showFavoriteButton: true,
-                      ),
-                      
-                      // Bottom padding
-                      const SliverPadding(padding: EdgeInsets.only(bottom: 128)),
-                    ],
+                    ),
                   ),
-                ),
+                  
+                  const SliverPadding(padding: EdgeInsets.only(top: 20)),
+
+                  SliverLayoutBuilder(
+                    builder: (context, constraints) {
+                      final double maxW = getResponsiveMaxWidth(context);
+                      final double horizontalPadding = (constraints.crossAxisExtent - maxW) / 2;
+                      final double padding = horizontalPadding > 0 ? horizontalPadding : 0;
+                      return SliverPadding(
+                        padding: EdgeInsets.symmetric(horizontal: 16 + padding),
+                        sliver: ZenifySongList(
+                          useSliver: true,
+                          showCover: true,
+                          showFavoriteButton: true,
+                          songs: songs.asMap().entries.map((entry) {
+                            final songIndex = entry.key;
+                            final song = entry.value;
+                            final api = ref.watch(subsonicApiProvider);
+                            final networkState = ref.watch(networkProvider);
+                            final coverUrl = api?.getCoverArtUrl(song['albumId']?.toString() ?? song['parent']?.toString() ?? song['coverArt']?.toString() ?? '', size: 250);
+                            final songId = song['id']?.toString() ?? '';
+                            
+                            return SongTileData(
+                              id: songId,
+                              title: song['title'] ?? l10n.unknownSong,
+                              subtitle: song['artist'] ?? l10n.unknownArtist,
+                              coverId: song['albumId']?.toString() ?? song['parent']?.toString() ?? song['coverArt']?.toString() ?? '',
+                              fallbackCoverUrl: coverUrl,
+                              duration: song['duration'] != null ? _formatDuration(song['duration'] as int) : '--:--',
+                              isOfflineUnplayable: networkState.isOffline && !(song['isDownloaded'] == true),
+                              serverId: server.id,
+                              rawSong: song,
+                              onTap: () {
+                                ref.read(audioProvider.notifier).playQueue(songs, songIndex);
+                              },
+                              isFavorite: true,
+                            );
+                          }).toList(),
+                        ),
+                      );
+                    },
+                  ),
+                  
+                  const SliverPadding(padding: EdgeInsets.only(bottom: 128)),
+                ],
               );
             },
             loading: () => Center(child: CircularProgressIndicator(color: colorScheme.foreground)),
