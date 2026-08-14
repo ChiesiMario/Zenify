@@ -110,12 +110,17 @@ final artistDetailProvider = FutureProvider.family<Map<String, dynamic>?, String
   final api = ref.watch(subsonicApiProvider);
   if (api == null) return null;
 
-  // 取得藝術家基本資料與專輯
-  final artistData = await api.getArtist(id);
+  // 併發取得藝術家基本資料與額外資訊 (bio)
+  final results = await Future.wait([
+    api.getArtist(id),
+    api.getArtistInfo2(id),
+  ]);
+
+  final artistData = results[0];
+  final artistInfo = results[1];
+
   if (artistData == null) return null;
 
-  // 取得額外資訊 (bio)
-  final artistInfo = await api.getArtistInfo2(id);
   if (artistInfo != null) {
     artistData['biography'] = artistInfo['biography'];
   }
