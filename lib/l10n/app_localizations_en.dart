@@ -798,13 +798,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playbackSettings => 'Playback';
 
   @override
-  String get replayGainTitle => 'ReplayGain (Volume Normalization)';
-
-  @override
-  String get replayGainSubtitle =>
-      'Automatically normalize volume levels across different tracks.';
-
-  @override
   String get deletePlaylist => 'Delete Playlist';
 
   @override
@@ -832,4 +825,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get download => 'Download';
+
+  @override
+  String durationMinutesOnly(String durationMinutes) {
+    return '$durationMinutes min';
+  }
 }

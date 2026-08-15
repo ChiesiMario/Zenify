@@ -2,6 +2,8 @@ import 'package:zenify/l10n/app_localizations.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:zenify/components/zenify_divider_dot.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/audio_provider.dart';
@@ -439,10 +441,7 @@ class AlbumDetailScreen extends ConsumerWidget {
                               for (int i = 0; i < parts.length; i++) {
                                 spans.add(TextSpan(text: parts[i]));
                                 if (i != parts.length - 1) {
-                                  spans.add(const TextSpan(
-                                    text: ' • ',
-                                    style: TextStyle(fontFamily: 'NotoSansTC'),
-                                  ));
+                                  spans.add(const WidgetSpan(alignment: PlaceholderAlignment.middle, child: ZenifyDividerDot()));
                                 }
                               }
                               
@@ -790,10 +789,7 @@ class _AlbumOfflineBentoCardState extends ConsumerState<_AlbumOfflineBentoCard> 
                           children: [
                             TextSpan(text: l10n.songCountWidget(widget.songList.length.toString())),
                             if (sizeFormatted.isNotEmpty) ...[
-                              const TextSpan(
-                                text: ' • ',
-                                style: TextStyle(fontFamily: 'NotoSansTC'),
-                              ),
+                              const WidgetSpan(alignment: PlaceholderAlignment.middle, child: ZenifyDividerDot()),
                               TextSpan(text: sizeFormatted),
                             ],
                           ],

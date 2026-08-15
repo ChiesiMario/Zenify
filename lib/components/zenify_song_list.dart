@@ -12,6 +12,7 @@ class SongTileData {
   final String id;
   final String title;
   final String? subtitle;
+  final Widget? subtitleWidget;
   final String? coverId;
   final String? fallbackCoverUrl;
   final String? trackNumber;
@@ -27,6 +28,7 @@ class SongTileData {
     required this.id,
     required this.title,
     this.subtitle,
+    this.subtitleWidget,
     this.coverId,
     this.fallbackCoverUrl,
     this.trackNumber,
@@ -395,7 +397,13 @@ class _ZenifySongTileState extends ConsumerState<_ZenifySongTile> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    if (widget.song.subtitle != null && widget.song.subtitle!.isNotEmpty) ...[
+                    if (widget.song.subtitleWidget != null) ...[
+                      const SizedBox(height: 2),
+                      DefaultTextStyle(
+                        style: TextStyle(color: widget.colorScheme.mutedForeground, fontSize: 12),
+                        child: widget.song.subtitleWidget!,
+                      ),
+                    ] else if (widget.song.subtitle != null && widget.song.subtitle!.isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(
                         widget.song.subtitle!,

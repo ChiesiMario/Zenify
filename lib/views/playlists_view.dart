@@ -1,5 +1,7 @@
 import 'package:zenify/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:zenify/components/zenify_divider_dot.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:convert';
 import 'package:zenify/utils/responsive.dart';
@@ -280,9 +282,18 @@ class PlaylistsView extends ConsumerWidget {
                                           fontSize: 14,
                                         ),
                                       ),
-                                      subtitle: Text(
-                                        l10n.songsCountAndDuration(songCount.toString(), durationMinutes.toString()),
-                                        style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12),
+                                      subtitle: Row(
+                                        children: [
+                                          Text(
+                                            l10n.songsCountOnly(songCount.toString()),
+                                            style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12),
+                                          ),
+                                          const ZenifyDividerDot(),
+                                          Text(
+                                            l10n.durationMinutesOnly(durationMinutes.toString()),
+                                            style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12),
+                                          ),
+                                        ],
                                       ),
                                       trailing: Icon(
                                         LucideIcons.arrowUpRight,

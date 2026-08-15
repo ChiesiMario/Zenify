@@ -19,6 +19,7 @@ import 'package:zenify/components/zenify_dialog.dart';
 import 'package:zenify/components/zenify_select.dart';
 import 'package:zenify/utils/responsive.dart';
 
+import 'package:zenify/components/zenify_divider_dot.dart';
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
@@ -217,27 +218,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
                     const SizedBox(height: 32),
 
-                    // 2.5 播放 SECTION
-                    _buildSectionHeader(l10n.playbackSettings, colorScheme),
-                    const SizedBox(height: 12),
-                    Consumer(
-                      builder: (context, ref, child) {
-                        final isEnabled = ref.watch(replayGainEnabledProvider);
-                        return _VercelSettingTile(
-                          title: l10n.replayGainTitle,
-                          subtitle: l10n.replayGainSubtitle,
-                          icon: LucideIcons.volume2,
-                          trailing: ShadSwitch(
-                            value: isEnabled,
-                            onChanged: (v) {
-                              ref.read(replayGainEnabledProvider.notifier).toggle();
-                            },
-                          ),
-                        );
-                      }
-                    ),
-                    
-                    const SizedBox(height: 32),
+
 
                     // 3. 儲存與快取 SECTION
                     _buildSectionHeader(l10n.storageAndCache, colorScheme),
@@ -614,16 +595,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 themeName,
                 style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13, fontWeight: FontWeight.w500),
               ),
-              const SizedBox(width: 6),
-              Text('•', style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12)),
-              const SizedBox(width: 6),
+              const ZenifyDividerDot(),
               Text(
                 cacheSize,
                 style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13, fontWeight: FontWeight.w500),
               ),
-              const SizedBox(width: 6),
-              Text('•', style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12)),
-              const SizedBox(width: 6),
+              const ZenifyDividerDot(),
               Expanded(
                 child: Text(
                   serverName,

@@ -2,6 +2,8 @@ import 'package:zenify/l10n/app_localizations.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:zenify/components/zenify_divider_dot.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zenify/models/downloaded_track.dart';
 import 'package:zenify/providers/download_provider.dart';
@@ -384,7 +386,13 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
                   return SongTileData(
                     id: track.songId,
                     title: track.title,
-                    subtitle: '${track.artist} • $size',
+                    subtitleWidget: Row(
+                      children: [
+                        Flexible(child: Text(track.artist ?? '', maxLines: 1, overflow: TextOverflow.ellipsis)),
+                        const ZenifyDividerDot(),
+                        Text(size),
+                      ],
+                    ),
                     coverId: track.albumId ?? track.coverArt,
                     fallbackCoverUrl: track.coverArt != null ? api?.getCoverArtUrl(track.coverArt!) : null,
                     duration: duration,

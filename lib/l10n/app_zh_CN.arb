@@ -526,8 +526,6 @@
   "songListComingSoon": "歌曲列表即将推出",
   "navPlaylists": "播放列表",
   "playbackSettings": "播放",
-  "replayGainTitle": "开启音量平衡 (ReplayGain)",
-  "replayGainSubtitle": "自动平衡不同年代歌曲的音量大小，避免忽大忽小",
   "deletePlaylist": "删除播放列表",
   "deletePlaylistConfirm": "确定要删除播放列表「{name}」吗？此操作无法还原。",
   "@deletePlaylistConfirm": {
@@ -543,5 +541,14 @@
   "addToQueue": "加入队列",
   "goAlbum": "前往专辑",
   "goArtist": "前往歌手",
-  "download": "下载"
+  "download": "下载",
+  "durationMinutesOnly": "{durationMinutes} 分钟",
+  "@durationMinutesOnly": {
+    "description": "Duration in minutes only",
+    "placeholders": {
+      "durationMinutes": {
+        "type": "String"
+      }
+    }
+  }
 }

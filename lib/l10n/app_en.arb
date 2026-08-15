@@ -526,8 +526,6 @@
   "songListComingSoon": "Song list coming soon",
   "navPlaylists": "Playlists",
   "playbackSettings": "Playback",
-  "replayGainTitle": "ReplayGain (Volume Normalization)",
-  "replayGainSubtitle": "Automatically normalize volume levels across different tracks.",
   "deletePlaylist": "Delete Playlist",
   "deletePlaylistConfirm": "Are you sure you want to delete playlist \"{name}\"? This action cannot be undone.",
   "@deletePlaylistConfirm": {
@@ -543,5 +541,14 @@
   "addToQueue": "Add to Queue",
   "goAlbum": "Go to Album",
   "goArtist": "Go to Artist",
-  "download": "Download"
+  "download": "Download",
+  "durationMinutesOnly": "{durationMinutes} min",
+  "@durationMinutesOnly": {
+    "description": "Duration in minutes only",
+    "placeholders": {
+      "durationMinutes": {
+        "type": "String"
+      }
+    }
+  }
 }

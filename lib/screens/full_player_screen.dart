@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:zenify/components/zenify_divider_dot.dart';
+
 import 'dart:ui';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
@@ -311,16 +313,7 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen> {
                                       },
                                     ),
                                   ),
-                                  Text(
-                                    ' • ',
-                                    style: TextStyle(
-                                      color: colorScheme.mutedForeground,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.normal,
-                                      fontFamily: 'NotoSansTC',
-                                      height: 1.1,
-                                    ),
-                                  ),
+                                  const ZenifyDividerDot(offsetY: 0.5),
                                   Flexible(
                                     child: _HoverableLink(
                                       text: currentSong['album'] ?? l10n.unknownAlbum,

@@ -1492,18 +1492,6 @@ abstract class AppLocalizations {
   /// **'播放'**
   String get playbackSettings;
 
-  /// No description provided for @replayGainTitle.
-  ///
-  /// In zh_TW, this message translates to:
-  /// **'開啟音量平衡 (ReplayGain)'**
-  String get replayGainTitle;
-
-  /// No description provided for @replayGainSubtitle.
-  ///
-  /// In zh_TW, this message translates to:
-  /// **'自動平衡不同年代歌曲的音量大小，避免忽大忽小'**
-  String get replayGainSubtitle;
-
   /// No description provided for @deletePlaylist.
   ///
   /// In zh_TW, this message translates to:
@@ -1557,6 +1545,12 @@ abstract class AppLocalizations {
   /// In zh_TW, this message translates to:
   /// **'下載'**
   String get download;
+
+  /// Duration in minutes only
+  ///
+  /// In zh_TW, this message translates to:
+  /// **'{durationMinutes} 分鐘'**
+  String durationMinutesOnly(String durationMinutes);
 }
 
 class _AppLocalizationsDelegate

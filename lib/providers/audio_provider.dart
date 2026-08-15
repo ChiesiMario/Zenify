@@ -12,27 +12,6 @@ import 'package:zenify/services/path_service.dart';
 import 'package:zenify/services/audio_cache_proxy.dart';
 import 'package:zenify/api/subsonic_api.dart';
 import 'package:path/path.dart' as p;
-import 'dart:math' as math;
-
-class ReplayGainEnabledNotifier extends Notifier<bool> {
-  static const _key = 'replay_gain_enabled';
-
-  @override
-  bool build() {
-    final prefs = ref.watch(sharedPreferencesProvider);
-    return prefs.getBool(_key) ?? true;
-  }
-
-  void toggle() {
-    final newValue = !state;
-    state = newValue;
-    ref.read(sharedPreferencesProvider).setBool(_key, newValue);
-  }
-}
-
-final replayGainEnabledProvider = NotifierProvider<ReplayGainEnabledNotifier, bool>(() {
-  return ReplayGainEnabledNotifier();
-});
 
 enum AudioRepeatMode { off, all, one }
 
@@ -430,21 +409,7 @@ class AudioNotifier extends Notifier<AudioState> {
 
       await _player.setAudioSource(audioSource);
       
-      // Apply ReplayGain
-      final isReplayGainEnabled = ref.read(replayGainEnabledProvider);
-      double targetVolume = 1.0;
-      if (isReplayGainEnabled && song['replayGain'] != null) {
-        final replayGain = song['replayGain'];
-        final trackGain = replayGain['trackGain'] as num?;
-        final albumGain = replayGain['albumGain'] as num?;
-        final fallbackGain = replayGain['fallbackGain'] as num?;
-        
-        final gain = trackGain ?? albumGain ?? fallbackGain;
-        if (gain != null) {
-          targetVolume = math.pow(10, gain / 20).toDouble();
-        }
-      }
-      await _player.setVolume(targetVolume);
+      await _player.setVolume(1.0);
       
       // Send Now Playing scrobble
       if (autoPlay) {

@@ -11,6 +11,7 @@ import 'package:zenify/views/playlists_view.dart';
 import 'package:zenify/utils/responsive.dart';
 import 'package:zenify/router/app_router.dart';
 
+import 'package:zenify/components/zenify_divider_dot.dart';
 class FavoritesView extends ConsumerWidget {
   const FavoritesView({super.key});
 
@@ -189,16 +190,12 @@ class FavoritesView extends ConsumerWidget {
                 l10n.songsCountFull(songs.length.toString()),
                 style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13, fontWeight: FontWeight.w500),
               ),
-              const SizedBox(width: 6),
-              Text('•', style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12)),
-              const SizedBox(width: 6),
+              const ZenifyDividerDot(),
               Text(
                 l10n.albumsCountVarFull(albumsCount.toString()),
                 style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13, fontWeight: FontWeight.w500),
               ),
-              const SizedBox(width: 6),
-              Text('•', style: TextStyle(color: colorScheme.mutedForeground, fontSize: 12)),
-              const SizedBox(width: 6),
+              const ZenifyDividerDot(),
               Text(
                 cacheSize,
                 style: TextStyle(color: colorScheme.mutedForeground, fontSize: 13, fontWeight: FontWeight.w500),
