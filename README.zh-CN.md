@@ -10,7 +10,7 @@
 
 <br>
 <p align="center">
-  <img src="assets/icon/app_icon.png" alt="Zenify Screenshot" width="800">
+  <img src="Screenshot/image.png" alt="Zenify Screenshot" width="800">
 </p>
 <br>
 

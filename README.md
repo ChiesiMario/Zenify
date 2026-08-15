@@ -10,8 +10,7 @@
 
 <br>
 <p align="center">
-  <!-- TODO: Update screenshot path if available -->
-  <img src="assets/icon/app_icon.png" alt="Zenify Screenshot" width="800">
+  <img src="Screenshot/image.png" alt="Zenify Screenshot" width="800">
 </p>
 <br>
 
