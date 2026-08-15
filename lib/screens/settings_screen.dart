@@ -268,7 +268,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           try {
                             result = await getDirectoryPath(confirmButtonText: l10n.selectThisDirectory);
                           } catch (e) {
-                            print('FileSelector error: $e');
+                            debugPrint('FileSelector error: $e');
                           }
                           if (result != null && context.mounted) {
                             final progressNotifier = ValueNotifier<double>(0);
@@ -333,7 +333,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               // 重新載入當前歌曲（使用新路徑）並保持暫停狀態
                               await ref.read(audioProvider.notifier).reloadCurrentTrack();
                             } catch (e, stack) {
-                              print('Change directory error: $e\n$stack');
+                              debugPrint('Change directory error: $e\n$stack');
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(content: Text(l10n.errorOccurred(e.toString()))),

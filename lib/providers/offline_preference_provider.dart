@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/foundation.dart';
 import 'package:zenify/models/offline_preference.dart';
 import 'package:zenify/providers/app_providers.dart';
 
@@ -84,7 +85,7 @@ class OfflinePreferenceNotifier extends StateNotifier<AsyncValue<OfflinePreferen
       final currentState = state.valueOrNull ?? OfflinePreferenceState();
       state = AsyncValue.data(currentState.copyWith(favoritesPreference: isOffline));
     } catch (e) {
-      print('Error saving favorites offline preference: $e');
+      debugPrint('Error saving favorites offline preference: $e');
     }
   }
 
@@ -113,7 +114,7 @@ class OfflinePreferenceNotifier extends StateNotifier<AsyncValue<OfflinePreferen
       newAlbumPrefs[albumId] = isOffline;
       state = AsyncValue.data(currentState.copyWith(albumPreferences: newAlbumPrefs));
     } catch (e) {
-      print('Error saving album offline preference: $e');
+      debugPrint('Error saving album offline preference: $e');
     }
   }
 }

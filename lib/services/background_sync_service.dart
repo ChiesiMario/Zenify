@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zenify/providers/app_providers.dart';
@@ -52,7 +53,7 @@ class BackgroundSyncService {
         final id = song['id'].toString();
         if (addedIds.contains(id)) {
           downloadService.downloadSong(song, server.id).catchError((e) {
-            print('Background auto-download favorite song error: $e');
+            debugPrint('Background auto-download favorite song error: $e');
           });
         }
       }
@@ -66,7 +67,7 @@ class BackgroundSyncService {
         ref.invalidate(downloadedTracksProvider);
       }
     } catch (e) {
-      print('Error processing favorites changes: $e');
+      debugPrint('Error processing favorites changes: $e');
     }
   }
 
@@ -110,7 +111,7 @@ class BackgroundSyncService {
                 final favorites = await api.getStarred();
                 targetSongs = favorites['songs'] ?? [];
               } catch (e) {
-                print('Background sync failed to fetch favorites: $e');
+                debugPrint('Background sync failed to fetch favorites: $e');
               }
               break;
             }
@@ -126,7 +127,7 @@ class BackgroundSyncService {
               }
             }
           } catch (e) {
-            print('Background sync failed to fetch album ${pref.targetId}: $e');
+            debugPrint('Background sync failed to fetch album ${pref.targetId}: $e');
           }
         }
 
@@ -138,7 +139,7 @@ class BackgroundSyncService {
             try {
               await downloadService.downloadSong(song, activeServer.id);
             } catch (e) {
-              print('Background sync failed to download song $songId: $e');
+              debugPrint('Background sync failed to download song $songId: $e');
             }
           }
         }
@@ -148,7 +149,7 @@ class BackgroundSyncService {
       ref.invalidate(downloadedTracksProvider);
       
     } catch (e) {
-      print('Background sync error: $e');
+      debugPrint('Background sync error: $e');
     }
   }
 }

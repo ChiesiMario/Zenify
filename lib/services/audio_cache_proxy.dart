@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -19,7 +20,7 @@ class AudioCacheProxy {
   Future<void> start() async {
     if (_server != null) return;
     _server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
-    print('AudioCacheProxy running on localhost:${_server!.port}');
+    debugPrint('AudioCacheProxy running on localhost:${_server!.port}');
     _server!.listen(_handleRequest);
   }
 

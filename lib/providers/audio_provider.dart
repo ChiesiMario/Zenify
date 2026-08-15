@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:zenify/models/downloaded_track.dart';
@@ -119,7 +120,7 @@ class AudioNotifier extends Notifier<AudioState> {
         originalQueue = jsonDecode(oqStr) as List<dynamic>;
       }
     } catch (e) {
-      print('Failed to decode saved queue: $e');
+      debugPrint('Failed to decode saved queue: $e');
     }
     
     // Ensure index is valid
@@ -195,7 +196,7 @@ class AudioNotifier extends Notifier<AudioState> {
         }
       }
     } catch (e) {
-      print('Failed to restore playback state: $e');
+      debugPrint('Failed to restore playback state: $e');
     }
   }
 
@@ -461,7 +462,7 @@ class AudioNotifier extends Notifier<AudioState> {
       
       _preloadNextSongs();
     } catch (e) {
-      print('AudioPlayer Error in _playIndex: $e');
+      debugPrint('AudioPlayer Error in _playIndex: $e');
     }
   }
 
@@ -496,7 +497,7 @@ class AudioNotifier extends Notifier<AudioState> {
         if (track == null || !track.isComplete || !File(track.localPath).existsSync()) {
           // Trigger download in background (cache mode)
           ref.read(downloadServiceProvider).downloadSong(song, activeServer.id, isManual: false).catchError((e) {
-            print('Preload error for song $songId: $e');
+            debugPrint('Preload error for song $songId: $e');
           });
         }
       }

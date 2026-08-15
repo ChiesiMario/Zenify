@@ -1,23 +1,17 @@
 import 'dart:ui';
 import 'package:zenify/models/server.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:zenify/screens/search_screen.dart';
-import 'package:zenify/views/album_view.dart';
-import 'package:zenify/views/artists_view.dart';
-import 'package:zenify/views/favorites_view.dart';
 import 'package:zenify/screens/full_player_screen.dart';
 import 'package:zenify/components/local_cover_image.dart';
-import 'package:zenify/screens/album_detail_screen.dart';
-import 'package:zenify/screens/artist_detail_screen.dart';
 import 'package:zenify/screens/playlist_detail_screen.dart';
 import 'package:zenify/views/playlists_view.dart';
 import 'package:zenify/components/zenify_toast.dart';
 import 'package:zenify/components/zenify_popover.dart';
 
-import 'package:flutter/foundation.dart';
+
 import 'package:zenify/services/sync_service.dart';
 import 'package:zenify/providers/app_providers.dart';
 import 'package:zenify/providers/audio_provider.dart';
@@ -102,7 +96,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
     final syncState = ref.watch(syncProvider);
-    final activeServerAsync = ref.watch(activeServerProvider);
+
 
     ref.listen<AsyncValue<Server?>>(activeServerProvider, (previous, next) {
       final prevId = previous?.value?.id;
@@ -769,7 +763,6 @@ class _NowPlayingTabIconState extends ConsumerState<NowPlayingTabIcon> with Sing
   Widget build(BuildContext context) {
     final audioState = ref.watch(audioProvider);
     final currentSong = audioState.currentSong;
-    final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
     

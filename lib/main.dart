@@ -1,9 +1,11 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:screen_retriever/screen_retriever.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:zenify/providers/theme_provider.dart';
 import 'package:zenify/services/image_service.dart';
@@ -78,10 +80,45 @@ void main() async {
         final double? y = prefs.getDouble('window_y');
         final double? width = prefs.getDouble('window_width');
         final double? height = prefs.getDouble('window_height');
+        final bool? isMaximized = prefs.getBool('window_maximized');
 
         if (x != null && y != null && width != null && height != null) {
-          await windowManager.setBounds(Rect.fromLTWH(x, y, width, height));
+          Rect bounds = Rect.fromLTWH(x, y, width, height);
+          
+          
+          bool isVisible = false;
+          try {
+            final displays = await screenRetriever.getAllDisplays();
+            for (final display in displays) {
+              final pos = display.visiblePosition ?? const Offset(0, 0);
+              final size = display.visibleSize ?? const Size(0, 0);
+              final displayRect = pos & size;
+              final intersect = displayRect.intersect(bounds);
+              if (intersect.width > 50 && intersect.height > 50) {
+                isVisible = true;
+                break;
+              }
+            }
+          } catch (e) {
+            
+            isVisible = true; // Fallback
+          }
+
+          if (isVisible) {
+            
+            await windowManager.setBounds(bounds);
+          } else {
+            
+            await windowManager.setSize(Size(width, height));
+            await windowManager.center();
+          }
+
+          if (isMaximized == true) {
+            
+            await windowManager.maximize();
+          }
         } else {
+          
           await windowManager.setSize(const Size(1024, 768));
           await windowManager.center();
         }
@@ -114,11 +151,21 @@ class ZenifyApp extends ConsumerStatefulWidget {
 }
 
 class _ZenifyAppState extends ConsumerState<ZenifyApp> with WindowListener, TrayListener {
+  Timer? _saveBoundsTimer;
+  bool _isReadyToSave = false;
+
   @override
   void initState() {
     super.initState();
     windowManager.addListener(this);
     trayManager.addListener(this);
+    
+    // 延遲 2 秒，等待視窗初始化完成後再允許儲存
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        _isReadyToSave = true;
+      }
+    });
     
     // Start background sync
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -128,6 +175,7 @@ class _ZenifyAppState extends ConsumerState<ZenifyApp> with WindowListener, Tray
 
   @override
   void dispose() {
+    _saveBoundsTimer?.cancel();
     ref.read(backgroundSyncServiceProvider).stop();
     trayManager.removeListener(this);
     windowManager.removeListener(this);
@@ -136,6 +184,9 @@ class _ZenifyAppState extends ConsumerState<ZenifyApp> with WindowListener, Tray
 
   @override
   void onWindowClose() async {
+    if (_isReadyToSave) {
+      await _saveWindowBounds();
+    }
     bool isPreventClose = await windowManager.isPreventClose();
     if (isPreventClose) {
       await windowManager.hide();
@@ -164,17 +215,49 @@ class _ZenifyAppState extends ConsumerState<ZenifyApp> with WindowListener, Tray
   }
 
   Future<void> _saveWindowBounds() async {
-    final bounds = await windowManager.getBounds();
+    final bool isMaximized = await windowManager.isMaximized();
     final prefs = ref.read(sharedPreferencesProvider);
-    await prefs.setDouble('window_x', bounds.left);
-    await prefs.setDouble('window_y', bounds.top);
-    await prefs.setDouble('window_width', bounds.width);
-    await prefs.setDouble('window_height', bounds.height);
+    await prefs.setBool('window_maximized', isMaximized);
+
+    if (!isMaximized) {
+      final bounds = await windowManager.getBounds();
+      
+      await prefs.setDouble('window_x', bounds.left);
+      await prefs.setDouble('window_y', bounds.top);
+      await prefs.setDouble('window_width', bounds.width);
+      await prefs.setDouble('window_height', bounds.height);
+    } else {
+      
+    }
+  }
+
+  void _debouncedSave() {
+    if (!_isReadyToSave) return;
+    
+    _saveBoundsTimer?.cancel();
+    _saveBoundsTimer = Timer(const Duration(milliseconds: 500), () {
+      _saveWindowBounds();
+    });
   }
 
   @override
   void onWindowMoved() {
-    _saveWindowBounds();
+    _debouncedSave();
+  }
+
+  @override
+  void onWindowResized() {
+    _debouncedSave();
+  }
+
+  @override
+  void onWindowMaximize() {
+    _debouncedSave();
+  }
+
+  @override
+  void onWindowUnmaximize() {
+    _debouncedSave();
   }
 
   @override
