@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -126,7 +127,7 @@ void main() async {
         await windowManager.show();
         await windowManager.focus();
       } catch (e) {
-        print('Window manager setup failed: $e');
+        debugPrint('Window manager setup failed: $e');
       }
     });
   }

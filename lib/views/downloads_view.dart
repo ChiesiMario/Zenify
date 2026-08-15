@@ -388,7 +388,7 @@ class _DownloadsViewState extends ConsumerState<DownloadsView> with SingleTicker
                     title: track.title,
                     subtitleWidget: Row(
                       children: [
-                        Flexible(child: Text(track.artist ?? '', maxLines: 1, overflow: TextOverflow.ellipsis)),
+                        Flexible(child: Text(track.artist, maxLines: 1, overflow: TextOverflow.ellipsis)),
                         const ZenifyDividerDot(),
                         Text(size),
                       ],

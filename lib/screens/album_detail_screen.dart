@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:zenify/l10n/app_localizations.dart';
 import 'dart:async';
 import 'dart:io';
@@ -896,7 +897,7 @@ class _StreamingPlatformsRow extends StatelessWidget {
         await Process.run('xdg-open', [url]);
       }
     } catch (e) {
-      print('Failed to open URL: $e');
+      debugPrint('Failed to open URL: $e');
     }
   }
 

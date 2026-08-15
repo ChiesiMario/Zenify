@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
@@ -106,10 +107,10 @@ class SubsonicApi {
           }
           return [];
         } else {
-          print('Subsonic API Error: ${responseData['error']}');
+          debugPrint('Subsonic API Error: ${responseData['error']}');
         }
       } else {
-        print('HTTP Error: ${response.statusCode}');
+        debugPrint('HTTP Error: ${response.statusCode}');
       }
       return [];
     } catch (e) {
@@ -144,14 +145,14 @@ class SubsonicApi {
           }
           return allArtists;
         } else {
-          print('Subsonic API Error: ${responseData['error']}');
+          debugPrint('Subsonic API Error: ${responseData['error']}');
         }
       } else {
-        print('HTTP Error: ${response.statusCode}');
+        debugPrint('HTTP Error: ${response.statusCode}');
       }
       return [];
     } catch (e) {
-      print('Exception in getArtists: $e');
+      debugPrint('Exception in getArtists: $e');
       return [];
     }
   }
@@ -180,14 +181,14 @@ class SubsonicApi {
             'songs': ensureList(starred['song']),
           };
         } else {
-          print('Subsonic API Error: ${responseData['error']}');
+          debugPrint('Subsonic API Error: ${responseData['error']}');
         }
       } else {
-        print('HTTP Error: ${response.statusCode}');
+        debugPrint('HTTP Error: ${response.statusCode}');
       }
       return {'artists': [], 'albums': [], 'songs': []};
     } catch (e) {
-      print('Exception in getStarred: $e');
+      debugPrint('Exception in getStarred: $e');
       return {'artists': [], 'albums': [], 'songs': []};
     }
   }
@@ -204,12 +205,12 @@ class SubsonicApi {
         if (responseData['status'] == 'ok') {
           return responseData['album'];
         } else {
-          print('Subsonic API Error: ${responseData['error']}');
+          debugPrint('Subsonic API Error: ${responseData['error']}');
         }
       }
       return null;
     } catch (e) {
-      print('Exception in getAlbum: $e');
+      debugPrint('Exception in getAlbum: $e');
       return null;
     }
   }
@@ -450,11 +451,11 @@ class SubsonicApi {
         final json = jsonDecode(response.body);
         final responseData = json['subsonic-response'];
         if (responseData['status'] != 'ok') {
-          print('Subsonic API Error (Scrobble): ${responseData['error']}');
+          debugPrint('Subsonic API Error (Scrobble): ${responseData['error']}');
         }
       }
     } catch (e) {
-      print('Exception in scrobble: $e');
+      debugPrint('Exception in scrobble: $e');
     }
   }
 
@@ -474,7 +475,7 @@ class SubsonicApi {
       }
       return false;
     } catch (e) {
-      print('Exception in star: $e');
+      debugPrint('Exception in star: $e');
       return false;
     }
   }
@@ -495,7 +496,7 @@ class SubsonicApi {
       }
       return false;
     } catch (e) {
-      print('Exception in unstar: $e');
+      debugPrint('Exception in unstar: $e');
       return false;
     }
   }

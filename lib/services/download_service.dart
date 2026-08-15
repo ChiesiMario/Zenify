@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
@@ -114,7 +115,7 @@ class DownloadService {
         onProgress!(songId, 1.0); // complete
       }
     } catch (e) {
-      print('Download error: $e');
+      debugPrint('Download error: $e');
       rethrow;
     }
   }

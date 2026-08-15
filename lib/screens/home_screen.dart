@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:zenify/models/server.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:zenify/screens/full_player_screen.dart';
