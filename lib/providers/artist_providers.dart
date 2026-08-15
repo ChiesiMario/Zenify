@@ -103,21 +103,41 @@ class ArtistsPaginationNotifier extends AsyncNotifier<ArtistsPaginationState> {
 final artistsProvider = AsyncNotifierProvider<ArtistsPaginationNotifier, ArtistsPaginationState>(() {
   return ArtistsPaginationNotifier();
 });
-final artistDetailProvider = FutureProvider.family<Map<String, dynamic>?, String>((ref, id) async {
+class ArtistDetailArgs {
+  final String id;
+  final String name;
+
+  const ArtistDetailArgs({required this.id, required this.name});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ArtistDetailArgs &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          name == other.name;
+
+  @override
+  int get hashCode => id.hashCode ^ name.hashCode;
+}
+
+final artistDetailProvider = FutureProvider.family<Map<String, dynamic>?, ArtistDetailArgs>((ref, args) async {
   final networkState = ref.watch(networkProvider);
   if (networkState.isOffline) return null;
 
   final api = ref.watch(subsonicApiProvider);
   if (api == null) return null;
 
-  // 併發取得藝術家基本資料與額外資訊 (bio)
+  // 併發取得藝術家基本資料、額外資訊 (bio) 與熱門歌曲
   final results = await Future.wait([
-    api.getArtist(id),
-    api.getArtistInfo2(id),
+    api.getArtist(args.id),
+    api.getArtistInfo2(args.id),
+    if (args.name.isNotEmpty) api.getTopSongs(args.name, count: 10) else Future.value([]),
   ]);
 
-  final artistData = results[0];
-  final artistInfo = results[1];
+  final artistData = results[0] as Map<String, dynamic>?;
+  final artistInfo = results[1] as Map<String, dynamic>?;
+  final fetchedTop = results[2] as List<dynamic>;
 
   if (artistData == null) return null;
 
@@ -126,12 +146,7 @@ final artistDetailProvider = FutureProvider.family<Map<String, dynamic>?, String
   }
 
   // 取得熱門歌曲 (Top 10)
-  final String artistName = artistData['name'] ?? '';
-  List<dynamic> topSongs = [];
-  if (artistName.isNotEmpty) {
-    final fetchedTop = await api.getTopSongs(artistName, count: 10);
-    topSongs = List<dynamic>.from(fetchedTop);
-  }
+  List<dynamic> topSongs = List<dynamic>.from(fetchedTop);
 
   // 排序 by playCount descending
   topSongs.sort((a, b) {
@@ -140,46 +155,6 @@ final artistDetailProvider = FutureProvider.family<Map<String, dynamic>?, String
     return countB.compareTo(countA);
   });
 
-  // 如果不足 10 首，從該歌手的專輯中隨機挑選補充
-  if (topSongs.length < 10) {
-    var albums = artistData['album'];
-    if (albums != null) {
-      if (albums is! List) albums = [albums];
-      final albumList = List<dynamic>.from(albums)..shuffle();
-      
-      List<dynamic> additionalSongs = [];
-      Set<String> existingSongIds = topSongs.map((s) => s['id'].toString()).toSet();
-
-      // 抽取最多 5 張專輯
-      final albumsToFetch = albumList.take(5);
-      final futures = albumsToFetch.map((album) => api.getAlbum(album['id'].toString()));
-      final fetchedAlbums = await Future.wait(futures);
-
-      List<dynamic> pool = [];
-      for (var albumData in fetchedAlbums) {
-        if (albumData != null) {
-          var songs = albumData['song'];
-          if (songs != null) {
-            if (songs is! List) songs = [songs];
-            pool.addAll(songs);
-          }
-        }
-      }
-
-      // 將所有抽取的專輯歌曲倒進大池子徹底打散
-      pool.shuffle();
-
-      for (var song in pool) {
-        final sId = song['id'].toString();
-        if (!existingSongIds.contains(sId)) {
-          additionalSongs.add(song);
-          existingSongIds.add(sId);
-          if (additionalSongs.length >= (10 - topSongs.length)) break;
-        }
-      }
-      topSongs.addAll(additionalSongs);
-    }
-  }
 
   // 為了確保最多只有 10 首
   if (topSongs.length > 10) {

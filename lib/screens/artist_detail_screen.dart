@@ -43,7 +43,9 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
     final l10n = AppLocalizations.of(context)!;
     final theme = ShadTheme.of(context);
     final colorScheme = theme.colorScheme;
-    final artistDetailAsync = ref.watch(artistDetailProvider(widget.artistId));
+    final artistDetailAsync = ref.watch(artistDetailProvider(
+      ArtistDetailArgs(id: widget.artistId, name: widget.artistName)
+    ));
     final server = ref.watch(activeServerProvider).value;
     final api = ref.watch(subsonicApiProvider);
     final networkState = ref.watch(networkProvider);
@@ -96,9 +98,9 @@ class _ArtistDetailScreenState extends ConsumerState<ArtistDetailScreen> {
                                 fit: StackFit.expand,
                                 children: [
                                   LocalCoverImage(
-                                    id: widget.artistId,
+                                    id: artistData['coverArt']?.toString() ?? widget.artistId,
                                     serverId: server?.id ?? 0,
-                                    fallbackUrl: widget.coverUrl,
+                                    fallbackUrl: artistData['artistImageUrl']?.toString() ?? widget.coverUrl,
                                     fit: BoxFit.cover,
                                     isThumb: false,
                                   ),
